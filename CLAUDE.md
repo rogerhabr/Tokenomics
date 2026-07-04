@@ -2,6 +2,21 @@
 
 An interactive financial dashboard for AI tokenomics research. Built as a dynamic Next.js app with Supabase (Postgres + Auth) and deployed to Vercel.
 
+## Full-Stack Development Policy
+
+**Every new feature or change in this repo is built against the full 13-layer architecture below, by default — not bolted on as a frontend-only change.** Before starting new dev work, check which layers it touches and reuse the existing pattern for that layer rather than inventing a parallel one. If a layer genuinely doesn't apply to a given change, that's fine — just don't skip a layer silently when the change actually touches it (e.g. a new table with no RLS, a new API route with no auth check, a new external call with no graceful-degradation fallback).
+
+Checklist for anything beyond a pure UI tweak:
+- [ ] **New database table?** → add a migration in `supabase/migrations/`, enable RLS, add policies. Never ship a table without RLS.
+- [ ] **New backend logic?** → a Route Handler in `src/app/api/*`, using `src/lib/supabase/server.ts` for any DB access so RLS is enforced (see `src/app/api/profile/route.ts` for the pattern).
+- [ ] **Touches auth/permissions?** → extend `middleware.ts` / the `profiles.role` column rather than inventing a new gate.
+- [ ] **New external API call?** → rate-limit it the way `src/lib/rateLimit.ts` does, and fail open (never crash) if it's unconfigured — see `src/middleware.ts`.
+- [ ] **New env var?** → add it to `.env.example`, document it under Setup, and make the code degrade gracefully rather than crash if it's unset.
+- [ ] **Changes what's deployed?** → `npm run build` + `npm run lint` clean before pushing. Vercel deploys automatically on merge to `master`; don't add a custom deploy Action.
+- [ ] Go branch → PR → merge for every change, same as CI/CD layer below — no direct pushes to `master`.
+
+Full layer-by-layer status is in "Full-Stack Architecture Map" near the bottom of this file — update it as new layers get exercised or verified live (not just built).
+
 ## Tech Stack
 
 - **Framework**: Next.js 14 (App Router, standard server build — no static export)
@@ -102,17 +117,17 @@ This file is committed and served statically. The `useLiveData` hook reads it at
 
 | Layer | Status | Implementation |
 |---|---|---|
-| 1. Frontend foundations | ✅ Built | Next.js App Router, React, Tailwind |
-| 2. APIs & backend logic | ✅ Built | Next.js Route Handlers (`src/app/api/*`) |
-| 3. Database & storage | ✅ Built | Supabase Postgres (`profiles` table); no object storage yet — add a Supabase Storage bucket if needed |
-| 4. Auth, authz, permissions | ✅ Built | Supabase Auth (email/password), session cookies via `@supabase/ssr`, `middleware.ts` route protection; `profiles.role` column exists for future RBAC checks but nothing enforces roles yet |
-| 5/6. Hosting & compute | ⚙️ Platform-provided | Vercel serverless functions — auto-scales, no config needed |
-| 7. CI/CD & version control | ✅ Built (CI) / ⚙️ Platform (CD) | `.github/workflows/ci.yml` lints+builds on push/PR; actual deploys happen via Vercel's native GitHub integration (connect the repo in the Vercel dashboard) |
-| 8. Security & row-level security | ✅ Built | Postgres RLS policies in `supabase/migrations/0001_init.sql` |
-| 9. Rate limiting | ✅ Built (optional) | `src/lib/rateLimit.ts`, Upstash Redis — no-ops if unconfigured |
+| 1. Frontend foundations | ✅ Verified live | Next.js App Router, React, Tailwind — confirmed rendering correctly on Vercel |
+| 2. APIs & backend logic | ✅ Built | Next.js Route Handlers (`src/app/api/*`); `/api/health` checked live, `/api/profile` not yet called directly (its data path is proven via the DB check below) |
+| 3. Database & storage | ✅ Verified live | Supabase Postgres (`profiles` table) — confirmed a real row is created on signup; no object storage yet, add a Supabase Storage bucket if needed |
+| 4. Auth, authz, permissions | ✅ Verified live | Supabase Auth (email/password), session cookies via `@supabase/ssr`, `middleware.ts` route protection — full sign-up → confirm → sign-in → logout cycle confirmed working. `profiles.role` column exists for future RBAC checks but nothing enforces roles yet. **Email confirmation is currently OFF** in the Supabase dashboard (Authentication → Providers → Email) to work around the default mailer's rate limit during testing — turn it back on (and/or configure custom SMTP) before real users sign up |
+| 5/6. Hosting & compute | ✅ Verified live | Vercel serverless functions, auto-deploys on push to `master` — confirmed across multiple deployments |
+| 7. CI/CD & version control | ✅ Working | `.github/workflows/ci.yml` lints+builds on push/PR; every change goes branch → PR → merge → Vercel auto-deploy (its native GitHub integration, not a custom Action) |
+| 8. Security & row-level security | ✅ Verified live | Postgres RLS policies in `supabase/migrations/0001_init.sql` — confirmed 2 active policies on `profiles` in the Supabase Table Editor |
+| 9. Rate limiting | ⚙️ Built, not configured | `src/lib/rateLimit.ts`, Upstash Redis — no-ops (never blocks) until `UPSTASH_REDIS_REST_URL`/`_TOKEN` are set; add before this is public-facing |
 | 10. Caching & CDN | ⚙️ Platform-provided | Vercel's edge network; `Cache-Control` header set as an example on `/api/health` |
 | 11. Load balancing & scaling | ⚙️ Platform-provided | Vercel serverless auto-scaling |
-| 12. Error tracking & logs | ❌ Not built | No Sentry/logging service wired up. Adding Sentry is a well-documented drop-in (`npx @sentry/wizard@latest -i nextjs`) once you have a DSN — deliberately left out rather than half-configured |
+| 12. Error tracking & logs | ❌ Not built | No Sentry/logging service wired up. Adding Sentry is a well-documented drop-in (`npx @sentry/wizard@latest -i nextjs`) once you have a DSN — the single biggest remaining gap now that the rest of the stack is verified |
 | 13. Availability & recovery | ⚙️ Platform-provided | Vercel (multi-region edge, automatic rollback on failed deploys) + Supabase (automated backups; point-in-time recovery requires a paid Supabase plan) |
 
 "Platform-provided" means the layer is handled by Vercel/Supabase's infrastructure with no custom code required, not that it's unimplemented.
