@@ -42,7 +42,8 @@ npm run lint     # ESLint via next lint
 1. Create a [Supabase](https://supabase.com) project. In the SQL Editor, run `supabase/migrations/0001_init.sql`.
 2. Copy `.env.example` to `.env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` from Project Settings → API.
 3. (Optional) Create an [Upstash](https://upstash.com) Redis database and add its REST URL/token to `.env.local` to enable API rate limiting.
-4. Connect this repo to a [Vercel](https://vercel.com) project and set the same env vars there (Project Settings → Environment Variables) for production/preview deploys.
+4. (Optional) Create a [Sentry](https://sentry.io) project and add its DSN to `.env.local` as `NEXT_PUBLIC_SENTRY_DSN` to enable error tracking.
+5. Connect this repo to a [Vercel](https://vercel.com) project and set the same env vars there (Project Settings → Environment Variables) for production/preview deploys.
 
 ## Architecture
 
@@ -67,6 +68,12 @@ npm run lint     # ESLint via next lint
 - `src/app/auth/callback/route.ts` — Exchanges a Supabase email-confirmation code for a session
 - `src/app/api/health/route.ts`, `src/app/api/profile/route.ts` — Example Route Handlers; `profile` demonstrates a Postgres-RLS-scoped query against the signed-in user
 - `supabase/migrations/0001_init.sql` — `profiles` table, RLS policies, and an `auth.users` insert trigger that provisions a profile row on signup
+
+### Observability
+- `sentry.client.config.ts` / `sentry.server.config.ts` / `sentry.edge.config.ts` — Sentry init for each runtime; all no-op with a console warning if `NEXT_PUBLIC_SENTRY_DSN` isn't set
+- `src/instrumentation.ts` — Next.js instrumentation hook that loads the right Sentry config per runtime and wires up `onRequestError` for Server Component/Route Handler errors
+- `src/app/global-error.tsx` — Root error boundary; reports uncaught React render errors to Sentry
+- `next.config.js` — Wrapped with `withSentryConfig` for source map upload; skipped automatically (not a build failure) unless `SENTRY_ORG`/`SENTRY_PROJECT`/`SENTRY_AUTH_TOKEN` are set
 
 ### UI Structure
 - `src/app/page.tsx` — Root page; renders sidebar + header + section content; sections are lazy-loaded with `next/dynamic`. Protected by `middleware.ts`, not a client-side gate.
@@ -127,7 +134,7 @@ This file is committed and served statically. The `useLiveData` hook reads it at
 | 9. Rate limiting | ⚙️ Built, not configured | `src/lib/rateLimit.ts`, Upstash Redis — no-ops (never blocks) until `UPSTASH_REDIS_REST_URL`/`_TOKEN` are set; add before this is public-facing |
 | 10. Caching & CDN | ⚙️ Platform-provided | Vercel's edge network; `Cache-Control` header set as an example on `/api/health` |
 | 11. Load balancing & scaling | ⚙️ Platform-provided | Vercel serverless auto-scaling |
-| 12. Error tracking & logs | ❌ Not built | No Sentry/logging service wired up. Adding Sentry is a well-documented drop-in (`npx @sentry/wizard@latest -i nextjs`) once you have a DSN — the single biggest remaining gap now that the rest of the stack is verified |
+| 12. Error tracking & logs | ⚙️ Built, not configured | Sentry wired into all 3 runtimes (client/server/edge) plus `global-error.tsx` and the middleware/login-form catch blocks — no-ops with a console warning until `NEXT_PUBLIC_SENTRY_DSN` is set; add a real DSN and (optionally) `SENTRY_ORG`/`SENTRY_PROJECT`/`SENTRY_AUTH_TOKEN` for source maps before relying on it in production |
 | 13. Availability & recovery | ⚙️ Platform-provided | Vercel (multi-region edge, automatic rollback on failed deploys) + Supabase (automated backups; point-in-time recovery requires a paid Supabase plan) |
 
 "Platform-provided" means the layer is handled by Vercel/Supabase's infrastructure with no custom code required, not that it's unimplemented.

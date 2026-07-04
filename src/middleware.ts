@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { isRateLimited } from '@/lib/rateLimit';
 
 const PUBLIC_PATHS = ['/login', '/auth/callback'];
@@ -80,6 +81,7 @@ export async function middleware(request: NextRequest) {
   } catch (err) {
     // A misconfigured URL/key (or a transient Supabase outage) should degrade
     // to "auth disabled" rather than 500 the entire site.
+    Sentry.captureException(err);
     if (!warnedError) {
       console.error('[middleware] Supabase auth check failed — letting requests through unauthenticated:', err);
       warnedError = true;
