@@ -892,3 +892,114 @@ export const labHeadcount = [
   { year: '2030E',OpenAI:21000, Anthropic:12500, xAI:18500, DeepSeek:4000 },
 ];
 
+// ─── Data Center Cost Breakdown (annualized OpEx vs CapEx, driven by formulae) ──
+// Every line item is computed from user-adjustable inputs — nothing is a fixed
+// lump-sum total. capacityGW and energyCostPerKWh are the two inputs the user
+// must set explicitly; every other field below is a labeled "estimate" default
+// (industry unit-cost assumption) that the user can override with a slider.
+// Defaults are calibrated so that, at their starting values, the model
+// reproduces Epoch.ai's published annualized 1 GW hyperscaler cost structure —
+// but every downstream number is recomputed live from the formulae, not looked
+// up from that baseline.
+
+export interface DataCenterCostInputs {
+  // Required — the user must set these explicitly.
+  capacityGW: number;        // IT (critical load) capacity, GW
+  energyCostPerKWh: number;  // $/kWh, all-in industrial rate
+
+  // Utilization & efficiency
+  pue: number;               // Power Usage Effectiveness (total facility power / IT power)
+  utilizationPct: number;    // Average IT load factor, %
+
+  // Servers — CapEx, $ per kW of IT capacity, amortized over serverAmortYears
+  serverCostPerKW: number;
+  serverAmortYears: number;
+
+  // Facility / Network / Utility / Land — CapEx, $ per kW of IT capacity,
+  // amortized over a shared infraAmortYears (building/infra lifespan)
+  facilityCostPerKW: number;
+  networkCostPerKW: number;
+  utilityCostPerKW: number;
+  landCostPerKW: number;
+  infraAmortYears: number;
+
+  // Recurring OpEx rates
+  taxRatePctOfCapex: number;        // Property tax, % of total annualized CapEx
+  maintenanceRatePctOfCapex: number; // % of total annualized CapEx
+  laborCostPerFTE: number;          // $/employee/year
+  fteDensityPerGW: number;          // Staff headcount per GW of IT capacity
+  waterUseEffectivenessLPerKWh: number; // Liters of water per kWh consumed
+  waterPricePerM3: number;          // $ per cubic meter
+}
+
+export const defaultDataCenterCostInputs: DataCenterCostInputs = {
+  capacityGW: 1,
+  energyCostPerKWh: 0.055,
+
+  pue: 1.2,
+  utilizationPct: 100,
+
+  serverCostPerKW: 15_000,
+  serverAmortYears: 3,
+
+  facilityCostPerKW: 20_800,
+  networkCostPerKW: 17_500,
+  utilityCostPerKW: 300,
+  landCostPerKW: 195,
+  infraAmortYears: 15,
+
+  taxRatePctOfCapex: 1.88,
+  maintenanceRatePctOfCapex: 1.58,
+  laborCostPerFTE: 150_000,
+  fteDensityPerGW: 267,
+  waterUseEffectivenessLPerKWh: 0.30,
+  waterPricePerM3: 1.80,
+};
+
+export const DC_COST_LABELS = {
+  opex: {
+    energy: 'Energy', taxes: 'Taxes', maintenance: 'Maintenance', labor: 'Labor', water: 'Water',
+  },
+  capex: {
+    servers: 'Servers', facility: 'Facility', networkInfrastructure: 'Network Infrastructure',
+    utilityWorks: 'Utility Works', land: 'Land',
+  },
+};
+
+export function calcDataCenterCost(inputs: DataCenterCostInputs) {
+  const capacityKW = inputs.capacityGW * 1_000_000;
+  const annualEnergyKWh = capacityKW * inputs.pue * (inputs.utilizationPct / 100) * 8760;
+
+  const energy = annualEnergyKWh * inputs.energyCostPerKWh;
+  const water = (annualEnergyKWh * inputs.waterUseEffectivenessLPerKWh / 1000) * inputs.waterPricePerM3;
+
+  const serverCapex   = (capacityKW * inputs.serverCostPerKW) / inputs.serverAmortYears;
+  const facilityCapex = (capacityKW * inputs.facilityCostPerKW) / inputs.infraAmortYears;
+  const networkCapex  = (capacityKW * inputs.networkCostPerKW) / inputs.infraAmortYears;
+  const utilityCapex  = (capacityKW * inputs.utilityCostPerKW) / inputs.infraAmortYears;
+  const landCapex     = (capacityKW * inputs.landCostPerKW) / inputs.infraAmortYears;
+
+  const capex = {
+    servers: serverCapex, facility: facilityCapex, networkInfrastructure: networkCapex,
+    utilityWorks: utilityCapex, land: landCapex,
+  };
+  const totalCapex = serverCapex + facilityCapex + networkCapex + utilityCapex + landCapex;
+
+  const taxes = totalCapex * (inputs.taxRatePctOfCapex / 100);
+  const maintenance = totalCapex * (inputs.maintenanceRatePctOfCapex / 100);
+  const numFTEs = inputs.fteDensityPerGW * inputs.capacityGW;
+  const labor = numFTEs * inputs.laborCostPerFTE;
+
+  const opex = { energy, taxes, maintenance, labor, water };
+  const totalOpex = energy + taxes + maintenance + labor + water;
+  const totalAnnual = totalOpex + totalCapex;
+
+  return {
+    opex, capex, totalOpex, totalCapex, totalAnnual,
+    annualEnergyKWh, numFTEs,
+    serverShareOfCapex: totalCapex > 0 ? (serverCapex / totalCapex) * 100 : 0,
+    serverShareOfTotal: totalAnnual > 0 ? (serverCapex / totalAnnual) * 100 : 0,
+    capexPerOpexDollar: totalOpex > 0 ? totalCapex / totalOpex : 0,
+  };
+}
+

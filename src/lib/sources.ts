@@ -244,6 +244,14 @@ export const DATA_SOURCES: Record<string, DataSource> = {
     primarySource: 'Inferred from API provider pricing tier structures, Anthropic usage reports, and published AI adoption surveys',
     notes: 'Token counts per session are estimates from API cost analyses and public Anthropic model card data. Adoption shares are the author\'s estimates — no comprehensive public survey covers this breakdown.',
   },
+
+  dataCenterCostBreakdown: {
+    label: 'Data Center Annual Cost Breakdown (OpEx vs CapEx)',
+    sourceType: 'estimate',
+    primarySource: 'Formula-driven model; unit-cost defaults calibrated against Epoch.ai\'s annualized 1 GW hyperscaler cost structure',
+    sourceURL: 'https://epoch.ai/',
+    notes: 'Capacity (GW) and energy cost ($/kWh) are required user inputs. Every line item (Energy, Water, Taxes, Maintenance, Labor OpEx; Servers, Facility, Network Infrastructure, Utility Works, Land CapEx) is computed from user-adjustable unit-cost assumptions (e.g. $/kW build cost, amortization years, PUE, staffing density) — none are fixed lookup totals. No public live-data feed exists for data-center construction unit costs, so these assumptions are labeled estimates; defaults are chosen so the model reproduces the Epoch.ai baseline at its starting slider positions.',
+  },
 };
 
 // ── Colour coding for source types ──────────────────────────────────────────
