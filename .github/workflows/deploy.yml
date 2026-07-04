@@ -31,6 +31,9 @@ jobs:
         run: npm ci
 
       - name: Build
+        env:
+          NEXT_PUBLIC_APP_USERNAME: ${{ secrets.APP_USERNAME }}
+          NEXT_PUBLIC_APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
         run: npm run build
 
       - name: Setup Pages
