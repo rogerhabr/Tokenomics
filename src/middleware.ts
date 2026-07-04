@@ -4,10 +4,14 @@ import { isRateLimited } from '@/lib/rateLimit';
 
 const PUBLIC_PATHS = ['/login', '/auth/callback'];
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// .trim() guards against a trailing newline/space sneaking in from copy-paste
+// into the Vercel dashboard — that alone is enough to make the Supabase SDK
+// throw on an otherwise-valid URL/key.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
 
 let warnedNotConfigured = false;
+let warnedError = false;
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -29,49 +33,59 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  let response = NextResponse.next({ request: { headers: request.headers } });
+  try {
+    let response = NextResponse.next({ request: { headers: request.headers } });
 
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
+    const supabase = createServerClient(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+          set(name: string, value: string, options: CookieOptions) {
+            request.cookies.set({ name, value, ...options });
+            response = NextResponse.next({ request: { headers: request.headers } });
+            response.cookies.set({ name, value, ...options });
+          },
+          remove(name: string, options: CookieOptions) {
+            request.cookies.set({ name, value: '', ...options });
+            response = NextResponse.next({ request: { headers: request.headers } });
+            response.cookies.set({ name, value: '', ...options });
+          },
         },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options });
-          response = NextResponse.next({ request: { headers: request.headers } });
-          response.cookies.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options });
-          response = NextResponse.next({ request: { headers: request.headers } });
-          response.cookies.set({ name, value: '', ...options });
-        },
-      },
+      }
+    );
+
+    // Refreshes the session token if it's expired — required for Server
+    // Components, which can't write cookies themselves.
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const isPublic = PUBLIC_PATHS.some(p => pathname.startsWith(p));
+
+    if (!user && !isPublic && !isApi) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
     }
-  );
 
-  // Refreshes the session token if it's expired — required for Server
-  // Components, which can't write cookies themselves.
-  const { data: { user } } = await supabase.auth.getUser();
+    if (user && pathname === '/login') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      return NextResponse.redirect(url);
+    }
 
-  const isPublic = PUBLIC_PATHS.some(p => pathname.startsWith(p));
-
-  if (!user && !isPublic && !isApi) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
+    return response;
+  } catch (err) {
+    // A misconfigured URL/key (or a transient Supabase outage) should degrade
+    // to "auth disabled" rather than 500 the entire site.
+    if (!warnedError) {
+      console.error('[middleware] Supabase auth check failed — letting requests through unauthenticated:', err);
+      warnedError = true;
+    }
+    return NextResponse.next();
   }
-
-  if (user && pathname === '/login') {
-    const url = request.nextUrl.clone();
-    url.pathname = '/';
-    return NextResponse.redirect(url);
-  }
-
-  return response;
 }
 
 export const config = {
