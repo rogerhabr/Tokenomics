@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import * as Sentry from '@sentry/nextjs';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 
 export default function LoginForm() {
@@ -37,6 +38,7 @@ export default function LoginForm() {
         setInfo('Check your email to confirm your account, then sign in.');
       }
     } catch (err) {
+      Sentry.captureException(err);
       setError(err instanceof Error ? err.message : 'Something went wrong — please try again.');
     } finally {
       setLoading(false);
