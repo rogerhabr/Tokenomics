@@ -29,8 +29,7 @@ export function useThroughputData() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const base = process.env.NODE_ENV === 'production' ? '/rogerhabr' : '';
-    fetch(`${base}/throughput-data.json`)
+    fetch('/throughput-data.json')
       .then(r => (r.ok ? r.json() : Promise.reject(new Error('not found'))))
       .then((d: ThroughputData) => { setData({ ...EMPTY, ...d }); setLoaded(true); })
       .catch(() => setLoaded(true)); // absent until the agent's first PR merges — fall back to static

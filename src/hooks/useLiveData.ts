@@ -88,8 +88,7 @@ export function useLiveData() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const base = process.env.NODE_ENV === 'production' ? '/rogerhabr' : '';
-    fetch(`${base}/live-data.json`)
+    fetch('/live-data.json')
       .then(r => r.json())
       .then((d: LiveData) => { setData({ ...EMPTY, ...d }); setLoaded(true); })
       .catch(() => setLoaded(true));

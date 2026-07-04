@@ -1,19 +1,29 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useGlobalParams } from '@/contexts/ParamsContext';
 import { useLiveData } from '@/hooks/useLiveData';
+import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 
 interface HeaderProps {
   activeSection: string;
   sections: { id: string; label: string; icon: string }[];
   onMenuClick?: () => void;
-  onLogout?: () => void;
 }
 
-export default function Header({ activeSection, sections, onMenuClick, onLogout }: HeaderProps) {
+export default function Header({ activeSection, sections, onMenuClick }: HeaderProps) {
   const current = sections.find(s => s.id === activeSection);
   const { setPanelOpen } = useGlobalParams();
   const { liveData, liveLoaded } = useLiveData();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    if (isSupabaseConfigured) {
+      await createClient().auth.signOut();
+    }
+    router.replace('/login');
+    router.refresh();
+  };
 
   const updatedLabel = liveLoaded && liveData.lastUpdated
     ? `Live data: ${new Date(liveData.lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
@@ -61,14 +71,12 @@ export default function Header({ activeSection, sections, onMenuClick, onLogout 
             {liveLoaded ? 'SEC EDGAR · Daily' : 'Live data…'}
           </span>
         </div>
-        {onLogout && (
-          <button
-            onClick={onLogout}
-            className="px-2.5 md:px-3 py-1.5 rounded-lg bg-sa-card border border-sa-border text-xs font-medium text-slate-400 hover:text-white hover:border-sa-accent transition-colors"
-          >
-            Log out
-          </button>
-        )}
+        <button
+          onClick={handleLogout}
+          className="px-2.5 md:px-3 py-1.5 rounded-lg bg-sa-card border border-sa-border text-xs font-medium text-slate-400 hover:text-white hover:border-sa-accent transition-colors"
+        >
+          Log out
+        </button>
       </div>
     </header>
   );

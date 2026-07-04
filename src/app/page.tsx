@@ -3,10 +3,8 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
 import AssumptionsPanel from '@/components/AssumptionsPanel';
 import SectionErrorBoundary from '@/components/SectionErrorBoundary';
-import LoginGate from '@/components/LoginGate';
 import { ParamsProvider } from '@/contexts/ParamsContext';
 
 const LOADING = () => (
@@ -15,6 +13,7 @@ const LOADING = () => (
   </div>
 );
 
+const Header                 = dynamic(() => import('@/components/Header'),                            { ssr: false });
 const Overview               = dynamic(() => import('@/components/sections/Overview'),                { ssr: false, loading: LOADING });
 const HardwareInstalledBase  = dynamic(() => import('@/components/sections/HardwareInstalledBase'),   { ssr: false, loading: LOADING });
 const TokenThroughput        = dynamic(() => import('@/components/sections/TokenThroughput'),         { ssr: false, loading: LOADING });
@@ -79,37 +78,32 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <LoginGate>
-      {logout => (
-        <ParamsProvider activeSection={active} onNavigate={setActive}>
-          <div className="flex min-h-screen bg-sa-bg">
-            <Sidebar
-              sections={SECTIONS}
-              active={active}
-              onSelect={setActive}
-              open={sidebarOpen}
-              onClose={() => setSidebarOpen(false)}
-            />
-            <div className="flex-1 md:ml-64">
-              <Header
-                activeSection={active}
-                sections={SECTIONS}
-                onMenuClick={() => setSidebarOpen(true)}
-                onLogout={logout}
-              />
-              <ScenarioBar />
-              <main className="pt-24 min-h-screen">
-                <div className="p-4 md:p-6 max-w-7xl">
-                  <SectionErrorBoundary key={active}>
-                    <SectionContent id={active} />
-                  </SectionErrorBoundary>
-                </div>
-              </main>
+    <ParamsProvider activeSection={active} onNavigate={setActive}>
+      <div className="flex min-h-screen bg-sa-bg">
+        <Sidebar
+          sections={SECTIONS}
+          active={active}
+          onSelect={setActive}
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+        <div className="flex-1 md:ml-64">
+          <Header
+            activeSection={active}
+            sections={SECTIONS}
+            onMenuClick={() => setSidebarOpen(true)}
+          />
+          <ScenarioBar />
+          <main className="pt-24 min-h-screen">
+            <div className="p-4 md:p-6 max-w-7xl">
+              <SectionErrorBoundary key={active}>
+                <SectionContent id={active} />
+              </SectionErrorBoundary>
             </div>
-          </div>
-          <AssumptionsPanel />
-        </ParamsProvider>
-      )}
-    </LoginGate>
+          </main>
+        </div>
+      </div>
+      <AssumptionsPanel />
+    </ParamsProvider>
   );
 }
