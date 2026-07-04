@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
 import AssumptionsPanel from '@/components/AssumptionsPanel';
 import SectionErrorBoundary from '@/components/SectionErrorBoundary';
 import { ParamsProvider } from '@/contexts/ParamsContext';
@@ -14,6 +13,7 @@ const LOADING = () => (
   </div>
 );
 
+const Header                 = dynamic(() => import('@/components/Header'),                            { ssr: false });
 const Overview               = dynamic(() => import('@/components/sections/Overview'),                { ssr: false, loading: LOADING });
 const HardwareInstalledBase  = dynamic(() => import('@/components/sections/HardwareInstalledBase'),   { ssr: false, loading: LOADING });
 const TokenThroughput        = dynamic(() => import('@/components/sections/TokenThroughput'),         { ssr: false, loading: LOADING });
