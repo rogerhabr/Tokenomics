@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-03T09:15:12.807Z",
+  "lastUpdated": "2026-07-04T08:34:07.228Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -226,8 +226,8 @@
       "contextK": 200
     },
     "claude-sonnet-5": {
-      "inputPerM": 3,
-      "outputPerM": 15,
+      "inputPerM": 2,
+      "outputPerM": 10,
       "provider": "Anthropic",
       "displayName": "Claude Sonnet 5",
       "contextK": 1000
