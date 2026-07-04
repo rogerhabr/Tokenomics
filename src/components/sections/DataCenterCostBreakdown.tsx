@@ -42,7 +42,7 @@ export default function DataCenterCostBreakdown() {
   return (
     <div>
       <SectionHeader
-        title="Data Center Cost Breakdown"
+        title="AI Data Center Costs"
         subtitle="Annualized OpEx vs CapEx cost structure for a hyperscaler AI data center. Enter a build size in gigawatts — every line item scales linearly from Epoch.ai's per-GW baseline."
         badge="Interactive"
         sources={[

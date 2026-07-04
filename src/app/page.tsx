@@ -45,7 +45,7 @@ const SECTIONS = [
   { id: 'hardware-refresh',    label: 'HW Refresh Sensitivity',  icon: '🔄', group: 'Economics' },
   { id: 'hardware-demand',     label: 'Hardware Demand Forecast',icon: '📦', group: 'Economics' },
   { id: 'revenue-profit',      label: 'Revenue & Profit',        icon: '💰', group: 'Economics' },
-  { id: 'dc-cost-breakdown',   label: 'Data Center Cost Breakdown', icon: '🏭', group: 'Economics' },
+  { id: 'dc-cost-breakdown',   label: 'AI Data Center Costs',    icon: '🏭', group: 'Economics' },
   { id: 'token-cost',          label: 'Token Cost Anatomy',      icon: '🧬', group: 'Tokenomics' },
   { id: 'workflow-allocation', label: 'Workflow Allocation',     icon: '🕸️', group: 'Tokenomics' },
   { id: 'data-sources',        label: 'Data Sources',            icon: '🔍', group: 'Methodology' },
