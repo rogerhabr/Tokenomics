@@ -19,23 +19,27 @@ export default function LoginForm() {
     setInfo(null);
     setLoading(true);
 
-    const supabase = createClient();
+    try {
+      const supabase = createClient();
 
-    if (mode === 'signin') {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (mode === 'signin') {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) { setError(error.message); return; }
+        router.replace('/');
+        router.refresh();
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+        });
+        if (error) { setError(error.message); return; }
+        setInfo('Check your email to confirm your account, then sign in.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong — please try again.');
+    } finally {
       setLoading(false);
-      if (error) { setError(error.message); return; }
-      router.replace('/');
-      router.refresh();
-    } else {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-      });
-      setLoading(false);
-      if (error) { setError(error.message); return; }
-      setInfo('Check your email to confirm your account, then sign in.');
     }
   };
 
