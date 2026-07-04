@@ -892,3 +892,68 @@ export const labHeadcount = [
   { year: '2030E',OpenAI:21000, Anthropic:12500, xAI:18500, DeepSeek:4000 },
 ];
 
+// ─── Data Center Cost Breakdown (annualized OpEx vs CapEx per GW) ──────────────
+// Baseline: annualized cost structure of a 1 GW hyperscaler AI data center
+// (Epoch.ai). CapEx figures are already annualized (depreciation-equivalent),
+// so OpEx and CapEx are directly comparable on a $/year basis. Every figure
+// scales linearly with capacity — the model's only required input is GW.
+
+export interface DataCenterCostInputs {
+  capacityGW: number;
+}
+
+export const defaultDataCenterCostInputs: DataCenterCostInputs = {
+  capacityGW: 1,
+};
+
+// $ millions per GW per year, at baseline (1 GW) capacity.
+const DC_COST_PER_GW_M = {
+  opex: {
+    energy:      594,
+    taxes:       143,
+    maintenance: 120,
+    labor:        40,
+    water:         6,
+  },
+  capex: {
+    servers:               5021,
+    facility:              1387,
+    networkInfrastructure: 1167,
+    utilityWorks:            20,
+    land:                    13,
+  },
+};
+
+export const DC_COST_LABELS = {
+  opex: {
+    energy: 'Energy', taxes: 'Taxes', maintenance: 'Maintenance', labor: 'Labor', water: 'Water',
+  },
+  capex: {
+    servers: 'Servers', facility: 'Facility', networkInfrastructure: 'Network Infrastructure',
+    utilityWorks: 'Utility Works', land: 'Land',
+  },
+};
+
+export function calcDataCenterCost(inputs: DataCenterCostInputs) {
+  const scale = inputs.capacityGW * 1_000_000; // $M/GW -> $ at requested capacity
+
+  const opex = Object.fromEntries(
+    Object.entries(DC_COST_PER_GW_M.opex).map(([k, v]) => [k, v * scale])
+  ) as Record<keyof typeof DC_COST_PER_GW_M.opex, number>;
+
+  const capex = Object.fromEntries(
+    Object.entries(DC_COST_PER_GW_M.capex).map(([k, v]) => [k, v * scale])
+  ) as Record<keyof typeof DC_COST_PER_GW_M.capex, number>;
+
+  const totalOpex = Object.values(opex).reduce((a, b) => a + b, 0);
+  const totalCapex = Object.values(capex).reduce((a, b) => a + b, 0);
+  const totalAnnual = totalOpex + totalCapex;
+
+  return {
+    opex, capex, totalOpex, totalCapex, totalAnnual,
+    serverShareOfCapex: totalCapex > 0 ? (capex.servers / totalCapex) * 100 : 0,
+    serverShareOfTotal: totalAnnual > 0 ? (capex.servers / totalAnnual) * 100 : 0,
+    capexPerOpexDollar: totalOpex > 0 ? totalCapex / totalOpex : 0,
+  };
+}
+
