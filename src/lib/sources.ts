@@ -246,11 +246,11 @@ export const DATA_SOURCES: Record<string, DataSource> = {
   },
 
   dataCenterCostBreakdown: {
-    label: 'Data Center Annual Cost Breakdown (OpEx vs CapEx per GW)',
-    sourceType: 'derived',
-    primarySource: 'Epoch.ai — annualized cost model for a 1 GW hyperscaler AI data center',
+    label: 'Data Center Annual Cost Breakdown (OpEx vs CapEx)',
+    sourceType: 'estimate',
+    primarySource: 'Formula-driven model; unit-cost defaults calibrated against Epoch.ai\'s annualized 1 GW hyperscaler cost structure',
     sourceURL: 'https://epoch.ai/',
-    notes: 'Baseline per-GW figures (Energy, Taxes, Maintenance, Labor, Water OpEx; Servers, Facility, Network Infrastructure, Utility Works, Land CapEx) are annualized (2026, Epoch.ai) and scaled linearly by the requested capacity in GW.',
+    notes: 'Capacity (GW) and energy cost ($/kWh) are required user inputs. Every line item (Energy, Water, Taxes, Maintenance, Labor OpEx; Servers, Facility, Network Infrastructure, Utility Works, Land CapEx) is computed from user-adjustable unit-cost assumptions (e.g. $/kW build cost, amortization years, PUE, staffing density) — none are fixed lookup totals. No public live-data feed exists for data-center construction unit costs, so these assumptions are labeled estimates; defaults are chosen so the model reproduces the Epoch.ai baseline at its starting slider positions.',
   },
 };
 

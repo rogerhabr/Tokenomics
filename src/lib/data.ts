@@ -892,36 +892,68 @@ export const labHeadcount = [
   { year: '2030E',OpenAI:21000, Anthropic:12500, xAI:18500, DeepSeek:4000 },
 ];
 
-// ─── Data Center Cost Breakdown (annualized OpEx vs CapEx per GW) ──────────────
-// Baseline: annualized cost structure of a 1 GW hyperscaler AI data center
-// (Epoch.ai). CapEx figures are already annualized (depreciation-equivalent),
-// so OpEx and CapEx are directly comparable on a $/year basis. Every figure
-// scales linearly with capacity — the model's only required input is GW.
+// ─── Data Center Cost Breakdown (annualized OpEx vs CapEx, driven by formulae) ──
+// Every line item is computed from user-adjustable inputs — nothing is a fixed
+// lump-sum total. capacityGW and energyCostPerKWh are the two inputs the user
+// must set explicitly; every other field below is a labeled "estimate" default
+// (industry unit-cost assumption) that the user can override with a slider.
+// Defaults are calibrated so that, at their starting values, the model
+// reproduces Epoch.ai's published annualized 1 GW hyperscaler cost structure —
+// but every downstream number is recomputed live from the formulae, not looked
+// up from that baseline.
 
 export interface DataCenterCostInputs {
-  capacityGW: number;
+  // Required — the user must set these explicitly.
+  capacityGW: number;        // IT (critical load) capacity, GW
+  energyCostPerKWh: number;  // $/kWh, all-in industrial rate
+
+  // Utilization & efficiency
+  pue: number;               // Power Usage Effectiveness (total facility power / IT power)
+  utilizationPct: number;    // Average IT load factor, %
+
+  // Servers — CapEx, $ per kW of IT capacity, amortized over serverAmortYears
+  serverCostPerKW: number;
+  serverAmortYears: number;
+
+  // Facility / Network / Utility / Land — CapEx, $ per kW of IT capacity,
+  // amortized over a shared infraAmortYears (building/infra lifespan)
+  facilityCostPerKW: number;
+  networkCostPerKW: number;
+  utilityCostPerKW: number;
+  landCostPerKW: number;
+  infraAmortYears: number;
+
+  // Recurring OpEx rates
+  taxRatePctOfCapex: number;        // Property tax, % of total annualized CapEx
+  maintenanceRatePctOfCapex: number; // % of total annualized CapEx
+  laborCostPerFTE: number;          // $/employee/year
+  fteDensityPerGW: number;          // Staff headcount per GW of IT capacity
+  waterUseEffectivenessLPerKWh: number; // Liters of water per kWh consumed
+  waterPricePerM3: number;          // $ per cubic meter
 }
 
 export const defaultDataCenterCostInputs: DataCenterCostInputs = {
   capacityGW: 1,
-};
+  energyCostPerKWh: 0.055,
 
-// $ millions per GW per year, at baseline (1 GW) capacity.
-const DC_COST_PER_GW_M = {
-  opex: {
-    energy:      594,
-    taxes:       143,
-    maintenance: 120,
-    labor:        40,
-    water:         6,
-  },
-  capex: {
-    servers:               5021,
-    facility:              1387,
-    networkInfrastructure: 1167,
-    utilityWorks:            20,
-    land:                    13,
-  },
+  pue: 1.2,
+  utilizationPct: 100,
+
+  serverCostPerKW: 15_000,
+  serverAmortYears: 3,
+
+  facilityCostPerKW: 20_800,
+  networkCostPerKW: 17_500,
+  utilityCostPerKW: 300,
+  landCostPerKW: 195,
+  infraAmortYears: 15,
+
+  taxRatePctOfCapex: 1.88,
+  maintenanceRatePctOfCapex: 1.58,
+  laborCostPerFTE: 150_000,
+  fteDensityPerGW: 267,
+  waterUseEffectivenessLPerKWh: 0.30,
+  waterPricePerM3: 1.80,
 };
 
 export const DC_COST_LABELS = {
@@ -935,24 +967,38 @@ export const DC_COST_LABELS = {
 };
 
 export function calcDataCenterCost(inputs: DataCenterCostInputs) {
-  const scale = inputs.capacityGW * 1_000_000; // $M/GW -> $ at requested capacity
+  const capacityKW = inputs.capacityGW * 1_000_000;
+  const annualEnergyKWh = capacityKW * inputs.pue * (inputs.utilizationPct / 100) * 8760;
 
-  const opex = Object.fromEntries(
-    Object.entries(DC_COST_PER_GW_M.opex).map(([k, v]) => [k, v * scale])
-  ) as Record<keyof typeof DC_COST_PER_GW_M.opex, number>;
+  const energy = annualEnergyKWh * inputs.energyCostPerKWh;
+  const water = (annualEnergyKWh * inputs.waterUseEffectivenessLPerKWh / 1000) * inputs.waterPricePerM3;
 
-  const capex = Object.fromEntries(
-    Object.entries(DC_COST_PER_GW_M.capex).map(([k, v]) => [k, v * scale])
-  ) as Record<keyof typeof DC_COST_PER_GW_M.capex, number>;
+  const serverCapex   = (capacityKW * inputs.serverCostPerKW) / inputs.serverAmortYears;
+  const facilityCapex = (capacityKW * inputs.facilityCostPerKW) / inputs.infraAmortYears;
+  const networkCapex  = (capacityKW * inputs.networkCostPerKW) / inputs.infraAmortYears;
+  const utilityCapex  = (capacityKW * inputs.utilityCostPerKW) / inputs.infraAmortYears;
+  const landCapex     = (capacityKW * inputs.landCostPerKW) / inputs.infraAmortYears;
 
-  const totalOpex = Object.values(opex).reduce((a, b) => a + b, 0);
-  const totalCapex = Object.values(capex).reduce((a, b) => a + b, 0);
+  const capex = {
+    servers: serverCapex, facility: facilityCapex, networkInfrastructure: networkCapex,
+    utilityWorks: utilityCapex, land: landCapex,
+  };
+  const totalCapex = serverCapex + facilityCapex + networkCapex + utilityCapex + landCapex;
+
+  const taxes = totalCapex * (inputs.taxRatePctOfCapex / 100);
+  const maintenance = totalCapex * (inputs.maintenanceRatePctOfCapex / 100);
+  const numFTEs = inputs.fteDensityPerGW * inputs.capacityGW;
+  const labor = numFTEs * inputs.laborCostPerFTE;
+
+  const opex = { energy, taxes, maintenance, labor, water };
+  const totalOpex = energy + taxes + maintenance + labor + water;
   const totalAnnual = totalOpex + totalCapex;
 
   return {
     opex, capex, totalOpex, totalCapex, totalAnnual,
-    serverShareOfCapex: totalCapex > 0 ? (capex.servers / totalCapex) * 100 : 0,
-    serverShareOfTotal: totalAnnual > 0 ? (capex.servers / totalAnnual) * 100 : 0,
+    annualEnergyKWh, numFTEs,
+    serverShareOfCapex: totalCapex > 0 ? (serverCapex / totalCapex) * 100 : 0,
+    serverShareOfTotal: totalAnnual > 0 ? (serverCapex / totalAnnual) * 100 : 0,
     capexPerOpexDollar: totalOpex > 0 ? totalCapex / totalOpex : 0,
   };
 }
