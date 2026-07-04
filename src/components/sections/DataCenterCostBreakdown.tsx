@@ -25,6 +25,10 @@ function fmtUSD(n: number): string {
   return `$${n.toFixed(0)}`;
 }
 
+function fmtCapacity(mw: number): string {
+  return mw >= 1000 ? `${(mw / 1000).toFixed(2)} GW` : `${mw.toFixed(0)} MW`;
+}
+
 function SliderInput({ label, value, min, max, step, onChange, format, required }: {
   label: string; value: number; min: number; max: number; step: number;
   onChange: (v: number) => void; format: (v: number) => string; required?: boolean;
@@ -97,8 +101,8 @@ export default function DataCenterCostBreakdown() {
 
           <Group title="Required">
             <SliderInput
-              required label="Data Center IT Capacity (GW)" value={inputs.capacityGW} min={0.1} max={20} step={0.1}
-              onChange={set('capacityGW')} format={v => `${v.toFixed(1)} GW`}
+              required label="Data Center IT Capacity" value={inputs.capacityGW * 1000} min={10} max={1000} step={10}
+              onChange={v => set('capacityGW')(v / 1000)} format={fmtCapacity}
             />
             <SliderInput
               required label="Energy Cost ($/kWh)" value={inputs.energyCostPerKWh} min={0.01} max={0.30} step={0.005}
@@ -186,7 +190,7 @@ export default function DataCenterCostBreakdown() {
             <p className="text-4xl font-black number-cell text-sa-accent mt-1">{fmtUSD(result.totalAnnual)}</p>
             <p className="text-xs text-sa-muted mt-2">
               For every <span className="text-white font-semibold">$1</span> spent operating a{' '}
-              <span className="text-white font-semibold">{inputs.capacityGW.toFixed(1)} GW</span> AI data center,{' '}
+              <span className="text-white font-semibold">{fmtCapacity(inputs.capacityGW * 1000)}</span> AI data center,{' '}
               <span className="text-sa-accent font-semibold">${result.capexPerOpexDollar.toFixed(1)}</span> goes into CapEx
               — {result.serverShareOfTotal.toFixed(0)}% of total spend is servers alone.
             </p>
@@ -195,7 +199,7 @@ export default function DataCenterCostBreakdown() {
           <div className="grid grid-cols-2 gap-3 mb-5">
             <MetricCard label="Total OpEx / yr" value={fmtUSD(result.totalOpex)} subtext="Energy, taxes, maintenance, labor, water" />
             <MetricCard label="Total CapEx / yr" value={fmtUSD(result.totalCapex)} subtext="Servers, facility, network, utility, land" accent />
-            <MetricCard label="Annual Energy Use" value={`${(result.annualEnergyKWh / 1e9).toFixed(2)} TWh`} subtext={`${inputs.capacityGW.toFixed(1)} GW × PUE ${inputs.pue.toFixed(2)} × ${inputs.utilizationPct}% load`} />
+            <MetricCard label="Annual Energy Use" value={`${(result.annualEnergyKWh / 1e9).toFixed(2)} TWh`} subtext={`${fmtCapacity(inputs.capacityGW * 1000)} × PUE ${inputs.pue.toFixed(2)} × ${inputs.utilizationPct}% load`} />
             <MetricCard label="Staffing" value={`${result.numFTEs.toFixed(0)} FTE`} subtext={`${inputs.fteDensityPerGW.toFixed(0)} FTE/GW`} />
           </div>
 
@@ -237,7 +241,7 @@ export default function DataCenterCostBreakdown() {
 
       {/* Full line-item table */}
       <div className="bg-sa-card rounded-xl border border-sa-border p-4">
-        <h3 className="text-sm font-semibold text-white mb-3">All Line Items — {inputs.capacityGW.toFixed(1)} GW</h3>
+        <h3 className="text-sm font-semibold text-white mb-3">All Line Items — {fmtCapacity(inputs.capacityGW * 1000)}</h3>
         <div className="overflow-x-auto">
           <table className="text-xs w-full">
             <thead>
