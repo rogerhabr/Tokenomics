@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-09T09:35:34.819Z",
+  "lastUpdated": "2026-07-10T09:31:46.645Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 204.12,
-      "prevClose": 200.09,
-      "changePct": 2.01,
+      "price": 202.78,
+      "prevClose": 197.58,
+      "changePct": 2.63,
       "marketCap": null
     },
     "MSFT": {
-      "price": 383.34,
-      "prevClose": 373.02,
-      "changePct": 2.77,
+      "price": 384.36,
+      "prevClose": 384.28,
+      "changePct": 0.02,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 361.92,
-      "prevClose": 357.37,
-      "changePct": 1.27,
+      "price": 358.89,
+      "prevClose": 361.21,
+      "changePct": -0.64,
       "marketCap": null
     },
     "AMZN": {
-      "price": 243.62,
-      "prevClose": 238.34,
-      "changePct": 2.22,
+      "price": 247.04,
+      "prevClose": 241.7,
+      "changePct": 2.21,
       "marketCap": null
     },
     "META": {
-      "price": 603.12,
-      "prevClose": 563.29,
-      "changePct": 7.07,
+      "price": 631.48,
+      "prevClose": 612.91,
+      "changePct": 3.03,
       "marketCap": null
     },
     "AMD": {
-      "price": 517.405,
-      "prevClose": 580.91,
-      "changePct": -10.93,
+      "price": 546.72,
+      "prevClose": 540.88,
+      "changePct": 1.08,
       "marketCap": null
     },
     "ORCL": {
-      "price": 140.49,
-      "prevClose": 146.55,
-      "changePct": -4.14,
+      "price": 144.22,
+      "prevClose": 142.5,
+      "changePct": 1.21,
       "marketCap": null
     }
   },
@@ -701,6 +701,34 @@
       "displayName": "Gpt 5.3 Chat Latest",
       "contextK": 128
     },
+    "gpt-5.6": {
+      "inputPerM": 5,
+      "outputPerM": 30,
+      "provider": "OpenAI",
+      "displayName": "Gpt 5.6",
+      "contextK": 1050
+    },
+    "gpt-5.6-sol": {
+      "inputPerM": 5,
+      "outputPerM": 30,
+      "provider": "OpenAI",
+      "displayName": "Gpt 5.6 Sol",
+      "contextK": 1050
+    },
+    "gpt-5.6-terra": {
+      "inputPerM": 2.5,
+      "outputPerM": 15,
+      "provider": "OpenAI",
+      "displayName": "Gpt 5.6 Terra",
+      "contextK": 1050
+    },
+    "gpt-5.6-luna": {
+      "inputPerM": 1,
+      "outputPerM": 6,
+      "provider": "OpenAI",
+      "displayName": "Gpt 5.6 Luna",
+      "contextK": 1050
+    },
     "gpt-5.5": {
       "inputPerM": 5,
       "outputPerM": 30,
@@ -826,6 +854,20 @@
       "provider": "OpenAI",
       "displayName": "Gpt Realtime 2",
       "contextK": 32
+    },
+    "gpt-realtime-2.1": {
+      "inputPerM": 4,
+      "outputPerM": 24,
+      "provider": "OpenAI",
+      "displayName": "Gpt Realtime 2.1",
+      "contextK": 128
+    },
+    "gpt-realtime-2.1-mini": {
+      "inputPerM": 0.6,
+      "outputPerM": 2.4,
+      "provider": "OpenAI",
+      "displayName": "Gpt Realtime 2.1 Mini",
+      "contextK": 128
     },
     "gpt-realtime-mini": {
       "inputPerM": 0.6,
@@ -1666,6 +1708,20 @@
       "provider": "xAI",
       "displayName": "Xai/Grok 4.3 Latest",
       "contextK": 1000
+    },
+    "xai/grok-4.5": {
+      "inputPerM": 2,
+      "outputPerM": 6,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.5",
+      "contextK": 500
+    },
+    "xai/grok-4.5-latest": {
+      "inputPerM": 2,
+      "outputPerM": 6,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.5 Latest",
+      "contextK": 500
     },
     "xai/grok-beta": {
       "inputPerM": 5,
