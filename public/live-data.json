@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-12T08:13:48.566Z",
+  "lastUpdated": "2026-07-13T09:22:26.383Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -75,85 +75,7 @@
       "source": "SEC EDGAR 10-K"
     }
   },
-  "gpuRentalPrices": {
-    "MI300X": {
-      "lambdaPerHour": null,
-      "azurePerHour": 6.552,
-      "lowestPerHour": 6.552,
-      "sources": [
-        "Azure"
-      ]
-    },
-    "GB200": {
-      "lambdaPerHour": null,
-      "azurePerHour": 108.16,
-      "lowestPerHour": 108.16,
-      "sources": [
-        "Azure"
-      ]
-    },
-    "_discovered": [
-      "Standard_NC48ads_A100_v4",
-      "ND96isrH200v5",
-      "NC40adsH100v5",
-      "NC24r",
-      "NC36ldsxlRTX6kv6",
-      "NC72ldsxlRTX6kv6",
-      "NC132dsxlRTX6kv6",
-      "NC80adisH100v5",
-      "NC8as T4 v3",
-      "NC264ldsxlRTX6kv6",
-      "NC144dsxlRTX6kv6",
-      "ND96isrfH100v5",
-      "ND96isrH100v5",
-      "NC64ldsxlRTX6Kv6",
-      "ND96amsA100v4",
-      "NC4as T4 v3",
-      "Standard_ND96amsr_A100_v4",
-      "NC132ldsxlRTX6kv6",
-      "Standard_NC8ads_A10_v4",
-      "NC12s v3",
-      "Standard_NC96ads_A100_v4",
-      "NC32dsxlRTX6Kv6",
-      "NC24s v3",
-      "Standard_NC24ads_A100_v4",
-      "NC324dsxlRTX6kv6",
-      "NC16asT4 v3",
-      "NC12",
-      "NC324ldsxlRTX6kv6",
-      "NDmr40s v2",
-      "NC264dsxlRTX6kv6",
-      "NDasrA100v4 Type1",
-      "NC72dsxlRTX6kv6",
-      "NC144ldsxlRTX6kv6",
-      "NC64asT4 v3",
-      "NC6s v3",
-      "NC16ldsxlRTX6Kv6",
-      "NC24ldsxlRTX6kv6",
-      "NC256dsxlRTX6Kv6",
-      "NC128ldsxlRTX6Kv6",
-      "NC36dsxlRTX6kv6",
-      "ND96isnIBH100v5",
-      "ND96asrA100v4_NU",
-      "NC24rs v3",
-      "NC256ldsxlRTX6Kv6",
-      "NC320dsxlRTX6Kv6",
-      "ND96isfH100v5",
-      "NC288ldsxlRTX6kv6",
-      "NC32ldsxlRTX6Kv6",
-      "ND96isH100v5",
-      "ND96isflH100v5",
-      "NC6",
-      "NC8dsxlRTX6Kv6",
-      "Standard_NC32ads_A10_v4",
-      "NC128dsxlRTX6Kv6",
-      "NC288dsxlRTX6kv6",
-      "NC64dsxlRTX6Kv6",
-      "NCC40adsH100v5",
-      "NC24",
-      "Standard_NC16ads_A10_v4"
-    ]
-  },
+  "gpuRentalPrices": {},
   "modelPricing": {
     "chatgpt-4o-latest": {
       "inputPerM": 5,
