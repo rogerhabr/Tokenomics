@@ -9,6 +9,17 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/loop-context.sh",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   },
   "permissions": {
