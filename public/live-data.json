@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-18T07:45:55.645Z",
+  "lastUpdated": "2026-07-19T08:13:03.631Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -582,20 +582,6 @@
       "displayName": "Gpt 4o Mini Audio Preview 2024 12 17",
       "contextK": 128
     },
-    "gpt-4o-mini-realtime-preview": {
-      "inputPerM": 0.6,
-      "outputPerM": 2.4,
-      "provider": "OpenAI",
-      "displayName": "Gpt 4o Mini Realtime Preview",
-      "contextK": 128
-    },
-    "gpt-4o-mini-realtime-preview-2024-12-17": {
-      "inputPerM": 0.6,
-      "outputPerM": 2.4,
-      "provider": "OpenAI",
-      "displayName": "Gpt 4o Mini Realtime Preview 2024 12 17",
-      "contextK": 128
-    },
     "gpt-4o-mini-search-preview": {
       "inputPerM": 0.15,
       "outputPerM": 0.6,
@@ -608,27 +594,6 @@
       "outputPerM": 0.6,
       "provider": "OpenAI",
       "displayName": "Gpt 4o Mini Search Preview 2025 03 11",
-      "contextK": 128
-    },
-    "gpt-4o-realtime-preview": {
-      "inputPerM": 5,
-      "outputPerM": 20,
-      "provider": "OpenAI",
-      "displayName": "Gpt 4o Realtime Preview",
-      "contextK": 128
-    },
-    "gpt-4o-realtime-preview-2024-12-17": {
-      "inputPerM": 5,
-      "outputPerM": 20,
-      "provider": "OpenAI",
-      "displayName": "Gpt 4o Realtime Preview 2024 12 17",
-      "contextK": 128
-    },
-    "gpt-4o-realtime-preview-2025-06-03": {
-      "inputPerM": 5,
-      "outputPerM": 20,
-      "provider": "OpenAI",
-      "displayName": "Gpt 4o Realtime Preview 2025 06 03",
       "contextK": 128
     },
     "gpt-4o-search-preview": {
@@ -833,55 +798,6 @@
       "provider": "OpenAI",
       "displayName": "Gpt 5 Nano 2025 08 07",
       "contextK": 272
-    },
-    "gpt-realtime": {
-      "inputPerM": 4,
-      "outputPerM": 16,
-      "provider": "OpenAI",
-      "displayName": "Gpt Realtime",
-      "contextK": 32
-    },
-    "gpt-realtime-1.5": {
-      "inputPerM": 4,
-      "outputPerM": 16,
-      "provider": "OpenAI",
-      "displayName": "Gpt Realtime 1.5",
-      "contextK": 32
-    },
-    "gpt-realtime-2": {
-      "inputPerM": 4,
-      "outputPerM": 16,
-      "provider": "OpenAI",
-      "displayName": "Gpt Realtime 2",
-      "contextK": 32
-    },
-    "gpt-realtime-2.1": {
-      "inputPerM": 4,
-      "outputPerM": 24,
-      "provider": "OpenAI",
-      "displayName": "Gpt Realtime 2.1",
-      "contextK": 128
-    },
-    "gpt-realtime-2.1-mini": {
-      "inputPerM": 0.6,
-      "outputPerM": 2.4,
-      "provider": "OpenAI",
-      "displayName": "Gpt Realtime 2.1 Mini",
-      "contextK": 128
-    },
-    "gpt-realtime-mini": {
-      "inputPerM": 0.6,
-      "outputPerM": 2.4,
-      "provider": "OpenAI",
-      "displayName": "Gpt Realtime Mini",
-      "contextK": 128
-    },
-    "gpt-realtime-2025-08-28": {
-      "inputPerM": 4,
-      "outputPerM": 16,
-      "provider": "OpenAI",
-      "displayName": "Gpt Realtime 2025 08 28",
-      "contextK": 32
     },
     "mistral/codestral-2405": {
       "inputPerM": 1,
@@ -1771,20 +1687,6 @@
       "provider": "OpenAI",
       "displayName": "Gpt 5 Search Api 2025 10 14",
       "contextK": 272
-    },
-    "gpt-realtime-mini-2025-10-06": {
-      "inputPerM": 0.6,
-      "outputPerM": 2.4,
-      "provider": "OpenAI",
-      "displayName": "Gpt Realtime Mini 2025 10 06",
-      "contextK": 128
-    },
-    "gpt-realtime-mini-2025-12-15": {
-      "inputPerM": 0.6,
-      "outputPerM": 2.4,
-      "provider": "OpenAI",
-      "displayName": "Gpt Realtime Mini 2025 12 15",
-      "contextK": 128
     },
     "deepseek-v4-flash": {
       "inputPerM": 0.14,
