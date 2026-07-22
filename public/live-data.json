@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-21T08:24:44.442Z",
+  "lastUpdated": "2026-07-22T08:25:15.933Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 203.28,
-      "prevClose": 203.53,
-      "changePct": -0.12,
+      "price": 207.29,
+      "prevClose": 211.8,
+      "changePct": -2.13,
       "marketCap": null
     },
     "MSFT": {
-      "price": 402.29,
-      "prevClose": 390.99,
-      "changePct": 2.89,
+      "price": 397.75,
+      "prevClose": 384.93,
+      "changePct": 3.33,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 351.99,
-      "prevClose": 352.51,
-      "changePct": -0.15,
+      "price": 347.15,
+      "prevClose": 359.51,
+      "changePct": -3.44,
       "marketCap": null
     },
     "AMZN": {
-      "price": 249.99,
-      "prevClose": 247.31,
-      "changePct": 1.08,
+      "price": 247.55,
+      "prevClose": 247.49,
+      "changePct": 0.02,
       "marketCap": null
     },
     "META": {
-      "price": 645.85,
-      "prevClose": 656.73,
-      "changePct": -1.66,
+      "price": 643.81,
+      "prevClose": 661.04,
+      "changePct": -2.61,
       "marketCap": null
     },
     "AMD": {
-      "price": 503.57,
-      "prevClose": 534.39,
-      "changePct": -5.77,
+      "price": 544.43,
+      "prevClose": 548.13,
+      "changePct": -0.68,
       "marketCap": null
     },
     "ORCL": {
-      "price": 121.38,
-      "prevClose": 131.54,
-      "changePct": -7.72,
+      "price": 127.05,
+      "prevClose": 127.94,
+      "changePct": -0.7,
       "marketCap": null
     }
   },
@@ -398,6 +398,13 @@
       "outputPerM": 9,
       "provider": "Google",
       "displayName": "Vertex_ai/Gemini 3.5 Flash",
+      "contextK": 1049
+    },
+    "vertex_ai/gemini-3.6-flash": {
+      "inputPerM": 1.5,
+      "outputPerM": 7.5,
+      "provider": "Google",
+      "displayName": "Vertex_ai/Gemini 3.6 Flash",
       "contextK": 1049
     },
     "vertex_ai/gemini-3.1-pro-preview": {
