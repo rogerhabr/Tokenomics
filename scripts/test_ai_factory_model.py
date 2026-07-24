@@ -1,21 +1,27 @@
-"""Verification harness for AI_Factory_32x_Rubin_AbuDhabi.xlsx.
+"""Verification harness for AI_Factory_Model.xlsx.
 
 Re-implements the entire model independently in pure Python (no openpyxl
-formula evaluation involved) and compares ~50 key cells of the recalculated
+formula evaluation involved) and compares key cells of the recalculated
 workbook against the expected values, including all 16 sensitivity-engine
-IRRs. Run scripts/create_ai_factory_model.py and the xlsx recalc step first.
+IRRs. Works for any model horizon (Model_Horizon_Years); pass a workbook
+path and horizon on the command line to verify a non-default build:
 
+    python3 test_ai_factory_model.py [workbook.xlsx] [horizon]
+
+Run scripts/create_ai_factory_model.py and the xlsx recalc step first.
 Exit code 0 = all checks pass.
 """
 
 import sys
 
 import openpyxl
+from openpyxl.utils import get_column_letter
 
 from create_ai_factory_model import (
     DEBT_RATIOS,
     FILE_NAME,
     LOCATION_INDEX,
+    PROFORMA_SHEET,
     TARIFFS,
     YEAR_COLS,
     build_workbook,
@@ -34,6 +40,7 @@ INP = dict(
     pue=1.08, util=0.85, uptime=0.995, tokens_gpu_s=1800, token_share=0.30,
     tariff=0.06, tariff_esc=0.02, capex=139_500_000, resid_pct=0.10,
     debt_ratio=0.80, rate=0.065, tenor=5, tax=0.09, gidlr=0.30,
+    horizon=5, dep_life=5,
     hurdle=0.15, fixed_opex=10_877_000, opex_esc=0.03,
     lease_rev=58_800_000, token_rev=25_200_000, ramp=0.90,
     lease_esc=0.00, tok_decline=0.15, tok_growth=0.25,
@@ -63,8 +70,22 @@ def irr(cashflows, lo=-0.99, hi=10.0, tol=1e-10):
     return (lo + hi) / 2
 
 
+def debt_schedule(debt, rate, tenor, n):
+    """Per-year (debt service, interest, ending balance) over n years."""
+    ds_full = pmt(rate, tenor, debt)
+    bal, out = debt, []
+    for y in range(1, n + 1):
+        ds = ds_full if y <= tenor else 0.0
+        i = bal * rate
+        bal -= ds - i
+        out.append((ds, i, bal))
+    return ds_full, out
+
+
 def compute_model(p):
-    m = {}
+    n = p["horizon"]
+    life = p["dep_life"]
+    m = {"n": n}
     loads = {
         "vr": p["vr_count"] * p["vr_kw"],
         "net": p["net_count"] * p["net_kw"],
@@ -72,8 +93,7 @@ def compute_model(p):
     }
     it_kw = sum(loads.values())
     m["it_kw"] = it_kw
-    liquid_kw = sum(loads[k] for k in loads
-                    if p[f"{k}_cool"] == "Liquid")
+    liquid_kw = sum(loads[k] for k in loads if p[f"{k}_cool"] == "Liquid")
     air_kw = it_kw - liquid_kw
     m["liquid_kw"] = liquid_kw
     m["liquid_racks"] = sum(
@@ -91,45 +111,37 @@ def compute_model(p):
     m["water_m3"] = m["energy_mwh"] * p["wue"]
     m["co2_t"] = m["energy_mwh"] * p["carbon"]
 
-    # Revenue / OpEx / EBITDA per year (1..5)
-    ramp = [p["ramp"], 1, 1, 1, 1]
+    # Revenue / OpEx / EBITDA per year (index 0 = Year 1)
+    ramp = [p["ramp"]] + [1] * (n - 1)
     lease = [p["lease_rev"] * (1 + p["lease_esc"]) ** t * ramp[t]
-             for t in range(5)]
+             for t in range(n)]
     tok_f = (1 + p["tok_growth"]) * (1 - p["tok_decline"])
-    token = [p["token_rev"] * tok_f ** t * ramp[t] for t in range(5)]
+    token = [p["token_rev"] * tok_f ** t * ramp[t] for t in range(n)]
     rev = [a + b for a, b in zip(lease, token)]
-    elec = [kwh * p["tariff"] * (1 + p["tariff_esc"]) ** t for t in range(5)]
-    fixed = [p["fixed_opex"] * (1 + p["opex_esc"]) ** t for t in range(5)]
+    elec = [kwh * p["tariff"] * (1 + p["tariff_esc"]) ** t for t in range(n)]
+    fixed = [p["fixed_opex"] * (1 + p["opex_esc"]) ** t for t in range(n)]
     opex = [a + b for a, b in zip(elec, fixed)]
     ebitda = [r - o for r, o in zip(rev, opex)]
     m.update(rev=rev, token=token, elec=elec, opex=opex, ebitda=ebitda)
 
-    # Debt schedule
     debt = p["capex"] * p["debt_ratio"]
     equity = p["capex"] - debt
-    ds = pmt(p["rate"], p["tenor"], debt)
-    bal, interest, principal, ending = debt, [], [], []
-    for _ in range(5):
-        i = bal * p["rate"]
-        pr = ds - i
-        interest.append(i)
-        principal.append(pr)
-        bal -= pr
-        ending.append(bal)
-    m.update(debt=debt, equity=equity, ds=ds, interest=interest,
-             ending=ending)
+    ds_full, sched = debt_schedule(debt, p["rate"], p["tenor"], n)
+    ds = [s[0] for s in sched]
+    interest = [s[1] for s in sched]
+    ending = [s[2] for s in sched]
+    m.update(debt=debt, equity=equity, ds=ds_full, ending=ending)
 
-    depr = p["capex"] / 5
+    depr = [p["capex"] / life if y <= life else 0.0 for y in range(1, n + 1)]
     resid = p["capex"] * p["resid_pct"]
     ded_int = [min(i, p["gidlr"] * e) for i, e in zip(interest, ebitda)]
-    taxable = [e - depr - di for e, di in zip(ebitda, ded_int)]
+    taxable = [e - d - di for e, d, di in zip(ebitda, depr, ded_int)]
     tax = [max(0, ti) * p["tax"] for ti in taxable]
-    fcfe = [e - ds - tx for e, tx in zip(ebitda, tax)]
-    fcfe[4] += resid
+    fcfe = [e - s - tx for e, s, tx in zip(ebitda, ds, tax)]
+    fcfe[n - 1] += resid
     m.update(tax=tax, fcfe=[-equity] + fcfe)
 
-    cum = []
-    running = -equity
+    cum, running = [], -equity
     cum.append(running)
     for cf in fcfe:
         running += cf
@@ -140,17 +152,18 @@ def compute_model(p):
     m["moic"] = sum(m["fcfe"][1:]) / equity
     n_neg = sum(1 for c in cum if c < 0)
     m["payback"] = (n_neg - 1) + abs(cum[n_neg - 1]) / m["fcfe"][n_neg]
-    m["dscr"] = [e / ds for e in ebitda]
-    m["min_dscr"] = min(m["dscr"])
-    m["avg_dscr"] = sum(m["dscr"]) / 5
+    dscr = [e / s for e, s in zip(ebitda, ds) if s > 0]
+    m["dscr"] = dscr
+    m["min_dscr"] = min(dscr)
+    m["avg_dscr"] = sum(dscr) / len(dscr)
 
-    utax = [max(0, e - depr) * p["tax"] for e in ebitda]
+    utax = [max(0, e - d) * p["tax"] for e, d in zip(ebitda, depr)]
     fcff = [e - t for e, t in zip(ebitda, utax)]
-    fcff[4] += resid
+    fcff[n - 1] += resid
     m["fcff"] = [-p["capex"]] + fcff
     m["project_irr"] = irr(m["fcff"])
 
-    # Unit economics (Year 2 = index 1, post-ramp)
+    # Unit economics (Year 2, post-ramp)
     gpus = p["vr_count"] * p["gpus_per_rack"]
     avail = gpus * 8760 * p["uptime"]
     sold = avail * p["util"]
@@ -165,33 +178,28 @@ def compute_model(p):
     m["cost_mtok"] = opex[1] * p["token_share"] / (tok_cap_t * 1e6)
     m["energy_pct"] = elec[1] / rev[1]
     m["breakeven_tariff"] = (rev[1] - fixed[1]) / kwh
-    m["min_rev_dscr1"] = ds + opex[1]
+    m["min_rev_dscr1"] = ds_full + opex[1]
 
-    # Sensitivity engine
+    # Sensitivity engine: same revenue/fixed-opex, scenario tariff & leverage
     m["engine"] = {}
     for tariff in TARIFFS:
         for dr in DEBT_RATIOS:
-            q = dict(p, tariff=tariff, debt_ratio=dr)
-            sd = q["capex"] * dr
-            se = q["capex"] - sd
-            sds = pmt(q["rate"], q["tenor"], sd)
-            sbal = sd
-            s_int = []
-            for _ in range(5):
-                i = sbal * q["rate"]
-                s_int.append(i)
-                sbal -= sds - i
-            s_elec = [kwh * tariff * (1 + q["tariff_esc"]) ** t
-                      for t in range(5)]
+            sd = p["capex"] * dr
+            se = p["capex"] - sd
+            s_full, s_sched = debt_schedule(sd, p["rate"], p["tenor"], n)
+            s_ds = [x[0] for x in s_sched]
+            s_int = [x[1] for x in s_sched]
+            s_elec = [kwh * tariff * (1 + p["tariff_esc"]) ** t
+                      for t in range(n)]
             s_eb = [r - f - el for r, f, el in zip(rev, fixed, s_elec)]
-            s_ded = [min(i, q["gidlr"] * e) for i, e in zip(s_int, s_eb)]
-            s_tax = [max(0, e - depr - di) * q["tax"]
-                     for e, di in zip(s_eb, s_ded)]
-            s_fcfe = [e - sds - tx for e, tx in zip(s_eb, s_tax)]
-            s_fcfe[4] += resid
+            s_ded = [min(i, p["gidlr"] * e) for i, e in zip(s_int, s_eb)]
+            s_tax = [max(0, e - d - di) * p["tax"]
+                     for e, d, di in zip(s_eb, depr, s_ded)]
+            s_fcfe = [e - s - tx for e, s, tx in zip(s_eb, s_ds, s_tax)]
+            s_fcfe[n - 1] += resid
             m["engine"][(tariff, dr)] = dict(
                 irr=irr([-se] + s_fcfe),
-                avg_dscr=sum(s_eb) / 5 / sds,
+                avg_dscr=sum(s_eb) / n / s_full,
             )
     return m
 
@@ -200,13 +208,17 @@ def compute_model(p):
 # Comparison
 # ---------------------------------------------------------------------------
 def main():
-    _, maps = build_workbook()  # cell coordinates only; nothing is saved
-    P, T, F, U, E = maps["P"], maps["T"], maps["F"], maps["U"], maps["E"]
-    m = compute_model(INP)
+    file_name = sys.argv[1] if len(sys.argv) > 1 else FILE_NAME
+    horizon = int(sys.argv[2]) if len(sys.argv) > 2 else 5
 
-    wb = openpyxl.load_workbook(FILE_NAME, data_only=True)
+    _, maps = build_workbook({"Model_Horizon_Years": horizon})  # coords only
+    P, T, F, U, E = maps["P"], maps["T"], maps["F"], maps["U"], maps["E"]
+    m = compute_model(dict(INP, horizon=horizon))
+    n = m["n"]
+
+    wb = openpyxl.load_workbook(file_name, data_only=True)
     thermal = wb["Thermal Hydraulics & MLC"]
-    pro = wb["5Yr Pro Forma Financials"]
+    pro = wb[PROFORMA_SHEET]
     ue = wb["Unit Economics & KPIs"]
     eng = wb["Sensitivity Engine"]
     dash = wb["Dashboard"]
@@ -215,6 +227,9 @@ def main():
     checks = []
 
     def chk(label, actual, expected, tol=1e-4):
+        if isinstance(expected, str):
+            checks.append((label, actual, expected, actual == expected))
+            return
         if actual is None:
             checks.append((label, "MISSING (None)", expected, False))
             return
@@ -223,19 +238,19 @@ def main():
 
     chk("Thermal: total IT kW", thermal[f"B{T['Total Combined IT Load']}"].value,
         m["it_kw"])
-    chk("Thermal: peak MLC",
-        thermal[f"B{T['Peak Mechanical Load Component (MLC)']}"].value, m["mlc"])
-    chk("Thermal: MLC margin",
-        thermal[f"B{T['Safety Compliance Margin']}"].value, m["mlc_margin"])
     chk("Thermal: liquid-cooled kW",
         thermal[f"B{T['Liquid-Cooled IT Load']}"].value, m["liquid_kw"])
     chk("Thermal: S45 flow LPM",
         thermal[f"B{T['Total S45 Cluster Flow Rate']}"].value, m["flow_lpm"])
+    chk("Thermal: peak MLC",
+        thermal[f"B{T['Peak Mechanical Load Component (MLC)']}"].value, m["mlc"])
     chk("Thermal: MLC limit (location)",
         thermal[f"B{T['ASHRAE 90.4 MLC Limit (from location)']}"].value,
         m["mlc_limit"])
     chk("Thermal: N=20yr peak DB (location)",
         thermal[f"B{T['Peak Ambient Dry-Bulb (N=20yr)']}"].value, m["db20"])
+    chk("Thermal: MLC margin",
+        thermal[f"B{T['Safety Compliance Margin']}"].value, m["mlc_margin"])
     chk("Thermal: energy MWh",
         thermal[f"B{T['Annual Facility Energy']}"].value, m["energy_mwh"])
     chk("Thermal: water m3",
@@ -243,7 +258,7 @@ def main():
     chk("Thermal: CO2 t",
         thermal[f"B{T['Annual Carbon Emissions']}"].value, m["co2_t"])
 
-    for t in range(1, 6):
+    for t in range(1, n + 1):
         col = YEAR_COLS[t]
         chk(f"ProForma: Y{t} revenue",
             pro[f"{col}{F['Gross Annual Revenue']}"].value, m["rev"][t - 1])
@@ -255,16 +270,16 @@ def main():
 
     chk("ProForma: Y0 FCFE (=-equity)",
         pro[f"B{F['Leveraged Free Cash Flow (FCFE)']}"].value, m["fcfe"][0])
-    chk("ProForma: debt service",
+    chk("ProForma: debt service Y1",
         pro[f"C{F['Annual Debt Service (P+I)']}"].value, m["ds"])
-    chk("ProForma: Y5 ending debt ~ 0",
-        pro[f"G{F['Ending Debt Balance']}"].value + 1, m["ending"][4] + 1,
-        tol=1e-6)
+    tenor_end = min(INP["tenor"], n)
+    chk(f"ProForma: Y{tenor_end} ending debt ~ 0",
+        pro[f"{YEAR_COLS[tenor_end]}{F['Ending Debt Balance']}"].value + 1,
+        m["ending"][tenor_end - 1] + 1, tol=1e-6)
     chk("ProForma: equity IRR",
-        pro[f"B{F['Equity IRR (5-Yr, levered)']}"].value, m["equity_irr"],
-        tol=1e-5)
+        pro[f"B{F['Equity IRR (levered)']}"].value, m["equity_irr"], tol=1e-5)
     chk("ProForma: project IRR",
-        pro[f"B{F['Project IRR (5-Yr, unlevered)']}"].value, m["project_irr"],
+        pro[f"B{F['Project IRR (unlevered)']}"].value, m["project_irr"],
         tol=1e-5)
     chk("ProForma: NPV", pro[f"B{F['Equity NPV @ hurdle rate']}"].value,
         m["npv"])
@@ -297,29 +312,31 @@ def main():
         ue[f"B{U['Breakeven Power Tariff (EBITDA = 0)']}"].value,
         m["breakeven_tariff"])
 
+    irr_l = get_column_letter(E["irr_col"])
+    dscr_l = get_column_letter(E["dscr_col"])
     for ti, tariff in enumerate(TARIFFS):
         for di, dr in enumerate(DEBT_RATIOS):
-            row = E[str(ti * len(DEBT_RATIOS) + di)] \
-                if str(ti * len(DEBT_RATIOS) + di) in E \
-                else E[ti * len(DEBT_RATIOS) + di]
+            row = E[ti * len(DEBT_RATIOS) + di]
             exp = m["engine"][(tariff, dr)]
             chk(f"Engine IRR: ${tariff:.2f}/{int(dr*100)}%",
-                eng[f"M{row}"].value, exp["irr"], tol=1e-5)
+                eng[f"{irr_l}{row}"].value, exp["irr"], tol=1e-5)
             chk(f"Engine DSCR: ${tariff:.2f}/{int(dr*100)}%",
-                eng[f"N{row}"].value, exp["avg_dscr"])
+                eng[f"{dscr_l}{row}"].value, exp["avg_dscr"])
             chk(f"Matrix IRR: ${tariff:.2f}/{int(dr*100)}%",
                 mat.cell(row=6 + ti, column=2 + di).value, exp["irr"],
                 tol=1e-5)
 
     chk("Dashboard: equity IRR", dash["B5"].value, m["equity_irr"], tol=1e-5)
     chk("Dashboard: CO2", dash["B17"].value, m["co2_t"])
+    chk("Dashboard: location text", dash["B25"].value,
+        f"{INP['location']}  (zone {m['zone']})")
 
     failures = [c for c in checks if not c[3]]
     for label, actual, expected, ok in checks:
-        mark = "PASS" if ok else "FAIL"
         if not ok:
-            print(f"[{mark}] {label}: got {actual!r}, expected {expected!r}")
-    print(f"\n{len(checks) - len(failures)}/{len(checks)} checks passed.")
+            print(f"[FAIL] {label}: got {actual!r}, expected {expected!r}")
+    print(f"\n{len(checks) - len(failures)}/{len(checks)} checks passed"
+          f" (horizon = {n} years, file = {file_name}).")
     if failures:
         sys.exit(1)
     print("All checks passed — workbook is fully verified.")

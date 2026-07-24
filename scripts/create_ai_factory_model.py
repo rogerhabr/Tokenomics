@@ -1,11 +1,12 @@
-"""AI Factory financial & engineering model generator (v2, fully formula-driven).
+"""AI Factory financial & engineering model generator (fully formula-driven).
 
-Generates AI_Factory_32x_Rubin_AbuDhabi.xlsx with 7 sheets:
+Generates AI_Factory_Model.xlsx (horizon, rack architecture, location and all
+other parameters are prompted at generation time) with 8 sheets:
   1. Dashboard              - headline KPIs, all formula-linked
   2. Control Panel & Inputs - every assumption in one labeled cell (blue = input)
   3. Thermal Hydraulics & MLC - ASHRAE 90.4 engine + energy/water/carbon
   4. Unit Economics & KPIs  - GPU-hour and token-level unit economics
-  5. 5Yr Pro Forma Financials - leveraged model with GIDLR cap, IRR/NPV/MOIC/payback
+  5. Pro Forma Financials     - leveraged model over the prompted horizon
   6. Sensitivity Engine     - 16 live scenarios (tariff x debt ratio), each with its
                               own debt schedule, GIDLR-capped tax and IRR formula
   7. Sensitivity Matrices   - IRR & DSCR grids linked to the engine (no hardcodes)
@@ -19,8 +20,9 @@ import sys
 
 import openpyxl
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.utils import get_column_letter
 
-FILE_NAME = "AI_Factory_32x_Rubin_AbuDhabi.xlsx"
+FILE_NAME = "AI_Factory_Model.xlsx"
 
 # ASHRAE climate reference library. One row per selectable location:
 # (location, ASHRAE 169 climate zone, ASHRAE 90.4 max design MLC,
@@ -114,6 +116,11 @@ PARAM_SPEC = [
      "Senior debt facility rate"),
     ("Financial & Fiscal", "Debt_Tenor", 5, "Years", "#,##0",
      "Annual amortization schedule"),
+    ("Financial & Fiscal", "Model_Horizon_Years", 5, "Years", "#,##0",
+     "Pro forma & sensitivity horizon — STRUCTURAL: regenerate the workbook"
+     " to change (year columns are created at build time)"),
+    ("Financial & Fiscal", "Depreciation_Life_Years", 5, "Years", "#,##0",
+     "Straight-line depreciation life for the CapEx"),
     ("Financial & Fiscal", "UAE_Corporate_Tax", 0.09, "%", "0.0%",
      "Statutory corporate tax rate"),
     ("Financial & Fiscal", "GIDLR_EBITDA_Cap", 0.30, "%", "0.0%",
@@ -301,7 +308,7 @@ FMT_YEARS = '0.00" yrs"'
 
 INPUTS_SHEET = "Control Panel & Inputs"
 THERMAL_SHEET = "Thermal Hydraulics & MLC"
-PROFORMA_SHEET = "5Yr Pro Forma Financials"
+PROFORMA_SHEET = "Pro Forma Financials"
 ENGINE_SHEET = "Sensitivity Engine"
 
 TARIFFS = [0.04, 0.06, 0.08, 0.10]
@@ -350,7 +357,7 @@ def build_inputs(wb, values):
     ws.title = INPUTS_SHEET
     title_block(
         ws,
-        "NVIDIA Vera Rubin NVL72 AI Factory — Abu Dhabi",
+        f"NVIDIA Vera Rubin NVL72 AI Factory — {values['Geo_Location']}",
         "Master Control Panel — edit only the yellow Value cells; every other"
         " sheet recalculates from them",
     )
@@ -602,22 +609,24 @@ def build_thermal(wb):
 
 
 # ---------------------------------------------------------------------------
-# Sheet: 5Yr Pro Forma Financials
+# Sheet: Pro Forma Financials (horizon = Model_Horizon_Years, set at build)
 # ---------------------------------------------------------------------------
-YEAR_COLS = ["B", "C", "D", "E", "F", "G"]  # Year 0..5
+N_YEARS = 5     # overwritten by build_workbook from Model_Horizon_Years
+YEAR_COLS = []  # column letters for Year 0..N, filled by build_workbook
 
 
 def build_proforma(wb):
+    n = N_YEARS
+    last = YEAR_COLS[n]
     ws = wb.create_sheet(title=PROFORMA_SHEET)
     title_block(
         ws,
-        "5-Year Leveraged Financial Model & Debt Amortization",
+        f"{n}-Year Leveraged Financial Model & Debt Amortization",
         "UAE corporate tax (9%) with GIDLR 30%-of-EBITDA interest cap, revenue"
         " ramp & escalations, full debt schedule and equity returns",
     )
     style_header_row(
-        ws, 4,
-        ["Line Item (USD)", "Year 0", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5"],
+        ws, 4, ["Line Item (USD)"] + [f"Year {t}" for t in range(n + 1)],
     )
 
     line_items = [
@@ -640,7 +649,7 @@ def build_proforma(wb):
         "Interest Expense",
         "Debt Principal Payment",
         "Ending Debt Balance",
-        "Depreciation (5-Yr Straight Line)",
+        "Depreciation (Straight Line)",
         "GIDLR Deductible Interest",
         "Taxable Income",
         "UAE Corporate Tax",
@@ -655,12 +664,14 @@ def build_proforma(wb):
         F[item] = 5 + i
 
     def cells(item, y0, per_year):
-        """y0: Year-0 cell; per_year(t, col): formula for Year t (1-5)."""
+        """y0: Year-0 cell; per_year(t, col): formula for Year t (1..n)."""
         r = F[item]
-        vals = [y0] + [per_year(t, YEAR_COLS[t]) for t in range(1, 6)]
+        vals = [y0] + [per_year(t, YEAR_COLS[t]) for t in range(1, n + 1)]
         return r, vals
 
     R = F  # shorthand
+    life = pref("Depreciation_Life_Years")
+    tenor = pref("Debt_Tenor")
     rows = []
 
     rows.append(cells(
@@ -717,13 +728,13 @@ def build_proforma(wb):
         lambda t, c: f"={c}{R['EBITDA']}/{c}{R['Gross Annual Revenue']}",
     ))
     rows.append((F["CapEx Initial Outlay"],
-                 [f"={pref('CapEx_Initial')}", 0, 0, 0, 0, 0]))
+                 [f"={pref('CapEx_Initial')}"] + [0] * n))
     rows.append((F["Debt Financed Amount"],
-                 [f"=B{R['CapEx Initial Outlay']}*{pref('Debt_Ratio')}",
-                  0, 0, 0, 0, 0]))
+                 [f"=B{R['CapEx Initial Outlay']}*{pref('Debt_Ratio')}"]
+                 + [0] * n))
     rows.append((F["Equity Outlay"],
-                 [f"=B{R['CapEx Initial Outlay']}-B{R['Debt Financed Amount']}",
-                  0, 0, 0, 0, 0]))
+                 [f"=B{R['CapEx Initial Outlay']}-B{R['Debt Financed Amount']}"]
+                 + [0] * n))
     rows.append(cells(
         "Beginning Debt Balance", 0,
         lambda t, c: (f"=B{R['Debt Financed Amount']}" if t == 1
@@ -731,8 +742,9 @@ def build_proforma(wb):
     ))
     rows.append(cells(
         "Annual Debt Service (P+I)", 0,
-        lambda t, c: f"=-PMT({pref('Interest_Rate')},{pref('Debt_Tenor')},"
-                     f"B{R['Debt Financed Amount']})",
+        lambda t, c: f"=IF({t}<={tenor},"
+                     f"-PMT({pref('Interest_Rate')},{tenor},"
+                     f"B{R['Debt Financed Amount']}),0)",
     ))
     rows.append(cells(
         "Interest Expense", 0,
@@ -749,8 +761,9 @@ def build_proforma(wb):
                      f"-{c}{R['Debt Principal Payment']}",
     ))
     rows.append(cells(
-        "Depreciation (5-Yr Straight Line)", 0,
-        lambda t, c: f"=B{R['CapEx Initial Outlay']}/5",
+        "Depreciation (Straight Line)", 0,
+        lambda t, c: f"=IF({t}<={life},"
+                     f"B{R['CapEx Initial Outlay']}/{life},0)",
     ))
     rows.append(cells(
         "GIDLR Deductible Interest", 0,
@@ -760,7 +773,7 @@ def build_proforma(wb):
     rows.append(cells(
         "Taxable Income", 0,
         lambda t, c: f"={c}{R['EBITDA']}"
-                     f"-{c}{R['Depreciation (5-Yr Straight Line)']}"
+                     f"-{c}{R['Depreciation (Straight Line)']}"
                      f"-{c}{R['GIDLR Deductible Interest']}",
     ))
     rows.append(cells(
@@ -771,7 +784,7 @@ def build_proforma(wb):
     rows.append(cells(
         "Residual Value Recovery", 0,
         lambda t, c: (f"={pref('CapEx_Initial')}*{pref('Residual_Value_Pct')}"
-                      if t == 5 else 0),
+                      if t == n else 0),
     ))
     rows.append(cells(
         "Leveraged Free Cash Flow (FCFE)",
@@ -788,12 +801,13 @@ def build_proforma(wb):
     ))
     rows.append(cells(
         "Debt Service Coverage Ratio (DSCR)", 0,
-        lambda t, c: f"={c}{R['EBITDA']}/{c}{R['Annual Debt Service (P+I)']}",
+        lambda t, c: f'=IF({c}{R["Annual Debt Service (P+I)"]}=0,"",'
+                     f"{c}{R['EBITDA']}/{c}{R['Annual Debt Service (P+I)']})",
     ))
     rows.append(cells(
         "Unlevered Tax (no interest shield)", 0,
         lambda t, c: f"=MAX(0,{c}{R['EBITDA']}"
-                     f"-{c}{R['Depreciation (5-Yr Straight Line)']})"
+                     f"-{c}{R['Depreciation (Straight Line)']})"
                      f"*{pref('UAE_Corporate_Tax')}",
     ))
     rows.append(cells(
@@ -822,7 +836,7 @@ def build_proforma(wb):
             else:
                 cell.number_format = FMT_MONEY
 
-    for col in range(1, 8):
+    for col in range(1, n + 3):
         c = ws.cell(row=F["Leveraged Free Cash Flow (FCFE)"], column=col)
         c.fill = HIGHLIGHT_FILL
         c.font = BOLD_FONT
@@ -836,22 +850,23 @@ def build_proforma(wb):
     start = F["Unlevered Free Cash Flow (FCFF)"] + 2
     ws.cell(row=start, column=1, value="Equity Returns Summary").font = SECTION_FONT
     kpis = [
-        ("Equity IRR (5-Yr, levered)",
-         f"=IRR(B{fcfe}:G{fcfe})", FMT_PCT),
-        ("Project IRR (5-Yr, unlevered)",
-         f"=IRR(B{fcff}:G{fcff})", FMT_PCT),
+        ("Equity IRR (levered)",
+         f"=IRR(B{fcfe}:{last}{fcfe})", FMT_PCT),
+        ("Project IRR (unlevered)",
+         f"=IRR(B{fcff}:{last}{fcff})", FMT_PCT),
         ("Equity NPV @ hurdle rate",
-         f"=B{fcfe}+NPV({pref('Equity_Discount_Rate')},C{fcfe}:G{fcfe})",
+         f"=B{fcfe}+NPV({pref('Equity_Discount_Rate')},C{fcfe}:{last}{fcfe})",
          FMT_MONEY),
         ("MOIC (total distributions / equity)",
-         f"=SUM(C{fcfe}:G{fcfe})/-B{fcfe}", FMT_X),
+         f"=SUM(C{fcfe}:{last}{fcfe})/-B{fcfe}", FMT_X),
         ("Payback Period",
-         f'=IFERROR(COUNTIF(B{cum}:G{cum},"<0")-1'
-         f'+ABS(INDEX(B{cum}:G{cum},COUNTIF(B{cum}:G{cum},"<0")))'
-         f'/INDEX(B{fcfe}:G{fcfe},COUNTIF(B{cum}:G{cum},"<0")+1),">5 yrs")',
+         f'=IFERROR(COUNTIF(B{cum}:{last}{cum},"<0")-1'
+         f'+ABS(INDEX(B{cum}:{last}{cum},COUNTIF(B{cum}:{last}{cum},"<0")))'
+         f'/INDEX(B{fcfe}:{last}{fcfe},COUNTIF(B{cum}:{last}{cum},"<0")+1),'
+         f'">{n} yrs")',
          FMT_YEARS),
-        ("Minimum DSCR", f"=MIN(C{dscr}:G{dscr})", FMT_X),
-        ("Average DSCR", f"=AVERAGE(C{dscr}:G{dscr})", FMT_X),
+        ("Minimum DSCR", f"=MIN(C{dscr}:{last}{dscr})", FMT_X),
+        ("Average DSCR", f"=AVERAGE(C{dscr}:{last}{dscr})", FMT_X),
     ]
     F["_returns_start"] = start + 1
     for i, (label, formula, fmt) in enumerate(kpis):
@@ -987,36 +1002,42 @@ def build_unit_economics(wb):
 
 
 # ---------------------------------------------------------------------------
-# Sheet: Sensitivity Engine (16 live scenarios)
+# Sheet: Sensitivity Engine (live scenarios, horizon-aware)
 # ---------------------------------------------------------------------------
 def build_engine(wb):
+    n = N_YEARS
+    nscen = len(TARIFFS) * len(DEBT_RATIOS)
     ws = wb.create_sheet(title=ENGINE_SHEET)
     title_block(
         ws,
-        "Sensitivity Engine — 16 Live Scenarios",
+        f"Sensitivity Engine — {nscen} Live Scenarios over {n} Years",
         "Each row re-runs the full leveraged model (debt schedule, GIDLR tax"
         " cap, residual value) for one tariff x debt-ratio combination",
     )
     style_header_row(
         ws, 4,
         ["Scenario", "Tariff $/kWh", "Debt %", "Debt $", "Equity $",
-         "Debt Service", "Y0 FCFE", "Y1 FCFE", "Y2 FCFE", "Y3 FCFE",
-         "Y4 FCFE", "Y5 FCFE", "Equity IRR", "Avg DSCR"],
+         "Debt Service"] + [f"Y{t} FCFE" for t in range(n + 1)]
+        + ["Equity IRR", "Avg DSCR"],
     )
 
-    n = len(TARIFFS) * len(DEBT_RATIOS)
-    grid_header = 4 + n + 2          # EBITDA grid header row
+    grid_header = 4 + nscen + 2      # EBITDA grid header row
     grid_start = grid_header + 1     # first EBITDA grid data row
     E["grid_start"] = grid_start
+    irr_col = 8 + n                  # after label..DS (6 cols) + Y0..Yn
+    dscr_col = 9 + n
+    E["irr_col"] = irr_col
+    E["dscr_col"] = dscr_col
 
     rate = pref("Interest_Rate")
     tenor = pref("Debt_Tenor")
+    life = pref("Depreciation_Life_Years")
     capex = pref("CapEx_Initial")
     cap = pref("GIDLR_EBITDA_Cap")
     tax = pref("UAE_Corporate_Tax")
     resid = f"{pref('CapEx_Initial')}*{pref('Residual_Value_Pct')}"
-    depr = f"{pref('CapEx_Initial')}/5"
-    grid_cols = ["B", "C", "D", "E", "F"]  # Y1..Y5 on the EBITDA grid
+    grid_cols = [get_column_letter(1 + t) for t in range(1, n + 1)]
+    y_last = get_column_letter(7 + n)
 
     idx = 0
     for tariff in TARIFFS:
@@ -1037,20 +1058,23 @@ def build_engine(wb):
             ws.cell(row=r, column=6,
                     value=f"=-PMT({rate},{tenor},$D{r})").number_format = FMT_MONEY
             ws.cell(row=r, column=7, value=f"=-$E{r}").number_format = FMT_MONEY
-            for t in range(1, 6):
+            for t in range(1, n + 1):
                 eb = f"{grid_cols[t - 1]}{g}"
-                interest = f"-IPMT({rate},{t},{tenor},$D{r})"
-                fcfe = (f"={eb}-$F{r}"
-                        f"-MAX(0,{eb}-{depr}-MIN({interest},{cap}*{eb}))*{tax}")
-                if t == 5:
+                ds_t = f"IF({t}<={tenor},$F{r},0)"
+                int_t = f"IF({t}<={tenor},-IPMT({rate},{t},{tenor},$D{r}),0)"
+                depr_t = f"IF({t}<={life},{capex}/{life},0)"
+                fcfe = (f"={eb}-{ds_t}"
+                        f"-MAX(0,{eb}-{depr_t}-MIN({int_t},{cap}*{eb}))*{tax}")
+                if t == n:
                     fcfe += f"+{resid}"
                 cell = ws.cell(row=r, column=7 + t, value=fcfe)
                 cell.number_format = FMT_MONEY
-            ws.cell(row=r, column=13,
-                    value=f"=IRR(G{r}:L{r})").number_format = FMT_PCT
-            ws.cell(row=r, column=14,
-                    value=f"=AVERAGE(B{g}:F{g})/$F{r}").number_format = FMT_X
-            for col in range(1, 15):
+            ws.cell(row=r, column=irr_col,
+                    value=f"=IRR(G{r}:{y_last}{r})").number_format = FMT_PCT
+            ws.cell(row=r, column=dscr_col,
+                    value=f"=AVERAGE(B{g}:{grid_cols[-1]}{g})/$F{r}"
+                    ).number_format = FMT_X
+            for col in range(1, dscr_col + 1):
                 cell = ws.cell(row=r, column=col)
                 cell.border = BORDER_DATA
                 if cell.font == Font():
@@ -1060,17 +1084,16 @@ def build_engine(wb):
     # EBITDA grid: scenario-specific EBITDA per year (tariff is the only
     # scenario-dependent OpEx driver; revenue & fixed OpEx come from the pro forma)
     ws.cell(row=grid_header - 1, column=1,
-            value="Scenario EBITDA Grid (Year 1-5)").font = SECTION_FONT
+            value=f"Scenario EBITDA Grid (Year 1-{n})").font = SECTION_FONT
     style_header_row(ws, grid_header,
-                     ["Scenario", "Y1 EBITDA", "Y2 EBITDA", "Y3 EBITDA",
-                      "Y4 EBITDA", "Y5 EBITDA"])
+                     ["Scenario"] + [f"Y{t} EBITDA" for t in range(1, n + 1)])
     kwh = fref("Annual Facility Energy (kWh)", "C")
     tesc = pref("Tariff_Escalation")
-    for i in range(n):
+    for i in range(nscen):
         r = E[i]
         g = grid_start + i
         ws.cell(row=g, column=1, value=f"=A{r}").font = REGULAR_FONT
-        for t in range(1, 6):
+        for t in range(1, n + 1):
             col = fref("Gross Annual Revenue", YEAR_COLS[t])
             fixed = fref("Fixed Non-Power OpEx", YEAR_COLS[t])
             f = (f"={col}-{fixed}"
@@ -1085,15 +1108,18 @@ def build_engine(wb):
 # Sheet: Sensitivity Matrices (linked to engine)
 # ---------------------------------------------------------------------------
 def build_matrices(wb):
+    n = N_YEARS
+    irr_l = get_column_letter(E["irr_col"])
+    dscr_l = get_column_letter(E["dscr_col"])
     ws = wb.create_sheet(title="Sensitivity Matrices")
     title_block(
         ws,
-        "5-Year Leveraged Sensitivity Matrices",
+        f"{n}-Year Leveraged Sensitivity Matrices",
         "Power tariff ($0.04 - $0.10/kWh) vs. debt ratio (50% - 80%) — every"
         " cell is a live link to the Sensitivity Engine",
     )
 
-    ws["A4"] = "Matrix 1: Leveraged 5-Year Equity IRR (%)"
+    ws["A4"] = f"Matrix 1: Leveraged {n}-Year Equity IRR (%)"
     ws["A4"].font = SECTION_FONT
     headers = ["Power Tariff ($/kWh)"] + [f"{int(d * 100)}% Debt" for d in DEBT_RATIOS]
     style_header_row(ws, 5, headers)
@@ -1104,7 +1130,7 @@ def build_matrices(wb):
         for di in range(len(DEBT_RATIOS)):
             src = E[ti * len(DEBT_RATIOS) + di]
             cell = ws.cell(row=r, column=2 + di,
-                           value=f"='{ENGINE_SHEET}'!M{src}")
+                           value=f"='{ENGINE_SHEET}'!{irr_l}{src}")
             cell.font = LINK_FONT
             cell.border = BORDER_DATA
             cell.number_format = FMT_PCT
@@ -1120,7 +1146,7 @@ def build_matrices(wb):
         for di in range(len(DEBT_RATIOS)):
             src = E[ti * len(DEBT_RATIOS) + di]
             cell = ws.cell(row=r, column=2 + di,
-                           value=f"='{ENGINE_SHEET}'!N{src}")
+                           value=f"='{ENGINE_SHEET}'!{dscr_l}{src}")
             cell.font = LINK_FONT
             cell.border = BORDER_DATA
             cell.number_format = FMT_X
@@ -1131,11 +1157,12 @@ def build_matrices(wb):
 # ---------------------------------------------------------------------------
 # Sheet: Dashboard
 # ---------------------------------------------------------------------------
-def build_dashboard(wb):
+def build_dashboard(wb, values):
     ws = wb.create_sheet(title="Dashboard", index=0)
     title_block(
         ws,
-        "AI Factory Dashboard — 32x Vera Rubin NVL72, Abu Dhabi",
+        f"AI Factory Dashboard — {values['VR_Rack_Count']}x Vera Rubin"
+        f" NVL72, {values['Geo_Location']}",
         "Headline KPIs, all live-linked; edit assumptions on"
         " 'Control Panel & Inputs'",
     )
@@ -1144,11 +1171,11 @@ def build_dashboard(wb):
     U = globals()["U"]
     ue = "Unit Economics & KPIs"
     kpis = [
-        ("Equity IRR (5-Yr, levered)",
-         f"='{PROFORMA_SHEET}'!B{F['Equity IRR (5-Yr, levered)']}",
+        ("Equity IRR (levered)",
+         f"='{PROFORMA_SHEET}'!B{F['Equity IRR (levered)']}",
          "%", FMT_PCT, PROFORMA_SHEET),
-        ("Project IRR (5-Yr, unlevered)",
-         f"='{PROFORMA_SHEET}'!B{F['Project IRR (5-Yr, unlevered)']}",
+        ("Project IRR (unlevered)",
+         f"='{PROFORMA_SHEET}'!B{F['Project IRR (unlevered)']}",
          "%", FMT_PCT, PROFORMA_SHEET),
         ("Equity NPV @ hurdle rate",
          f"='{PROFORMA_SHEET}'!B{F['Equity NPV @ hurdle rate']}",
@@ -1242,7 +1269,12 @@ def autosize(wb):
 
 
 def build_workbook(values=None):
+    global N_YEARS
     values = dict(DEFAULTS, **(values or {}))
+    n = max(2, min(int(values.get("Model_Horizon_Years", 5)), 15))
+    values["Model_Horizon_Years"] = n
+    N_YEARS = n
+    YEAR_COLS[:] = [get_column_letter(2 + t) for t in range(n + 1)]
     P.clear(); T.clear(); F.clear(); E.clear()
     wb = openpyxl.Workbook()
     build_inputs(wb, values)
@@ -1252,7 +1284,7 @@ def build_workbook(values=None):
     build_unit_economics(wb)
     build_engine(wb)
     build_matrices(wb)
-    build_dashboard(wb)
+    build_dashboard(wb, values)
     autosize(wb)
     return wb, {"P": dict(P), "T": dict(T), "F": dict(F), "E": dict(E),
                 "U": dict(globals()["U"])}
