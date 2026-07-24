@@ -240,7 +240,7 @@ def main():
     horizon = int(sys.argv[2]) if len(sys.argv) > 2 else 5
 
     _, maps = build_workbook({"Model_Horizon_Years": horizon})  # coords only
-    P, T, F, U, E = maps["P"], maps["T"], maps["F"], maps["U"], maps["E"]
+    P, T, F, U, E, D = (maps[k] for k in ("P", "T", "F", "U", "E", "D"))
     m = compute_model(dict(INP, horizon=horizon))
     n = m["n"]
 
@@ -362,10 +362,17 @@ def main():
                 mat.cell(row=6 + ti, column=2 + di).value, exp["irr"],
                 tol=1e-5)
 
-    chk("Dashboard: equity IRR", dash["B5"].value, m["equity_irr"], tol=1e-5)
-    chk("Dashboard: CO2", dash["B17"].value, m["co2_t"])
-    chk("Dashboard: location text", dash["B25"].value,
+    chk("Dashboard: equity IRR",
+        dash[f"B{D['Equity IRR (levered)']}"].value, m["equity_irr"],
+        tol=1e-5)
+    chk("Dashboard: CO2",
+        dash[f"B{D['Annual Carbon Emissions']}"].value, m["co2_t"])
+    chk("Dashboard: location text",
+        dash[f"B{D['Location / ASHRAE 169 Zone']}"].value,
         f"{INP['location']}  (zone {m['zone']})")
+    chk("Dashboard: peak funding link",
+        dash[f"B{D['Peak Funding Requirement']}"].value,
+        m["expansion"]["peak_funding"])
 
     Xm = maps["X"]
     exp = m["expansion"]

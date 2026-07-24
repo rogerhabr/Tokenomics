@@ -19,6 +19,10 @@ import argparse
 import sys
 
 import openpyxl
+from openpyxl.chart import BarChart, LineChart, Reference
+from openpyxl.chart.shapes import GraphicalProperties
+from openpyxl.drawing.line import LineProperties
+from openpyxl.formatting.rule import CellIsRule, ColorScaleRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
@@ -282,25 +286,30 @@ def prompt_for_params(stream=None):
     print("\nParameter setup complete.\n", flush=True)
     return out
 
-FONT_FAMILY = "Calibri"
+FONT_FAMILY = "Segoe UI"       # labels & body
+DISPLAY_FONT = "Georgia"        # banner titles (serif display)
+MONO_FONT = "Consolas"          # every numeric cell (applied in polish pass)
 
 # Fonts (financial-model color convention: blue = hardcoded input,
 # black = same-sheet formula, green = link to another sheet)
-TITLE_FONT = Font(name=FONT_FAMILY, size=16, bold=True, color="1F4E78")
-SUBTITLE_FONT = Font(name=FONT_FAMILY, size=11, italic=True, color="595959")
-HEADER_FONT = Font(name=FONT_FAMILY, size=11, bold=True, color="FFFFFF")
-SECTION_FONT = Font(name=FONT_FAMILY, size=12, bold=True, color="1F4E78")
-BOLD_FONT = Font(name=FONT_FAMILY, size=11, bold=True)
-REGULAR_FONT = Font(name=FONT_FAMILY, size=11)
-INPUT_FONT = Font(name=FONT_FAMILY, size=11, color="0000FF")
-FORMULA_FONT = Font(name=FONT_FAMILY, size=11)
-LINK_FONT = Font(name=FONT_FAMILY, size=11, color="008000")
-LINK_BOLD_FONT = Font(name=FONT_FAMILY, size=11, bold=True, color="008000")
+TITLE_FONT = Font(name=DISPLAY_FONT, size=16, bold=True, color="FFFFFF")
+SUBTITLE_FONT = Font(name=DISPLAY_FONT, size=10, italic=True, color="C9D7EC")
+NOTE_FONT = Font(name=FONT_FAMILY, size=9, italic=True, color="737373")
+HEADER_FONT = Font(name=FONT_FAMILY, size=10, bold=True, color="FFFFFF")
+SECTION_FONT = Font(name=FONT_FAMILY, size=11, bold=True, color="1F4E78")
+BOLD_FONT = Font(name=FONT_FAMILY, size=10, bold=True)
+REGULAR_FONT = Font(name=FONT_FAMILY, size=10)
+INPUT_FONT = Font(name=MONO_FONT, size=10, color="0000FF")
+FORMULA_FONT = Font(name=FONT_FAMILY, size=10)
+LINK_FONT = Font(name=MONO_FONT, size=10, color="008000")
+LINK_BOLD_FONT = Font(name=MONO_FONT, size=10, bold=True, color="008000")
 
 NAVY_FILL = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
 SECTION_FILL = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
 HIGHLIGHT_FILL = PatternFill(start_color="E2EFDA", end_color="E2EFDA", fill_type="solid")
 INPUT_FILL = PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")
+ZEBRA_FILL = PatternFill(start_color="F5F7FA", end_color="F5F7FA", fill_type="solid")
+BAD_FILL = PatternFill(start_color="FDECEA", end_color="FDECEA", fill_type="solid")
 
 THIN = Side(border_style="thin", color="D9D9D9")
 DOUBLE = Side(border_style="double", color="1F4E78")
@@ -354,11 +363,24 @@ def style_header_row(ws, row, headers):
         cell.alignment = Alignment(horizontal="center", vertical="center")
 
 
-def title_block(ws, title, subtitle):
+def title_block(ws, title, subtitle, width=6):
+    """Navy banner across the top: Georgia title + subtitle on rows 1-2.
+    `title` may be an Excel formula (leading '=') so banners stay live-linked
+    to Control Panel inputs instead of baking generation-time values."""
+    last = get_column_letter(width)
+    for row in (1, 2):
+        for col in range(1, width + 1):
+            ws.cell(row=row, column=col).fill = NAVY_FILL
+    ws.merge_cells(f"A1:{last}1")
+    ws.merge_cells(f"A2:{last}2")
     ws["A1"] = title
     ws["A1"].font = TITLE_FONT
+    ws["A1"].alignment = Alignment(vertical="center")
     ws["A2"] = subtitle
     ws["A2"].font = SUBTITLE_FONT
+    ws["A2"].alignment = Alignment(vertical="center")
+    ws.row_dimensions[1].height = 26
+    ws.row_dimensions[2].height = 15
 
 
 # ---------------------------------------------------------------------------
@@ -369,9 +391,10 @@ def build_inputs(wb, values):
     ws.title = INPUTS_SHEET
     title_block(
         ws,
-        f"NVIDIA Vera Rubin NVL72 AI Factory — {values['Geo_Location']}",
+        '="NVIDIA VERA RUBIN NVL72 AI FACTORY — "&UPPER($C$5)',
         "Master Control Panel — edit only the yellow Value cells; every other"
         " sheet recalculates from them",
+        width=5,
     )
     style_header_row(ws, 4, ["Category", "Parameter", "Value", "Unit", "Notes / Constraints"])
 
@@ -430,14 +453,14 @@ def build_inputs(wb, values):
     legend_row = r + 1
     ws.cell(row=legend_row, column=1,
             value="Legend: yellow cells with blue text are the editable inputs;"
-                  " all other cells in this workbook are formulas.").font = SUBTITLE_FONT
+                  " all other cells in this workbook are formulas.").font = NOTE_FONT
     ws.cell(row=legend_row + 1, column=1,
             value="Rows marked 'Assumption' are user-supplied estimates, not"
-                  " sourced market data — revisit before investment use.").font = SUBTITLE_FONT
+                  " sourced market data — revisit before investment use.").font = NOTE_FONT
     ws.cell(row=legend_row + 2, column=1,
             value="Geo_Location must exactly match a row on the 'ASHRAE Climate"
                   " Library' sheet; the four 'Derived from location' rows update"
-                  " automatically. Cooling types must be 'Liquid' or 'Air'.").font = SUBTITLE_FONT
+                  " automatically. Cooling types must be 'Liquid' or 'Air'.").font = NOTE_FONT
     return ws
 
 
@@ -640,6 +663,7 @@ def build_proforma(wb):
         f"{n}-Year Leveraged Financial Model & Debt Amortization",
         "UAE corporate tax (9%) with GIDLR 30%-of-EBITDA interest cap, revenue"
         " ramp & escalations, full debt schedule and equity returns",
+        width=n + 2,
     )
     style_header_row(
         ws, 4, ["Line Item (USD)"] + [f"Year {t}" for t in range(n + 1)],
@@ -1029,6 +1053,7 @@ def build_engine(wb):
         f"Sensitivity Engine — {nscen} Live Scenarios over {n} Years",
         "Each row re-runs the full leveraged model (debt schedule, GIDLR tax"
         " cap, residual value) for one tariff x debt-ratio combination",
+        width=9 + n,
     )
     style_header_row(
         ws, 4,
@@ -1061,7 +1086,8 @@ def build_engine(wb):
             r = 5 + idx
             g = grid_start + idx
             E[idx] = r
-            label = f"${tariff:.2f}/kWh @ {int(dr * 100)}% debt"
+            label = (f'=TEXT($B{r},"$0.00")&"/kWh @ "'
+                     f'&TEXT($C{r},"0%")&" debt"')
             ws.cell(row=r, column=1, value=label).font = REGULAR_FONT
             b = ws.cell(row=r, column=2, value=tariff)
             b.font = INPUT_FONT
@@ -1137,36 +1163,65 @@ def build_matrices(wb):
 
     ws["A4"] = f"Matrix 1: Leveraged {n}-Year Equity IRR (%)"
     ws["A4"].font = SECTION_FONT
-    headers = ["Power Tariff ($/kWh)"] + [f"{int(d * 100)}% Debt" for d in DEBT_RATIOS]
-    style_header_row(ws, 5, headers)
-    for ti, tariff in enumerate(TARIFFS):
-        r = 6 + ti
-        ws.cell(row=r, column=1, value=f"${tariff:.2f} / kWh").font = REGULAR_FONT
-        ws.cell(row=r, column=1).border = BORDER_DATA
-        for di in range(len(DEBT_RATIOS)):
-            src = E[ti * len(DEBT_RATIOS) + di]
-            cell = ws.cell(row=r, column=2 + di,
-                           value=f"='{ENGINE_SHEET}'!{irr_l}{src}")
-            cell.font = LINK_FONT
-            cell.border = BORDER_DATA
-            cell.number_format = FMT_PCT
-            cell.alignment = Alignment(horizontal="right")
+    headers = ["Power Tariff ($/kWh)"] + ["" for _ in DEBT_RATIOS]
+    nd = len(DEBT_RATIOS)
 
+    def axis_labels(header_row):
+        # column headers live-linked to the engine's debt-ratio cells
+        for di in range(nd):
+            hc = ws.cell(row=header_row, column=2 + di,
+                         value=f"=TEXT('{ENGINE_SHEET}'!$C${E[di]},\"0%\")"
+                               f"&\" Debt\"")
+            hc.font = HEADER_FONT
+            hc.fill = NAVY_FILL
+            hc.alignment = Alignment(horizontal="center", vertical="center")
+
+    def matrix(header_row, col_letter, fmt):
+        axis_labels(header_row)
+        for ti in range(len(TARIFFS)):
+            r = header_row + 1 + ti
+            src_row = E[ti * nd]
+            lab = ws.cell(row=r, column=1,
+                          value=f"=TEXT('{ENGINE_SHEET}'!$B${src_row},"
+                                f"\"$0.00\")&\" / kWh\"")
+            lab.font = REGULAR_FONT
+            lab.border = BORDER_DATA
+            for di in range(nd):
+                src = E[ti * nd + di]
+                cell = ws.cell(row=r, column=2 + di,
+                               value=f"='{ENGINE_SHEET}'!{col_letter}{src}")
+                cell.font = LINK_FONT
+                cell.border = BORDER_DATA
+                cell.number_format = fmt
+                cell.alignment = Alignment(horizontal="right")
+
+    style_header_row(ws, 5, headers)
+    matrix(5, irr_l, FMT_PCT)
     ws["A12"] = "Matrix 2: Average Debt Service Coverage Ratio (DSCR)"
     ws["A12"].font = SECTION_FONT
     style_header_row(ws, 13, headers)
-    for ti, tariff in enumerate(TARIFFS):
-        r = 14 + ti
-        ws.cell(row=r, column=1, value=f"${tariff:.2f} / kWh").font = REGULAR_FONT
-        ws.cell(row=r, column=1).border = BORDER_DATA
-        for di in range(len(DEBT_RATIOS)):
-            src = E[ti * len(DEBT_RATIOS) + di]
-            cell = ws.cell(row=r, column=2 + di,
-                           value=f"='{ENGINE_SHEET}'!{dscr_l}{src}")
-            cell.font = LINK_FONT
-            cell.border = BORDER_DATA
-            cell.number_format = FMT_X
-            cell.alignment = Alignment(horizontal="right")
+    matrix(13, dscr_l, FMT_X)
+
+    # sequential single-hue heatmaps (magnitude), plus a status rule on DSCR<1
+    irr_rng = f"B6:{get_column_letter(1 + nd)}9"
+    dscr_rng = f"B14:{get_column_letter(1 + nd)}17"
+    scale = ColorScaleRule(start_type="min", start_color="FFFFFF",
+                           end_type="max", end_color="9DC3E6")
+    ws.conditional_formatting.add(irr_rng, scale)
+    ws.conditional_formatting.add(
+        dscr_rng, ColorScaleRule(start_type="min", start_color="FFFFFF",
+                                 end_type="max", end_color="9DC3E6"))
+    ws.conditional_formatting.add(
+        dscr_rng,
+        CellIsRule(operator="lessThan", formula=["1"], stopIfTrue=False,
+                   font=Font(name=MONO_FONT, size=10, bold=True,
+                             color="C00000"), fill=BAD_FILL))
+    ws.conditional_formatting.add(
+        irr_rng,
+        CellIsRule(operator="lessThan",
+                   formula=[pref("Equity_Discount_Rate")], stopIfTrue=False,
+                   font=Font(name=MONO_FONT, size=10, bold=True,
+                             color="C00000")))
     return ws
 
 
@@ -1202,6 +1257,7 @@ def build_expansion(wb, values):
         " economics use the single-block Year-2 (steady-state) pro forma."
         " Simplification: per-vintage token-price dynamics and per-block"
         " financing are not modeled here.",
+        width=n + 1,
     )
     style_header_row(ws, 4, ["Metric"] + [f"Year {t}" for t in range(1, n + 1)])
 
@@ -1317,98 +1373,231 @@ def build_expansion(wb, values):
 # Sheet: Dashboard
 # ---------------------------------------------------------------------------
 def build_dashboard(wb, values):
+    """KPI stat-tile dashboard: live banner, sectioned KPI groups, status
+    conditional formats, and two native charts. Row positions are exposed in
+    the D map so tests never hardcode coordinates."""
     ws = wb.create_sheet(title="Dashboard", index=0)
+    n = N_YEARS
     title_block(
         ws,
-        f"AI Factory Dashboard — {values['VR_Rack_Count']}x Vera Rubin"
-        f" NVL72, {values['Geo_Location']}",
-        "Headline KPIs, all live-linked; edit assumptions on"
-        " 'Control Panel & Inputs'",
+        f'="AI FACTORY DASHBOARD — "&TEXT({pref("VR_Rack_Count")},"0")'
+        f'&"x VERA RUBIN NVL72 · "&UPPER({pref("Geo_Location")})',
+        "All values live-linked; edit assumptions on 'Control Panel & Inputs'"
+        " and everything on this page recalculates",
+        width=11,
     )
-    style_header_row(ws, 4, ["KPI", "Value", "Unit", "Source Sheet"])
+    style_header_row(ws, 4, ["KPI", "Value", "Unit", "Source"])
 
+    D = {}
     U = globals()["U"]
     ue = "Unit Economics & KPIs"
-    kpis = [
-        ("Equity IRR (levered)",
-         f"='{PROFORMA_SHEET}'!B{F['Equity IRR (levered)']}",
-         "%", FMT_PCT, PROFORMA_SHEET),
-        ("Project IRR (unlevered)",
-         f"='{PROFORMA_SHEET}'!B{F['Project IRR (unlevered)']}",
-         "%", FMT_PCT, PROFORMA_SHEET),
-        ("Equity NPV @ hurdle rate",
-         f"='{PROFORMA_SHEET}'!B{F['Equity NPV @ hurdle rate']}",
-         "USD", FMT_MONEY, PROFORMA_SHEET),
-        ("MOIC",
-         f"='{PROFORMA_SHEET}'!B{F['MOIC (total distributions / equity)']}",
-         "x", FMT_X, PROFORMA_SHEET),
-        ("Payback Period",
-         f"='{PROFORMA_SHEET}'!B{F['Payback Period']}",
-         "years", FMT_YEARS, PROFORMA_SHEET),
-        ("Year 1 Gross Revenue",
-         f"={fref('Gross Annual Revenue', 'C')}",
-         "USD", FMT_MONEY, PROFORMA_SHEET),
-        ("Year 1 EBITDA",
-         f"={fref('EBITDA', 'C')}",
-         "USD", FMT_MONEY, PROFORMA_SHEET),
-        ("Year 1 EBITDA Margin",
-         f"={fref('EBITDA Margin', 'C')}",
-         "%", FMT_PCT, PROFORMA_SHEET),
-        ("Minimum DSCR",
-         f"='{PROFORMA_SHEET}'!B{F['Minimum DSCR']}",
-         "x", FMT_X, PROFORMA_SHEET),
-        ("Peak MLC vs ASHRAE 90.4",
-         f"={tref('Peak Mechanical Load Component (MLC)')}",
-         "(limit 0.260)", FMT_3DP, THERMAL_SHEET),
-        ("MLC Compliance Margin",
-         f"={tref('Safety Compliance Margin')}",
-         "%", FMT_PCT, THERMAL_SHEET),
-        ("Annual Facility Energy",
-         f"={tref('Annual Facility Energy')}",
-         "MWh/yr", FMT_NUM, THERMAL_SHEET),
-        ("Annual Carbon Emissions",
-         f"={tref('Annual Carbon Emissions')}",
-         "tCO2/yr", FMT_NUM, THERMAL_SHEET),
-        ("Annual Water Consumption",
-         f"={tref('Annual Water Consumption')}",
-         "m³/yr", FMT_NUM, THERMAL_SHEET),
-        ("Total GPU Count",
-         f"='{ue}'!B{U['Total GPU Count']}",
-         "GPUs", FMT_NUM, ue),
-        ("CapEx per GPU",
-         f"='{ue}'!B{U['CapEx per GPU']}",
-         "$/GPU", FMT_MONEY, ue),
-        ("Blended Revenue per Sold GPU-hour",
-         f"='{ue}'!B{U['Blended Revenue per Sold GPU-hour']}",
-         "$/GPU-hr", FMT_MONEY_2DP, ue),
-        ("Cash Cost per M Tokens",
-         f"='{ue}'!B{U['Cash Cost per M Tokens']}",
-         "$/M tok", FMT_MONEY_2DP, ue),
-        ("Energy Cost as % of Revenue",
-         f"='{ue}'!B{U['Energy Cost as % of Revenue']}",
-         "%", FMT_PCT, ue),
-        ("Breakeven Power Tariff",
-         f"='{ue}'!B{U['Breakeven Power Tariff (EBITDA = 0)']}",
-         "$/kWh", "$#,##0.000", ue),
-        ("Location / ASHRAE 169 Zone",
-         f"={pref('Geo_Location')}&\"  (zone \"&{pref('ASHRAE_Climate_Zone')}&\")\"",
-         "", "@", INPUTS_SHEET),
-        ("ASHRAE 90.4 MLC Limit (location)",
-         f"={pref('ASHRAE_MLC_Limit')}",
-         "(design max)", FMT_3DP, INPUTS_SHEET),
+
+    sections = [
+        ("RETURNS & FINANCING", [
+            ("Equity IRR (levered)",
+             f"='{PROFORMA_SHEET}'!B{F['Equity IRR (levered)']}", "%",
+             FMT_PCT, PROFORMA_SHEET),
+            ("Project IRR (unlevered)",
+             f"='{PROFORMA_SHEET}'!B{F['Project IRR (unlevered)']}", "%",
+             FMT_PCT, PROFORMA_SHEET),
+            ("Equity NPV @ hurdle rate",
+             f"='{PROFORMA_SHEET}'!B{F['Equity NPV @ hurdle rate']}", "USD",
+             FMT_MONEY, PROFORMA_SHEET),
+            ("MOIC",
+             f"='{PROFORMA_SHEET}'!B{F['MOIC (total distributions / equity)']}",
+             "x", FMT_X, PROFORMA_SHEET),
+            ("Payback Period",
+             f"='{PROFORMA_SHEET}'!B{F['Payback Period']}", "years",
+             FMT_YEARS, PROFORMA_SHEET),
+            ("Minimum DSCR",
+             f"='{PROFORMA_SHEET}'!B{F['Minimum DSCR']}", "x",
+             FMT_X, PROFORMA_SHEET),
+        ]),
+        ("OPERATIONS & COMPLIANCE", [
+            ("Year 1 Gross Revenue",
+             f"={fref('Gross Annual Revenue', 'C')}", "USD",
+             FMT_MONEY, PROFORMA_SHEET),
+            ("Year 1 EBITDA",
+             f"={fref('EBITDA', 'C')}", "USD", FMT_MONEY, PROFORMA_SHEET),
+            ("Year 1 EBITDA Margin",
+             f"={fref('EBITDA Margin', 'C')}", "%", FMT_PCT, PROFORMA_SHEET),
+            ("Peak MLC vs ASHRAE 90.4",
+             f"={tref('Peak Mechanical Load Component (MLC)')}",
+             "(design max below)", FMT_3DP, THERMAL_SHEET),
+            ("ASHRAE 90.4 MLC Limit (location)",
+             f"={pref('ASHRAE_MLC_Limit')}", "(design max)", FMT_3DP,
+             INPUTS_SHEET),
+            ("MLC Compliance Margin",
+             f"={tref('Safety Compliance Margin')}", "%", FMT_PCT,
+             THERMAL_SHEET),
+            ("Location / ASHRAE 169 Zone",
+             f"={pref('Geo_Location')}&\"  (zone \"&{pref('ASHRAE_Climate_Zone')}&\")\"",
+             "", "@", INPUTS_SHEET),
+        ]),
+        ("SUSTAINABILITY", [
+            ("Annual Facility Energy",
+             f"={tref('Annual Facility Energy')}", "MWh/yr", FMT_NUM,
+             THERMAL_SHEET),
+            ("Annual Carbon Emissions",
+             f"={tref('Annual Carbon Emissions')}", "tCO2/yr", FMT_NUM,
+             THERMAL_SHEET),
+            ("Annual Water Consumption",
+             f"={tref('Annual Water Consumption')}", "m³/yr", FMT_NUM,
+             THERMAL_SHEET),
+        ]),
+        ("UNIT ECONOMICS", [
+            ("Total GPU Count", f"='{ue}'!B{U['Total GPU Count']}", "GPUs",
+             FMT_NUM, ue),
+            ("CapEx per GPU", f"='{ue}'!B{U['CapEx per GPU']}", "$/GPU",
+             FMT_MONEY, ue),
+            ("Blended Revenue per Sold GPU-hour",
+             f"='{ue}'!B{U['Blended Revenue per Sold GPU-hour']}", "$/GPU-hr",
+             FMT_MONEY_2DP, ue),
+            ("Cash Cost per M Tokens",
+             f"='{ue}'!B{U['Cash Cost per M Tokens']}", "$/M tok",
+             FMT_MONEY_2DP, ue),
+            ("Energy Cost as % of Revenue",
+             f"='{ue}'!B{U['Energy Cost as % of Revenue']}", "%", FMT_PCT, ue),
+            ("Breakeven Power Tariff",
+             f"='{ue}'!B{U['Breakeven Power Tariff (EBITDA = 0)']}", "$/kWh",
+             "$#,##0.000", ue),
+        ]),
+        ("CAMPUS EXPANSION", [
+            ("Final Campus IT Capacity",
+             f"='{EXPANSION_SHEET}'!B{X['Final Campus IT Capacity (MW)']}",
+             "MW", FMT_NUM_1DP, EXPANSION_SHEET),
+            ("Final Campus GPUs",
+             f"='{EXPANSION_SHEET}'!B{X['Final Campus GPUs']}", "GPUs",
+             FMT_NUM, EXPANSION_SHEET),
+            ("Total Campus CapEx",
+             f"='{EXPANSION_SHEET}'!B{X['Total Campus CapEx']}", "USD",
+             FMT_MONEY, EXPANSION_SHEET),
+            ("Peak Funding Requirement",
+             f"='{EXPANSION_SHEET}'!B{X['Peak Funding Requirement']}", "USD",
+             FMT_MONEY, EXPANSION_SHEET),
+            ("Run-Rate Campus EBITDA",
+             f"='{EXPANSION_SHEET}'!B{X['Run-Rate Campus EBITDA (full blocks)']}",
+             "USD/yr", FMT_MONEY, EXPANSION_SHEET),
+        ]),
     ]
-    for i, (name, formula, unit, fmt, src) in enumerate(kpis):
-        r = 5 + i
-        ws.cell(row=r, column=1, value=name).font = BOLD_FONT
-        cell = ws.cell(row=r, column=2, value=formula)
-        cell.font = LINK_BOLD_FONT
-        cell.number_format = fmt
-        cell.fill = HIGHLIGHT_FILL if i < 5 else PatternFill()
-        ws.cell(row=r, column=3, value=unit).font = REGULAR_FONT
-        ws.cell(row=r, column=4, value=src).font = SUBTITLE_FONT
-        for c in range(1, 5):
-            ws.cell(row=r, column=c).border = BORDER_DATA
+
+    r = 5
+    for section, kpis in sections:
+        for col in range(1, 5):
+            cell = ws.cell(row=r, column=col)
+            cell.fill = SECTION_FILL
+            cell.border = BORDER_DATA
+        ws.cell(row=r, column=1, value=section).font = SECTION_FONT
+        ws.row_dimensions[r].height = 16
+        r += 1
+        for name, formula, unit, fmt, source in kpis:
+            D[name] = r
+            ws.cell(row=r, column=1, value=name).font = REGULAR_FONT
+            cell = ws.cell(row=r, column=2, value=formula)
+            cell.font = LINK_BOLD_FONT
+            cell.number_format = fmt
+            ws.cell(row=r, column=3, value=unit).font = NOTE_FONT
+            ws.cell(row=r, column=4, value=source).font = NOTE_FONT
+            for c in range(1, 5):
+                ws.cell(row=r, column=c).border = BORDER_DATA
+            r += 1
+
+    # Status conditional formats (red = breach, needs attention)
+    bad_font = Font(name=MONO_FONT, size=10, bold=True, color="C00000")
+    ws.conditional_formatting.add(
+        f"B{D['Minimum DSCR']}",
+        CellIsRule(operator="lessThan", formula=["1"], font=bad_font,
+                   fill=BAD_FILL))
+    ws.conditional_formatting.add(
+        f"B{D['Equity IRR (levered)']}",
+        CellIsRule(operator="lessThan",
+                   formula=[pref("Equity_Discount_Rate")], font=bad_font))
+    ws.conditional_formatting.add(
+        f"B{D['Equity NPV @ hurdle rate']}",
+        CellIsRule(operator="lessThan", formula=["0"], font=bad_font))
+    ws.conditional_formatting.add(
+        f"B{D['Peak MLC vs ASHRAE 90.4']}",
+        CellIsRule(operator="greaterThan",
+                   formula=[pref("ASHRAE_MLC_Limit")], font=bad_font,
+                   fill=BAD_FILL))
+
+    # Charts (single series each — the title names the series, no legend)
+    pro = wb[PROFORMA_SHEET]
+    fcfe_row = F["Leveraged Free Cash Flow (FCFE)"]
+    bar = BarChart()
+    bar.type = "col"
+    bar.title = "Leveraged FCFE by Year (USD)"
+    bar.legend = None
+    bar.height, bar.width = 6.6, 10.6
+    data = Reference(pro, min_col=2, max_col=2 + n,
+                     min_row=fcfe_row, max_row=fcfe_row)
+    cats = Reference(pro, min_col=2, max_col=2 + n, min_row=4, max_row=4)
+    bar.add_data(data, titles_from_data=False, from_rows=True)
+    bar.set_categories(cats)
+    bar.series[0].graphicalProperties = GraphicalProperties(solidFill="1F4E78")
+    bar.gapWidth = 60
+    ws.add_chart(bar, "F5")
+
+    xs = wb[EXPANSION_SHEET]
+    line = LineChart()
+    line.title = "Campus Expansion — Cumulative Funding Position (USD)"
+    line.legend = None
+    line.height, line.width = 6.6, 10.6
+    ldata = Reference(xs, min_col=2, max_col=1 + n,
+                      min_row=X["Cumulative Funding Position"],
+                      max_row=X["Cumulative Funding Position"])
+    lcats = Reference(xs, min_col=2, max_col=1 + n, min_row=4, max_row=4)
+    line.add_data(ldata, titles_from_data=False, from_rows=True)
+    line.set_categories(lcats)
+    line.series[0].graphicalProperties = GraphicalProperties(
+        ln=LineProperties(solidFill="C55A11", w=28000))
+    ws.add_chart(line, "F19")
+
+    globals()["D"] = D
     return ws
+
+
+TAB_COLORS = {
+    "Dashboard": "1F4E78",
+    INPUTS_SHEET: "FFC000",
+    LIBRARY_SHEET: "A6A6A6",
+    THERMAL_SHEET: "5B9BD5",
+    PROFORMA_SHEET: "70AD47",
+    "Unit Economics & KPIs": "ED7D31",
+    ENGINE_SHEET: "7030A0",
+    "Sensitivity Matrices": "C00000",
+    EXPANSION_SHEET: "00B0A0",
+}
+
+ZEBRA_SHEETS = {INPUTS_SHEET, LIBRARY_SHEET, THERMAL_SHEET,
+                "Unit Economics & KPIs"}
+
+
+def polish(wb):
+    """Final visual pass: hide gridlines, freeze headers, color tabs, zebra
+    banding on reference tables, and Consolas for every numeric cell."""
+    numeric_chars = set("0#%$")
+    for ws in wb.worksheets:
+        ws.sheet_view.showGridLines = False
+        ws.freeze_panes = "A5"
+        if ws.title in TAB_COLORS:
+            ws.sheet_properties.tabColor = TAB_COLORS[ws.title]
+        for row in ws.iter_rows(min_row=3):
+            for cell in row:
+                f = cell.font
+                if (cell.value is not None
+                        and any(ch in numeric_chars
+                                for ch in (cell.number_format or ""))
+                        and f.name not in (MONO_FONT, DISPLAY_FONT)):
+                    cell.font = Font(name=MONO_FONT, size=f.size or 10,
+                                     bold=f.bold, italic=f.italic,
+                                     color=f.color)
+                if (ws.title in ZEBRA_SHEETS and cell.row >= 5
+                        and cell.row % 2 == 1
+                        and cell.border.left.style is not None
+                        and (cell.fill is None
+                             or cell.fill.fill_type is None)):
+                    cell.fill = ZEBRA_FILL
 
 
 def autosize(wb):
@@ -1446,8 +1635,10 @@ def build_workbook(values=None):
     build_expansion(wb, values)
     build_dashboard(wb, values)
     autosize(wb)
+    polish(wb)
     return wb, {"P": dict(P), "T": dict(T), "F": dict(F), "E": dict(E),
-                "U": dict(globals()["U"]), "X": dict(X)}
+                "U": dict(globals()["U"]), "X": dict(X),
+                "D": dict(globals()["D"])}
 
 
 def main(argv=None):
