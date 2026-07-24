@@ -92,6 +92,12 @@ PARAM_SPEC = [
      "Cooling power per kW of air-cooled IT (high-ambient chillers, CRAHs)"),
     ("Technical Specs", "Liquid_Supply_Temp_FWS", 45.0, "°C", "#,##0.0",
      "S45 direct-to-chip loop"),
+    ("Technical Specs", "Liquid_Return_Temp_FWR", 55.0, "°C", "#,##0.0",
+     "Facility water return — sets the loop delta-T"),
+    ("Technical Specs", "Coolant_Specific_Heat", 3.85, "kJ/kg·K", "0.00",
+     "Assumption: PG25 water/glycol at ~50°C"),
+    ("Technical Specs", "Coolant_Density", 1.03, "kg/L", "0.00",
+     "Assumption: PG25 mixture density"),
     ("Technical Specs", "Target_Annualized_PUE", 1.08, "", "0.000",
      "Drives facility energy = IT energy x PUE"),
     ("Technical Specs", "Cluster_Utilization", 0.85, "%", "0.0%",
@@ -490,14 +496,15 @@ def build_thermal(wb):
         yield ("S45 Loop Supply Temperature",
                f"={pref('Liquid_Supply_Temp_FWS')}",
                "°C", FMT_NUM_1DP, "Facility Water Supply (FWS)")
-        yield ("S45 Loop Return Temperature", 55.0, "°C", FMT_NUM_1DP,
-               "Facility Water Return (FWR) — assumption")
+        yield ("S45 Loop Return Temperature",
+               f"={pref('Liquid_Return_Temp_FWR')}",
+               "°C", FMT_NUM_1DP, "Facility Water Return (FWR)")
         yield ("S45 Loop Delta T", None, "°C", FMT_NUM_1DP,
                "Hydraulic temperature split")
-        yield ("S45 Liquid Flow Rate per Rack", 195.0, "LPM", FMT_NUM_1DP,
-               "PG25 water/glycol mixture — vendor spec")
+        yield ("S45 Liquid Flow Rate per VR Rack", None, "LPM", FMT_NUM_1DP,
+               "Physics: Q/(rho*Cp*dT)*60 — flow required to absorb one VR rack")
         yield ("Total S45 Cluster Flow Rate", None, "LPM", FMT_NUM_1DP,
-               "Flow per rack x liquid-cooled rack count")
+               "Physics: liquid-cooled load/(rho*Cp*dT)*60")
         yield ("Peak Ambient Dry-Bulb (N=20yr)",
                f"={pref('Peak_Ambient_DryBulb')}",
                "°C", FMT_NUM_1DP, "ASHRAE n=20yr extreme — derived from location")
@@ -557,9 +564,12 @@ def build_thermal(wb):
             f"={liq_count('VR')}+{liq_count('Network')}+{liq_count('Storage')}",
         "S45 Loop Delta T":
             f"=B{T['S45 Loop Return Temperature']}-B{T['S45 Loop Supply Temperature']}",
+        "S45 Liquid Flow Rate per VR Rack":
+            f"={pref('VR_Rack_Power_kW')}/({pref('Coolant_Density')}"
+            f"*{pref('Coolant_Specific_Heat')}*B{T['S45 Loop Delta T']})*60",
         "Total S45 Cluster Flow Rate":
-            f"=B{T['S45 Liquid Flow Rate per Rack']}"
-            f"*B{T['Liquid-Cooled Rack Count']}",
+            f"=B{T['Liquid-Cooled IT Load']}/({pref('Coolant_Density')}"
+            f"*{pref('Coolant_Specific_Heat')}*B{T['S45 Loop Delta T']})*60",
         "S45 Peak Rejection Approach":
             f"=B{T['S45 Loop Return Temperature']}"
             f"-B{T['Peak Ambient Dry-Bulb (N=20yr)']}",

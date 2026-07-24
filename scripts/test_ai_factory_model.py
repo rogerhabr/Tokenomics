@@ -36,6 +36,7 @@ INP = dict(
     net_count=6, net_kw=100.0, net_cool="Air",
     sto_count=10, sto_kw=40.0, sto_cool="Air",
     liq_oh=0.05, air_oh=0.28,
+    fws=45.0, fwr=55.0, cp=3.85, rho=1.03,
     gpus_per_rack=72,
     pue=1.08, util=0.85, uptime=0.995, tokens_gpu_s=1800, token_share=0.30,
     tariff=0.06, tariff_esc=0.02, capex=139_500_000, resid_pct=0.10,
@@ -99,7 +100,9 @@ def compute_model(p):
     m["liquid_racks"] = sum(
         p[f"{k}_count"] for k in ("vr", "net", "sto")
         if p[f"{k}_cool"] == "Liquid")
-    m["flow_lpm"] = 195.0 * m["liquid_racks"]
+    dt = p["fwr"] - p["fws"]
+    m["flow_per_rack"] = p["vr_kw"] / (p["rho"] * p["cp"] * dt) * 60
+    m["flow_lpm"] = liquid_kw / (p["rho"] * p["cp"] * dt) * 60
     m["mlc"] = (liquid_kw * p["liq_oh"] + air_kw * p["air_oh"]) / it_kw
     loc = LOCATION_INDEX[p["location"]]
     m["zone"], m["mlc_limit"], m["db20"], m["wb20"] = loc[1], loc[2], loc[3], loc[4]
@@ -242,6 +245,9 @@ def main():
         thermal[f"B{T['Liquid-Cooled IT Load']}"].value, m["liquid_kw"])
     chk("Thermal: S45 flow LPM",
         thermal[f"B{T['Total S45 Cluster Flow Rate']}"].value, m["flow_lpm"])
+    chk("Thermal: S45 flow per VR rack",
+        thermal[f"B{T['S45 Liquid Flow Rate per VR Rack']}"].value,
+        m["flow_per_rack"])
     chk("Thermal: peak MLC",
         thermal[f"B{T['Peak Mechanical Load Component (MLC)']}"].value, m["mlc"])
     chk("Thermal: MLC limit (location)",
