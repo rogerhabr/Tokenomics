@@ -23,11 +23,15 @@ DOCX = "AI_Factory_Whitepaper.docx"
 
 # -- formatters mirroring scripts/build_whitepaper.js ------------------------
 def usd(n):
-    return "$" + f"{round(n):,}"
+    return ("-$" if n < 0 else "$") + f"{abs(round(n)):,}"
 
 
 def usd_m(n, dp=1):
-    return "$" + f"{n / 1e6:.{dp}f}M"
+    return ("-$" if n < 0 else "$") + f"{abs(n) / 1e6:.{dp}f}M"
+
+
+def usd_b(n, dp=2):
+    return ("-$" if n < 0 else "$") + f"{abs(n) / 1e9:.{dp}f}B"
 
 
 def pct(n, dp=1):
@@ -61,7 +65,7 @@ def main():
         ("energy_mwh", "energy_mwh"), ("water_m3", "water_m3"),
         ("co2_t", "co2_t"), ("equity_irr", "equity_irr"),
         ("project_irr", "project_irr"), ("npv", "npv"), ("moic", "moic"),
-        ("payback", "payback"), ("min_dscr", "min_dscr"),
+        ("min_dscr", "min_dscr"),
         ("capex_gpu", "capex_gpu"), ("cost_mtok", "cost_mtok"),
         ("rev_gpu_hr", "rev_gpu_hr"), ("breakeven_tariff", "breakeven_tariff"),
     ]
@@ -69,12 +73,32 @@ def main():
         a, b = m[mk], ind[ik]
         chk(f"manifest {mk}", abs(a - b) / max(abs(b), 1e-9) < 1e-4,
             f"manifest={a} independent={b}")
+    exp = ind["expansion"]
+    for mk, iv in [("exp_final_mw", exp["final_mw"]),
+                   ("exp_final_gpus", exp["final_gpus"]),
+                   ("exp_capex_total", exp["capex_total"]),
+                   ("exp_peak_funding", exp["peak_funding"]),
+                   ("exp_runrate_ebitda", exp["runrate_ebitda"])]:
+        chk(f"manifest {mk}", abs(m[mk] - iv) / max(abs(iv), 1e-9) < 1e-4,
+            f"manifest={m[mk]} independent={iv}")
+    chk("manifest exp_cash_positive",
+        str(m["exp_cash_positive"]) == str(exp["cash_positive_year"]),
+        f"{m['exp_cash_positive']} vs {exp['cash_positive_year']}")
+
     chk("manifest rev_y1", abs(m["rev_y1"] - ind["rev"][0]) < 1,
         f"{m['rev_y1']} vs {ind['rev'][0]}")
     chk("manifest ebitda_y1", abs(m["ebitda_y1"] - ind["ebitda"][0]) < 1,
         f"{m['ebitda_y1']} vs {ind['ebitda'][0]}")
 
     # arithmetic identities used in the paper
+    if isinstance(m["payback"], (int, float)) and ind["payback"] is not None:
+        chk("manifest payback",
+            abs(m["payback"] - ind["payback"]) < 1e-4,
+            f"{m['payback']} vs {ind['payback']}")
+    else:
+        chk("manifest payback (text)",
+            not isinstance(m["payback"], (int, float)) and ind["payback"] is None)
+
     chk("128MW PUE savings math",
         abs(m["pue_ref_mwh_saved"] - 128 * 8760 * 0.29) < 1)
     chk("128MW lease math", 128_000 * 125 * 12 == 192_000_000)
@@ -105,7 +129,9 @@ def main():
         "project IRR": pct(m["project_irr"]),
         "NPV": usd_m(m["npv"]),
         "MOIC": f"{m['moic']:.2f}x",
-        "payback": f"{m['payback']:.2f} years",
+        "payback": (f"{m['payback']:.2f} years"
+                    if isinstance(m["payback"], (int, float))
+                    else str(m["payback"])),
         "min DSCR": f"{m['min_dscr']:.2f}x",
         "CapEx": usd_m(m["capex"]),
         "debt": usd_m(m["debt"]),
@@ -121,6 +147,13 @@ def main():
         "N20 dry bulb": f"{m['db20']:.1f}°C",
         "approach": f"+{m['approach']:.1f} K",
         "zone": f"Zone {m['zone']}",
+        "expansion MW": f"{num(m['exp_final_mw'])} MW",
+        "expansion GPUs": num(m["exp_final_gpus"]),
+        "expansion campus capex": usd_b(m["exp_capex_total"]),
+        "expansion peak funding": usd_b(m["exp_peak_funding"]),
+        "expansion run-rate EBITDA": usd_b(m["exp_runrate_ebitda"]),
+        "facility campus recon": usd_b(m["fac_campus_16"] * 1e6),
+        "facility block mid": usd_m(m["fac_block_mid"] * 1e6, 0),
     }
     for label, needle in expected.items():
         chk(f"doc contains {label} ({needle})", needle in text)

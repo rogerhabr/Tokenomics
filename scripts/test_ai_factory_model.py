@@ -39,7 +39,8 @@ INP = dict(
     fws=45.0, fwr=55.0, cp=3.85, rho=1.03,
     gpus_per_rack=72,
     pue=1.08, util=0.85, uptime=0.995, tokens_gpu_s=1800, token_share=0.30,
-    tariff=0.06, tariff_esc=0.02, capex=139_500_000, resid_pct=0.10,
+    tariff=0.06, tariff_esc=0.02, capex=328_000_000, resid_pct=0.10,
+    blocks_per_year=(2, 2, 4, 4, 4),
     debt_ratio=0.80, rate=0.065, tenor=5, tax=0.09, gidlr=0.30,
     horizon=5, dep_life=5,
     hurdle=0.15, fixed_opex=10_877_000, opex_esc=0.03,
@@ -154,7 +155,10 @@ def compute_model(p):
     m["npv"] = sum(cf / (1 + p["hurdle"]) ** t for t, cf in enumerate(m["fcfe"]))
     m["moic"] = sum(m["fcfe"][1:]) / equity
     n_neg = sum(1 for c in cum if c < 0)
-    m["payback"] = (n_neg - 1) + abs(cum[n_neg - 1]) / m["fcfe"][n_neg]
+    if n_neg >= len(cum):
+        m["payback"] = None  # never pays back within the horizon
+    else:
+        m["payback"] = (n_neg - 1) + abs(cum[n_neg - 1]) / m["fcfe"][n_neg]
     dscr = [e / s for e, s in zip(ebitda, ds) if s > 0]
     m["dscr"] = dscr
     m["min_dscr"] = min(dscr)
@@ -204,6 +208,27 @@ def compute_model(p):
                 irr=irr([-se] + s_fcfe),
                 avg_dscr=sum(s_eb) / n / s_full,
             )
+
+    # Phased expansion (identical blocks; block economics = Year-2 steady state)
+    sched = (list(p.get("blocks_per_year", ())) + [0] * n)[:n]
+    cum_b, eff, cume, cash = 0, [], [], 0.0
+    exp = {"added": sched, "cum_blocks": [], "eb": [], "cum_fund": []}
+    for t in range(n):
+        eff_t = cum_b + sched[t] * p["ramp"]
+        cum_b += sched[t]
+        eb_t = eff_t * ebitda[1]
+        cash += eb_t - sched[t] * p["capex"]
+        exp["cum_blocks"].append(cum_b)
+        exp["eb"].append(eb_t)
+        exp["cum_fund"].append(cash)
+    exp["final_mw"] = cum_b * it_kw / 1000
+    exp["final_gpus"] = cum_b * gpus
+    exp["peak_funding"] = min(exp["cum_fund"])
+    exp["runrate_ebitda"] = cum_b * ebitda[1]
+    exp["capex_total"] = sum(sched) * p["capex"]
+    n_neg_x = sum(1 for c in exp["cum_fund"] if c < 0)
+    exp["cash_positive_year"] = f">{n}" if n_neg_x == n else n_neg_x + 1
+    m["expansion"] = exp
     return m
 
 
@@ -291,8 +316,13 @@ def main():
         m["npv"])
     chk("ProForma: MOIC",
         pro[f"B{F['MOIC (total distributions / equity)']}"].value, m["moic"])
-    chk("ProForma: payback", pro[f"B{F['Payback Period']}"].value,
-        m["payback"])
+    if m["payback"] is None:
+        pb = pro[f"B{F['Payback Period']}"].value
+        chk("ProForma: payback (text)", 1 if str(pb).startswith(">") else 0, 1,
+            tol=0)
+    else:
+        chk("ProForma: payback", pro[f"B{F['Payback Period']}"].value,
+            m["payback"])
     chk("ProForma: min DSCR", pro[f"B{F['Minimum DSCR']}"].value,
         m["min_dscr"])
     chk("ProForma: avg DSCR", pro[f"B{F['Average DSCR']}"].value,
@@ -336,6 +366,29 @@ def main():
     chk("Dashboard: CO2", dash["B17"].value, m["co2_t"])
     chk("Dashboard: location text", dash["B25"].value,
         f"{INP['location']}  (zone {m['zone']})")
+
+    Xm = maps["X"]
+    exp = m["expansion"]
+    xs = wb["Phased Expansion"]
+    for t in range(1, n + 1):
+        xc = get_column_letter(1 + t)
+        chk(f"Expansion: Y{t} cum funding",
+            xs[f"{xc}{Xm['Cumulative Funding Position']}"].value,
+            exp["cum_fund"][t - 1])
+    chk("Expansion: final MW",
+        xs[f"B{Xm['Final Campus IT Capacity (MW)']}"].value, exp["final_mw"])
+    chk("Expansion: final GPUs",
+        xs[f"B{Xm['Final Campus GPUs']}"].value, exp["final_gpus"])
+    chk("Expansion: peak funding",
+        xs[f"B{Xm['Peak Funding Requirement']}"].value, exp["peak_funding"])
+    chk("Expansion: run-rate EBITDA",
+        xs[f"B{Xm['Run-Rate Campus EBITDA (full blocks)']}"].value,
+        exp["runrate_ebitda"])
+    chk("Expansion: total campus CapEx",
+        xs[f"B{Xm['Total Campus CapEx']}"].value, exp["capex_total"])
+    cp = xs[f"B{Xm['Campus Cash-Positive Year']}"].value
+    chk("Expansion: cash-positive year",
+        1 if str(cp) == str(exp["cash_positive_year"]) else 0, 1, tol=0)
 
     failures = [c for c in checks if not c[3]]
     for label, actual, expected, ok in checks:

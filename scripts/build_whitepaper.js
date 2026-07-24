@@ -17,8 +17,9 @@ const {
 const m = JSON.parse(fs.readFileSync("whitepaper_manifest.json", "utf8"));
 
 // ---------- number formatting ----------
-const usd = (n) => "$" + Math.round(n).toLocaleString("en-US");
-const usdM = (n, dp = 1) => "$" + (n / 1e6).toFixed(dp) + "M";
+const usd = (n) => (n < 0 ? "-$" : "$") + Math.abs(Math.round(n)).toLocaleString("en-US");
+const usdM = (n, dp = 1) => (n < 0 ? "-$" : "$") + Math.abs(n / 1e6).toFixed(dp) + "M";
+const usdB = (n, dp = 2) => (n < 0 ? "-$" : "$") + Math.abs(n / 1e9).toFixed(dp) + "B";
 const pct = (n, dp = 1) => (n * 100).toFixed(dp) + "%";
 const num = (n) => Math.round(n).toLocaleString("en-US");
 const f1 = (n) => n.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -47,7 +48,7 @@ const v = {
   elecY1: usdM(m.elec_y1),
   eqIrr: pct(m.equity_irr), prIrr: pct(m.project_irr),
   npv: usdM(m.npv), moic: x2(m.moic),
-  payback: m.payback.toFixed(2) + " years",
+  payback: typeof m.payback === "number" ? m.payback.toFixed(2) + " years" : String(m.payback),
   minDscr: x2(m.min_dscr), avgDscr: x2(m.avg_dscr),
   capexGpu: usd(m.capex_gpu),
   revGpuHr: "$" + f2(m.rev_gpu_hr), opexGpuHr: "$" + f2(m.opex_gpu_hr),
@@ -61,6 +62,15 @@ const v = {
   benchIt: usdM(m.bench_it_low * 1e6, 0) + "–" + usdM(m.bench_it_high * 1e6, 0),
   benchAll: usdM((m.bench_fac_low + m.bench_it_low) * 1e6, 0) + "–"
     + usdM((m.bench_fac_high + m.bench_it_high) * 1e6, 0),
+  expBlocks: String(m.exp_blocks),
+  expMW: num(m.exp_final_mw),
+  expGpus: num(m.exp_final_gpus),
+  expCapex: usdB(m.exp_capex_total),
+  expPeak: usdB(m.exp_peak_funding),
+  expEbitda: usdB(m.exp_runrate_ebitda),
+  expCashPos: String(m.exp_cash_positive),
+  facBlockMid: usdM(m.fac_block_mid * 1e6, 0),
+  facCampus16: usdB(m.fac_campus_16 * 1e6),
   pueSavedMwh: num(m.pue_ref_mwh_saved),
   pueSavedUsd: usdM(m.pue_ref_usd_saved, 0),
 };
@@ -208,8 +218,8 @@ children.push(
   ...testFit([
     `Scope: ${m.vr_racks} VR compute racks (${f1(m.vr_kw)} kW each) + ${m.net_racks} network + ${m.sto_racks} storage racks = ${v.itMW} MW IT load, ${v.gpus} GPUs.`,
     `Thermal compliance: peak MLC ${v.mlc} vs. ASHRAE 90.4 Zone ${m.zone} limit ${v.mlcLimit} — a ${v.mlcMargin} design margin.`,
-    `Year-1 economics (model): revenue ${v.revY1}, EBITDA ${v.ebitdaY1} (${v.marginY1} margin), levered equity IRR ${v.eqIrr}.`,
-    `Returns hinge on aggressive revenue and CapEx inputs — see the cross-checks in Sections 15 and 17 before treating them as investable.`,
+    `Year-1 economics (model): revenue ${v.revY1}, EBITDA ${v.ebitdaY1} (${v.marginY1} margin).`,
+    `At the benchmark-restated all-in CapEx (${v.capex}, owned IT), 80% leverage does not clear DSCR 1.0x and equity IRR falls to ${v.eqIrr} — the revenue input, conservative vs market $/GPU-hr, is now the swing factor (Sections 15 and 17).`,
   ]),
   P("Key takeaway: future-proofed capacity means 100% liquid-ready white space,"
     + " high-temperature heat rejection engineered against N=20-year climate extremes"
@@ -555,6 +565,12 @@ children.push(
   P("Each block closes its own commissioning (L1–L5) before the next starts, so"
     + " revenue begins at block one and the financing structure of Section 17 can"
     + " be replicated per phase rather than underwritten once at campus scale."),
+  ...testFit([
+    `Phased Expansion module (workbook sheet): default schedule 2+2+4+4+4 blocks over 5 years → ${v.expBlocks} blocks, ${v.expMW} MW IT, ${v.expGpus} GPUs.`,
+    `Campus capital: ${v.expCapex} total CapEx at ${v.capex}/block (owned IT); peak cumulative funding requirement ${v.expPeak}; campus cash-positive: ${v.expCashPos} (still building through Year 5).`,
+    `Run-rate campus EBITDA at full build: ${v.expEbitda}/yr. Facility-only reconciliation: ~${v.facBlockMid}/block x 16 = ${v.facCampus16} — consistent with the ~$1.42B/128 MW market reference in Section 17.`,
+    `Simplification: block economics use the single-block Year-2 steady state; per-vintage token pricing and per-block financing are edit points, not outputs.`,
+  ]),
 );
 
 // ---- Section 15 ----
@@ -572,12 +588,12 @@ children.push(
       ["Engineering & mgmt", "0.8–1.0", "8%", "Permitting, commissioning L1–L5, supervision"],
       ["Total (facility only)", "9.9–12.2", "100%", "Excludes IT compute silicon"],
     ], [200, 120, 80, 480]),
-  ...caveat("TEST-FIT CAPEX CROSS-CHECK — READ BEFORE USING THE MODEL'S RETURNS", [
-    `Model input: ${v.capex} total 'turnkey' CapEx for the ${v.itMW} MW test fit (${usd(m.capex / (m.it_kw / 1000))} per MW).`,
-    `Benchmark facility-only cost at ${v.itMW} MW: ${v.benchFac}.`,
-    `IT hardware cross-check: ${m.vr_racks} Vera Rubin NVL72 racks at reported $6.0–8.8M per rack = ${v.benchIt}; (GB200-class racks run $3.1–3.9M all-in).`,
-    `Benchmark all-in (facility + owned VR IT): ${v.benchAll} — several times the model input.`,
-    `Conclusion: ${v.capex} is credible only as facility + fit-out with IT hardware leased, vendor-financed, or customer-owned. If the operator owns the silicon, CapEx_Initial must be restated upward and every return in Section 17 falls accordingly. The model makes this a one-cell change.`,
+  ...caveat("TEST-FIT CAPEX BASIS — RESTATED TO THE BENCHMARK MIDPOINT", [
+    `Model input: ${v.capex} all-in for the ${v.itMW} MW test fit — the midpoint of the benchmark build-up below (an earlier draft carried $139.5M, which is credible only with leased or vendor-financed IT).`,
+    `Facility-only at ${v.itMW} MW: ${v.benchFac} (midpoint ~${v.facBlockMid}).`,
+    `IT hardware: ${m.vr_racks} Vera Rubin NVL72 racks at reported $6.0–8.8M per rack = ${v.benchIt} (GB200-class racks run $3.1–3.9M all-in).`,
+    `Benchmark all-in range: ${v.benchAll}; the model sits at the midpoint.`,
+    `If IT is leased, vendor-financed, or customer-owned, restate CapEx_Initial down toward the facility-only ~${v.facBlockMid} — a one-cell change that transforms every return in Section 17.`,
   ]),
 );
 
@@ -629,10 +645,11 @@ children.push(
       ["Equity NPV @ 15%", v.npv, "MOIC / payback", `${v.moic} / ${v.payback}`],
       ["UAE tax", `${pct(m.tax, 0)} with GIDLR ${pct(m.gidlr, 0)}-of-EBITDA interest cap (applied via MIN in the model)`, "Unit economics", `${v.capexGpu}/GPU CapEx; ${v.revGpuHr}/GPU-hr revenue vs ${v.opexGpuHr} cash cost; ${v.costMtok}/M tokens cash cost`],
     ], [200, 250, 200, 330]),
-  ...caveat("WHY THESE RETURNS ARE NOT COMPARABLE TO THE 128 MW REFERENCE", [
-    "The test-fit equity IRR (" + v.eqIrr + ") is an order above market because two inputs are aggressive: revenue of "
-      + usdM(m.rev_y2) + "/yr against " + v.capex + " CapEx, and the CapEx basis itself (Section 15 cross-check).",
-    "Restating CapEx to the benchmark all-in range (" + v.benchAll + ") or marking revenue to conservative $/GPU-hr pricing moves returns toward the market frame — the sensitivity engine in the workbook quantifies both in one edit.",
+  ...caveat("READING THESE RETURNS — CAPEX RESTATED; REVENUE IS NOW THE SWING FACTOR", [
+    "With CapEx restated to the benchmark all-in midpoint (" + v.capex + ", owned IT), the levered structure fails: minimum DSCR "
+      + v.minDscr + " (< 1.0x in Year 1), equity IRR " + v.eqIrr + ", NPV " + v.npv + " at a 15% hurdle. 80% leverage is not financeable on these cash flows — leverage must fall or revenue must rise.",
+    "The revenue input is the conservative side: " + v.revGpuHr + "/GPU-hr blended versus $8–11/GPU-hr market rates for GB200-class capacity. At market pricing, revenue roughly doubles and returns re-enter the 128 MW reference frame above.",
+    "Both levers are single-cell edits on the Control Panel; the sensitivity engine quantifies tariff x leverage across 16 scenarios automatically.",
   ]),
 );
 
@@ -701,8 +718,9 @@ children.push(
       ["4", "Underwrite with a live model, not a static deck",
         "Every figure here traces to AI_Factory_Model.xlsx: location-linked ASHRAE"
         + " compliance, physics-derived flow rates, GIDLR-capped tax, and 16-scenario"
-        + " tariff x leverage sensitivity. Challenge the two aggressive inputs"
-        + " (revenue, CapEx basis) before investment committee."],
+        + " tariff x leverage sensitivity, and a phased-expansion module. CapEx"
+        + " is restated to the owned-IT benchmark; challenge the revenue input"
+        + " (conservative vs market $/GPU-hr) before investment committee."],
     ], [50, 260, 670]),
   SPACER(),
   P("Bottom line: gigascale AI infrastructure is won at the intersection of thermal"
@@ -760,8 +778,11 @@ children.push(
         "Arithmetic verified and retained as market reference; explicitly separated from test-fit model outputs.",
         "Recomputation"],
       ["15", "No CapEx/IT reconciliation",
-        "Added: facility " + v.benchFac + " + VR IT " + v.benchIt + " vs model input " + v.capex + " — flagged (Sections 15/17).",
+        "Added and actioned: model CapEx restated from $139.5M to " + v.capex + " (facility " + v.benchFac + " + VR IT " + v.benchIt + " midpoint) — Sections 15/17.",
         "Rack pricing reports"],
+      ["16", "128 MW roadmap had no financial linkage",
+        "Added a Phased Expansion module (workbook sheet + Section 14 box): 16 blocks, " + v.expMW + " MW, " + v.expCapex + " campus CapEx, peak funding " + v.expPeak + ".",
+        "This revision"],
     ], [40, 280, 430, 230]),
 );
 

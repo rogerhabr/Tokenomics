@@ -112,8 +112,10 @@ PARAM_SPEC = [
      "Abu Dhabi industrial rate (Year 1)"),
     ("Financial & Fiscal", "Tariff_Escalation", 0.02, "%/yr", "0.0%",
      "Assumption: annual power price escalation"),
-    ("Financial & Fiscal", "CapEx_Initial", 139500000, "USD", "$#,##0",
-     "Total turnkey deployment"),
+    ("Financial & Fiscal", "CapEx_Initial", 328000000, "USD", "$#,##0",
+     "All-in benchmark midpoint: ~$91M facility (at $9.9-12.2M/MW) + 32 VR"
+     " racks at ~$7.4M each (reported $6.0-8.8M). Set to ~$91M if IT is"
+     " leased/vendor-financed."),
     ("Financial & Fiscal", "Residual_Value_Pct", 0.10, "%", "0.0%",
      "Assumption: pre-tax residual recovery of CapEx at end of Year 5"),
     ("Financial & Fiscal", "Debt_Ratio", 0.80, "%", "0.0%",
@@ -149,6 +151,10 @@ PARAM_SPEC = [
      "Core tokenomics: $/token deflation per year"),
     ("Revenue Strategy", "Token_Volume_Growth", 0.25, "%/yr", "0.0%",
      "Token demand growth (partially offsets price decline)"),
+    ("Phased Expansion", "Expansion_Blocks_Per_Year", "2,2,4,4,4", "blocks/yr", None,
+     "Comma-separated blocks added per year (padded/truncated to the horizon);"
+     " one block = this workbook's full rack architecture. Live numeric cells"
+     " are on the 'Phased Expansion' sheet."),
 ]
 
 DEFAULTS = {name: default for _, name, default, *_ in PARAM_SPEC}
@@ -1165,6 +1171,149 @@ def build_matrices(wb):
 
 
 # ---------------------------------------------------------------------------
+# Sheet: Phased Expansion (campus roll-out of identical blocks)
+# ---------------------------------------------------------------------------
+EXPANSION_SHEET = "Phased Expansion"
+X = {}  # expansion metric -> row (years in cols B..)
+
+
+def parse_expansion_schedule(raw, n):
+    """'2,2,4,4,4' -> [2,2,4,4,4] padded/truncated to n years."""
+    try:
+        vals = [max(0, int(float(x))) for x in str(raw).split(",") if str(x).strip() != ""]
+    except ValueError:
+        vals = []
+    if not vals:
+        vals = [2, 2, 4, 4, 4]
+    vals = (vals + [0] * n)[:n]
+    return vals
+
+
+def build_expansion(wb, values):
+    n = N_YEARS
+    U = globals()["U"]
+    ue = "Unit Economics & KPIs"
+    schedule = parse_expansion_schedule(values.get("Expansion_Blocks_Per_Year"), n)
+    ws = wb.create_sheet(title=EXPANSION_SHEET)
+    title_block(
+        ws,
+        "Phased Campus Expansion — Identical Blocks",
+        "Each block replicates this workbook's rack architecture; block"
+        " economics use the single-block Year-2 (steady-state) pro forma."
+        " Simplification: per-vintage token-price dynamics and per-block"
+        " financing are not modeled here.",
+    )
+    style_header_row(ws, 4, ["Metric"] + [f"Year {t}" for t in range(1, n + 1)])
+
+    metrics = [
+        "Blocks Added (input)",
+        "Cumulative Blocks",
+        "Campus IT Capacity (MW)",
+        "Campus GPUs",
+        "Effective Revenue Blocks",
+        "Campus Revenue",
+        "Campus EBITDA",
+        "CapEx Deployed",
+        "Campus Net Cash Flow",
+        "Cumulative Funding Position",
+    ]
+    for i, mname in enumerate(metrics):
+        X[mname] = 5 + i
+
+    block_mw = f"({tref('Total Combined IT Load')}/1000)"
+    gpus = f"'{ue}'!$B${U['Total GPU Count']}"
+    rev_block = fref("Gross Annual Revenue", "D")
+    eb_block = fref("EBITDA", "D")
+    ramp = pref("Year1_Ramp_Factor")
+    capex = pref("CapEx_Initial")
+
+    for t in range(1, n + 1):
+        c = get_column_letter(1 + t)       # Year t lives in col B.. (no Year 0)
+        prev = get_column_letter(t)
+        cells = {
+            "Blocks Added (input)": schedule[t - 1],
+            "Cumulative Blocks":
+                (f"={c}{X['Blocks Added (input)']}" if t == 1 else
+                 f"={prev}{X['Cumulative Blocks']}+{c}{X['Blocks Added (input)']}"),
+            "Campus IT Capacity (MW)":
+                f"={c}{X['Cumulative Blocks']}*{block_mw}",
+            "Campus GPUs":
+                f"={c}{X['Cumulative Blocks']}*{gpus}",
+            "Effective Revenue Blocks":
+                (f"={c}{X['Blocks Added (input)']}*{ramp}" if t == 1 else
+                 f"={prev}{X['Cumulative Blocks']}"
+                 f"+{c}{X['Blocks Added (input)']}*{ramp}"),
+            "Campus Revenue":
+                f"={c}{X['Effective Revenue Blocks']}*{rev_block}",
+            "Campus EBITDA":
+                f"={c}{X['Effective Revenue Blocks']}*{eb_block}",
+            "CapEx Deployed":
+                f"={c}{X['Blocks Added (input)']}*{capex}",
+            "Campus Net Cash Flow":
+                f"={c}{X['Campus EBITDA']}-{c}{X['CapEx Deployed']}",
+            "Cumulative Funding Position":
+                (f"={c}{X['Campus Net Cash Flow']}" if t == 1 else
+                 f"={prev}{X['Cumulative Funding Position']}"
+                 f"+{c}{X['Campus Net Cash Flow']}"),
+        }
+        for mname in metrics:
+            cell = ws.cell(row=X[mname], column=1 + t, value=cells[mname])
+            cell.border = BORDER_DATA
+            if mname == "Blocks Added (input)":
+                cell.font = INPUT_FONT
+                cell.fill = INPUT_FILL
+                cell.number_format = FMT_NUM
+            elif mname in ("Cumulative Blocks", "Campus GPUs"):
+                cell.font = REGULAR_FONT
+                cell.number_format = FMT_NUM
+            elif mname == "Campus IT Capacity (MW)":
+                cell.font = REGULAR_FONT
+                cell.number_format = FMT_NUM_1DP
+            elif mname == "Effective Revenue Blocks":
+                cell.font = REGULAR_FONT
+                cell.number_format = FMT_NUM_1DP
+            else:
+                cell.font = REGULAR_FONT
+                cell.number_format = FMT_MONEY
+    for mname in metrics:
+        ws.cell(row=X[mname], column=1, value=mname).font = (
+            BOLD_FONT if mname != "Blocks Added (input)" else REGULAR_FONT)
+        ws.cell(row=X[mname], column=1).border = BORDER_DATA
+
+    last = get_column_letter(1 + n)
+    kpi_start = X["Cumulative Funding Position"] + 2
+    ws.cell(row=kpi_start, column=1,
+            value="Campus KPIs").font = SECTION_FONT
+    cum = X["Cumulative Funding Position"]
+    kpis = [
+        ("Peak Funding Requirement",
+         f"=MIN(B{cum}:{last}{cum})", FMT_MONEY),
+        ("Campus Cash-Positive Year",
+         f'=IF(COUNTIF(B{cum}:{last}{cum},"<0")={n},">{n}",'
+         f'COUNTIF(B{cum}:{last}{cum},"<0")+1)', FMT_NUM),
+        ("Final Campus IT Capacity (MW)",
+         f"={last}{X['Campus IT Capacity (MW)']}", FMT_NUM_1DP),
+        ("Final Campus GPUs",
+         f"={last}{X['Campus GPUs']}", FMT_NUM),
+        ("Run-Rate Campus EBITDA (full blocks)",
+         f"={last}{X['Cumulative Blocks']}*{eb_block}", FMT_MONEY),
+        ("Total Campus CapEx",
+         f"=SUM(B{X['CapEx Deployed']}:{last}{X['CapEx Deployed']})", FMT_MONEY),
+    ]
+    for i, (label, formula, fmt) in enumerate(kpis):
+        r = kpi_start + 1 + i
+        X[label] = r
+        ws.cell(row=r, column=1, value=label).font = BOLD_FONT
+        cell = ws.cell(row=r, column=2, value=formula)
+        cell.font = BOLD_FONT
+        cell.number_format = fmt
+        cell.fill = HIGHLIGHT_FILL
+        for cc in range(1, 3):
+            ws.cell(row=r, column=cc).border = BORDER_DATA
+    return ws
+
+
+# ---------------------------------------------------------------------------
 # Sheet: Dashboard
 # ---------------------------------------------------------------------------
 def build_dashboard(wb, values):
@@ -1285,7 +1434,7 @@ def build_workbook(values=None):
     values["Model_Horizon_Years"] = n
     N_YEARS = n
     YEAR_COLS[:] = [get_column_letter(2 + t) for t in range(n + 1)]
-    P.clear(); T.clear(); F.clear(); E.clear()
+    P.clear(); T.clear(); F.clear(); E.clear(); X.clear()
     wb = openpyxl.Workbook()
     build_inputs(wb, values)
     build_climate_library(wb)
@@ -1294,10 +1443,11 @@ def build_workbook(values=None):
     build_unit_economics(wb)
     build_engine(wb)
     build_matrices(wb)
+    build_expansion(wb, values)
     build_dashboard(wb, values)
     autosize(wb)
     return wb, {"P": dict(P), "T": dict(T), "F": dict(F), "E": dict(E),
-                "U": dict(globals()["U"])}
+                "U": dict(globals()["U"]), "X": dict(X)}
 
 
 def main(argv=None):

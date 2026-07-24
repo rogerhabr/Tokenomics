@@ -24,12 +24,13 @@ OUT = "whitepaper_manifest.json"
 
 def main():
     _, maps = build_workbook()
-    P, T, F, U = maps["P"], maps["T"], maps["F"], maps["U"]
+    P, T, F, U, X = maps["P"], maps["T"], maps["F"], maps["U"], maps["X"]
     wb = openpyxl.load_workbook(FILE_NAME, data_only=True)
     inp = wb["Control Panel & Inputs"]
     th = wb["Thermal Hydraulics & MLC"]
     pro = wb[PROFORMA_SHEET]
     ue = wb["Unit Economics & KPIs"]
+    xs = wb["Phased Expansion"]
 
     def pv(name):
         return inp[f"C{P[name]}"].value
@@ -102,6 +103,18 @@ def main():
         "breakeven_tariff": uv("Breakeven Power Tariff (EBITDA = 0)"),
     }
 
+    # Phased expansion KPIs (Section 14)
+    def xv(name):
+        return xs[f"B{X[name]}"].value
+
+    m["exp_final_mw"] = xv("Final Campus IT Capacity (MW)")
+    m["exp_final_gpus"] = xv("Final Campus GPUs")
+    m["exp_capex_total"] = xv("Total Campus CapEx")
+    m["exp_peak_funding"] = xv("Peak Funding Requirement")
+    m["exp_runrate_ebitda"] = xv("Run-Rate Campus EBITDA (full blocks)")
+    m["exp_cash_positive"] = str(xv("Campus Cash-Positive Year"))
+    m["exp_blocks"] = int(m["exp_capex_total"] / m["capex"])
+
     # Physics cross-checks used in the paper's corrected Section 3
     m["flow_water_230"] = 230.0 / (1.0 * 4.18 * 10.0) * 60      # ~330 LPM
     m["flow_pg25_230"] = 230.0 / (m["rho"] * m["cp"] * 10.0) * 60
@@ -111,6 +124,8 @@ def main():
     m["bench_fac_high"] = 12.2 * m["it_kw"] / 1000
     m["bench_it_low"] = m["vr_racks"] * 6.0         # VR rack $6-8.8M reported
     m["bench_it_high"] = m["vr_racks"] * 8.8
+    m["fac_block_mid"] = (m["bench_fac_low"] + m["bench_fac_high"]) / 2
+    m["fac_campus_16"] = m["fac_block_mid"] * 16
 
     # PUE savings worked example (Section 16, corrected draft math)
     it_mw_ref = 128.0
