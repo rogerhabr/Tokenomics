@@ -65,23 +65,24 @@ COOLING_TYPES = ("Liquid", "Air")
 # Power/TDP are published or reported figures — 'est.' rows need verification.
 # Required LPM is computed live on the sheet from the model's coolant inputs.
 RACK_LIBRARY = [
-    ("Vera Rubin NVL72", "Compute", 72, 227.0, 2300, "Liquid",
-     "Reported envelope 130-250 kW; 227 kW = Max-P design point; TDP est."),
-    ("GB300 NVL72", "Compute", 72, 137.0, 1400, "Liquid",
-     "Vendor ~132-142 kW nominal, ~155 kW peak"),
-    ("GB200 NVL72", "Compute", 72, 121.0, 1200, "Liquid",
-     "~120 kW nominal; 130-132 kW observed at full load"),
+    # (type, class, GPUs, kW, TDP W, cooling, rack CapEx $M, note)
+    ("Vera Rubin NVL72", "Compute", 72, 227.0, 2300, "Liquid", 7.4,
+     "Reported envelope 130-250 kW; 227 kW = Max-P; $6.0-8.8M reported"),
+    ("GB300 NVL72", "Compute", 72, 137.0, 1400, "Liquid", 4.0,
+     "Vendor ~132-142 kW nominal, ~155 kW peak; price est."),
+    ("GB200 NVL72", "Compute", 72, 121.0, 1200, "Liquid", 3.5,
+     "~120 kW nominal; $3.1-3.9M all-in reported"),
     ("Rubin Ultra NVL576 (Kyber)", "Compute", 576, 600.0, 2300, "Liquid",
-     "Announced; reported up to ~1 MW class — estimate, verify before design"),
-    ("HGX H100 air rack (4x 8-GPU)", "Compute", 32, 44.0, 700, "Air",
+     30.0, "Announced; power & price are estimates — verify before design"),
+    ("HGX H100 air rack (4x 8-GPU)", "Compute", 32, 44.0, 700, "Air", 0.35,
      "Legacy air-cooled baseline"),
-    ("Quantum-X800 IB fabric rack", "Network", 0, 100.0, 0, "Air",
+    ("Quantum-X800 IB fabric rack", "Network", 0, 100.0, 0, "Air", 0.5,
      "Scale-out leaf/spine block — estimate"),
-    ("Spectrum-X CPO fabric rack", "Network", 0, 80.0, 0, "Liquid",
+    ("Spectrum-X CPO fabric rack", "Network", 0, 80.0, 0, "Liquid", 0.8,
      "Co-packaged-optics switch rack — estimate"),
-    ("NVMe flash storage rack", "Storage", 0, 40.0, 0, "Air",
+    ("NVMe flash storage rack", "Storage", 0, 40.0, 0, "Air", 0.4,
      "High-performance NVMe tier — estimate"),
-    ("HDD object storage rack", "Storage", 0, 25.0, 0, "Air",
+    ("HDD object storage rack", "Storage", 0, 25.0, 0, "Air", 0.25,
      "Bulk object tier — estimate"),
 ]
 RACK_INDEX = {r[0]: r for r in RACK_LIBRARY}
@@ -145,10 +146,9 @@ PARAM_SPEC = [
      "Abu Dhabi industrial rate (Year 1)"),
     ("Financial & Fiscal", "Tariff_Escalation", 0.02, "%/yr", "0.0%",
      "Assumption: annual power price escalation"),
-    ("Financial & Fiscal", "CapEx_Initial", 328000000, "USD", "$#,##0",
-     "All-in benchmark midpoint: ~$91M facility (at $9.9-12.2M/MW) + 32 VR"
-     " racks at ~$7.4M each (reported $6.0-8.8M). Set to ~$91M if IT is"
-     " leased/vendor-financed."),
+    ("Financial & Fiscal", "Facility_CapEx_Per_MW", 11050000, "$/MW",
+     "$#,##0", "Facility-only build cost per MW of IT (benchmark"
+     " $9.9-12.2M/MW midpoint) — scales with the configured racks"),
     ("Financial & Fiscal", "Residual_Value_Pct", 0.10, "%", "0.0%",
      "Assumption: pre-tax residual recovery of CapEx at end of Year 5"),
     ("Financial & Fiscal", "Debt_Ratio", 0.80, "%", "0.0%",
@@ -168,14 +168,17 @@ PARAM_SPEC = [
      "UAE interest deduction limit — applied via MIN() in the tax calc"),
     ("Financial & Fiscal", "Equity_Discount_Rate", 0.15, "%", "0.0%",
      "Assumption: hurdle rate for equity NPV"),
-    ("Financial & Fiscal", "Fixed_OpEx_Annual", 10877000, "USD/yr", "$#,##0",
-     "Staff, maintenance, insurance, connectivity (Year 1)"),
+    ("Financial & Fiscal", "Fixed_OpEx_Per_MW", 1316000, "$/MW/yr",
+     "$#,##0", "Staff, maintenance, insurance, connectivity per MW of IT"
+     " (calibrated from the prior $10.877M @ 8.264 MW baseline)"),
     ("Financial & Fiscal", "OpEx_Escalation", 0.03, "%/yr", "0.0%",
      "Assumption: annual fixed-OpEx inflation"),
-    ("Revenue Strategy", "Lease_Revenue_70pct", 58800000, "USD/yr", "$#,##0",
-     "70% bare-metal capacity leases (Year 1, pre-ramp)"),
-    ("Revenue Strategy", "Token_Revenue_30pct", 25200000, "USD/yr", "$#,##0",
-     "30% dynamic API token market (Year 1, pre-ramp)"),
+    ("Revenue Strategy", "Lease_Price_Per_GPU_Hr", 4.92, "$/GPU-hr",
+     "$#,##0.00", "Blended bare-metal lease rate (calibrated to the prior"
+     " $58.8M @ 32-rack baseline; market GB200-class $8-11)"),
+    ("Revenue Strategy", "Token_Price_Per_M_Tok", 0.76, "$/M tok",
+     "$#,##0.00", "Realized blended token price (calibrated to the prior"
+     " $25.2M baseline)"),
     ("Revenue Strategy", "Year1_Ramp_Factor", 0.90, "%", "0.0%",
      "Assumption: Year 1 commissioning / fill-up ramp"),
     ("Revenue Strategy", "Lease_Price_Escalation", 0.00, "%/yr", "0.0%",
@@ -286,7 +289,7 @@ def prompt_for_params(stream=None):
             options = [r for r in RACK_LIBRARY if r[1] == cls]
             print(f"{name} — pick a platform (sets power/GPUs/TDP/cooling/LPM"
                   f" via the Rack Type Library):", flush=True)
-            for i, (rn, _c, g, kw, tdp, cool, _n) in enumerate(options, 1):
+            for i, (rn, _c, g, kw, tdp, cool, _p, _n) in enumerate(options, 1):
                 gpu_s = f", {g} GPUs @ {tdp} W" if g else ""
                 print(f"  {i}) {rn}  ({kw:g} kW, {cool}{gpu_s})", flush=True)
             print(f"  type (number or name) [{default}]: ", end="", flush=True)
@@ -488,6 +491,50 @@ def build_inputs(wb, values):
             ("Coincident_WetBulb", "E", "°C", "#,##0.0",
              "Derived from location — ASHRAE N=20yr peak wet-bulb"),
         ]),
+        "Facility_CapEx_Per_MW": ("Financial & Fiscal", "CALLABLE", [
+            ("CapEx_Initial",
+             lambda: f"=$C${P['Facility_CapEx_Per_MW']}"
+                     f"*(($C${P['VR_Rack_Count']}*$C${P['VR_Rack_Power_kW']}"
+                     f"+$C${P['Network_Rack_Count']}*$C${P['Network_Rack_Power_kW']}"
+                     f"+$C${P['Storage_Rack_Count']}*$C${P['Storage_Rack_Power_kW']})/1000)"
+                     f"+($C${P['VR_Rack_Count']}*$C${P['VR_Rack_CapEx_M']}"
+                     f"+$C${P['Network_Rack_Count']}*$C${P['Network_Rack_CapEx_M']}"
+                     f"+$C${P['Storage_Rack_Count']}*$C${P['Storage_Rack_CapEx_M']})"
+                     f"*1000000",
+             "USD", "$#,##0",
+             "DERIVED: facility $/MW x IT MW + per-rack prices from the"
+             " Rack Type Library — scales with any rack count/type"),
+        ]),
+        "Fixed_OpEx_Per_MW": ("Financial & Fiscal", "CALLABLE", [
+            ("Fixed_OpEx_Annual",
+             lambda: f"=$C${P['Fixed_OpEx_Per_MW']}"
+                     f"*(($C${P['VR_Rack_Count']}*$C${P['VR_Rack_Power_kW']}"
+                     f"+$C${P['Network_Rack_Count']}*$C${P['Network_Rack_Power_kW']}"
+                     f"+$C${P['Storage_Rack_Count']}*$C${P['Storage_Rack_Power_kW']})/1000)",
+             "USD/yr", "$#,##0",
+             "DERIVED: fixed OpEx $/MW x configured IT MW"),
+        ]),
+        "Lease_Price_Per_GPU_Hr": ("Revenue Strategy", "CALLABLE", [
+            ("Lease_Revenue_70pct",
+             lambda: f"=$C${P['Lease_Price_Per_GPU_Hr']}"
+                     f"*$C${P['VR_Rack_Count']}*$C${P['GPUs_Per_Rack']}"
+                     f"*8760*$C${P['Uptime_Availability']}"
+                     f"*$C${P['Cluster_Utilization']}"
+                     f"*(1-$C${P['Token_Fleet_Share']})",
+             "USD/yr", "$#,##0",
+             "DERIVED: lease $/GPU-hr x sold GPU-hours x lease fleet share"),
+        ]),
+        "Token_Price_Per_M_Tok": ("Revenue Strategy", "CALLABLE", [
+            ("Token_Revenue_30pct",
+             lambda: f"=$C${P['Token_Price_Per_M_Tok']}"
+                     f"*$C${P['VR_Rack_Count']}*$C${P['GPUs_Per_Rack']}"
+                     f"*$C${P['Token_Fleet_Share']}"
+                     f"*$C${P['Tokens_Per_GPU_Sec']}*3600*8760"
+                     f"*$C${P['Cluster_Utilization']}"
+                     f"*$C${P['Uptime_Availability']}/1000000",
+             "USD/yr", "$#,##0",
+             "DERIVED: token $/M x annual token capacity of the token fleet"),
+        ]),
         "VR_Rack_Type": ("Technical Specs", None, [
             ("VR_Rack_Power_kW", "D", "kW/rack", "#,##0.0",
              "Derived from rack type — published/reported rack power"),
@@ -499,17 +546,23 @@ def build_inputs(wb, values):
              "Derived from rack type"),
             ("VR_LPM_Per_Rack", "G", "LPM", "#,##0.0",
              "Derived from rack type — required flow at the model's dT"),
+            ("VR_Rack_CapEx_M", "H", "$M/rack", "$#,##0.00",
+             "Derived from rack type — reported platform price"),
         ]),
         "Network_Rack_Type": ("Technical Specs", None, [
             ("Network_Rack_Power_kW", "D", "kW/rack", "#,##0.0",
              "Derived from rack type"),
             ("Network_Cooling_Type", "F", "Liquid/Air", None,
              "Derived from rack type"),
+            ("Network_Rack_CapEx_M", "H", "$M/rack", "$#,##0.00",
+             "Derived from rack type"),
         ]),
         "Storage_Rack_Type": ("Technical Specs", None, [
             ("Storage_Rack_Power_kW", "D", "kW/rack", "#,##0.0",
              "Derived from rack type"),
             ("Storage_Cooling_Type", "F", "Liquid/Air", None,
+             "Derived from rack type"),
+            ("Storage_Rack_CapEx_M", "H", "$M/rack", "$#,##0.00",
              "Derived from rack type"),
         ]),
     }
@@ -533,8 +586,12 @@ def build_inputs(wb, values):
             dcat, lookup_fn, rows_spec = derived_after[name]
             for dname, lib_col, dunit, dfmt, dnotes in rows_spec:
                 P[dname] = r
-                formula = (lookup_fn(lib_col) if lookup_fn
-                           else rack_lookup(lib_col, type_row))
+                if callable(lib_col):
+                    formula = lib_col()
+                elif lookup_fn and lookup_fn != "CALLABLE":
+                    formula = lookup_fn(lib_col)
+                else:
+                    formula = rack_lookup(lib_col, type_row)
                 row_vals = ((1, dcat), (2, dname), (3, formula),
                             (4, dunit), (5, dnotes))
                 for col, v in row_vals:
@@ -579,20 +636,23 @@ def build_rack_library(wb):
     )
     style_header_row(ws, 4, ["Rack Type", "Class", "GPUs / Rack",
                              "Rack Power (kW)", "GPU TDP (W)", "Cooling",
-                             "Required LPM / Rack", "Notes / Source"])
+                             "Required LPM / Rack", "Rack CapEx ($M)",
+                             "Notes / Source"])
     rho = pref("Coolant_Density")
     cp = pref("Coolant_Specific_Heat")
     fws = pref("Liquid_Supply_Temp_FWS")
     fwr = pref("Liquid_Return_Temp_FWR")
-    for i, (name, cls, gpus, kw, tdp, cool, note) in enumerate(RACK_LIBRARY):
+    for i, (name, cls, gpus, kw, tdp, cool, price_m,
+            note) in enumerate(RACK_LIBRARY):
         r = RACK_FIRST_ROW + i
         lpm = (f'=IF($F{r}="Liquid",'
                f"$D{r}/({rho}*{cp}*({fwr}-{fws}))*60,0)")
-        vals = [name, cls, gpus, kw, tdp, cool, lpm, note]
-        fmts = [None, None, "#,##0", "#,##0.0", "#,##0", None, "#,##0.0", None]
+        vals = [name, cls, gpus, kw, tdp, cool, lpm, price_m, note]
+        fmts = [None, None, "#,##0", "#,##0.0", "#,##0", None, "#,##0.0",
+                "$#,##0.00", None]
         for col, (v, fmt) in enumerate(zip(vals, fmts), start=1):
             cell = ws.cell(row=r, column=col, value=v)
-            cell.font = INPUT_FONT if col in (3, 4, 5, 6) else (
+            cell.font = INPUT_FONT if col in (3, 4, 5, 6, 8) else (
                 BOLD_FONT if col == 7 else REGULAR_FONT)
             cell.border = BORDER_DATA
             if fmt:

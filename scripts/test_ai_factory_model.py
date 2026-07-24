@@ -39,12 +39,15 @@ INP = dict(
     fws=45.0, fwr=55.0, cp=3.85, rho=1.03,
     gpus_per_rack=72,
     pue=1.08, util=0.85, uptime=0.995, tokens_gpu_s=1800, token_share=0.30,
-    tariff=0.06, tariff_esc=0.02, capex=328_000_000, resid_pct=0.10,
+    tariff=0.06, tariff_esc=0.02, resid_pct=0.10,
+    facility_capex_per_mw=11_050_000, vr_price_m=7.4, net_price_m=0.5,
+    sto_price_m=0.4,
+    fixed_opex_per_mw=1_316_000,
+    lease_gpu_hr=4.92, tok_price_m=0.76,
     blocks_per_year=(2, 2, 4, 4, 4),
     debt_ratio=0.80, rate=0.065, tenor=5, tax=0.09, gidlr=0.30,
     horizon=5, dep_life=5,
-    hurdle=0.15, fixed_opex=10_877_000, opex_esc=0.03,
-    lease_rev=58_800_000, token_rev=25_200_000, ramp=0.90,
+    hurdle=0.15, opex_esc=0.03, ramp=0.90,
     lease_esc=0.00, tok_decline=0.15, tok_growth=0.25,
     wue=0.15, carbon=0.39,
 )
@@ -85,6 +88,23 @@ def debt_schedule(debt, rate, tenor, n):
 
 
 def compute_model(p):
+    # Derive the lump-sum financial drivers from per-unit inputs, exactly
+    # as the workbook's DERIVED rows do — so economics scale with the fleet.
+    p = dict(p)
+    it_mw = (p["vr_count"] * p["vr_kw"] + p["net_count"] * p["net_kw"]
+             + p["sto_count"] * p["sto_kw"]) / 1000
+    p["capex"] = (p["facility_capex_per_mw"] * it_mw
+                  + (p["vr_count"] * p["vr_price_m"]
+                     + p["net_count"] * p["net_price_m"]
+                     + p["sto_count"] * p["sto_price_m"]) * 1e6)
+    p["fixed_opex"] = p["fixed_opex_per_mw"] * it_mw
+    gpus_total = p["vr_count"] * p["gpus_per_rack"]
+    sold_hrs = gpus_total * 8760 * p["uptime"] * p["util"]
+    p["lease_rev"] = (p["lease_gpu_hr"] * sold_hrs
+                      * (1 - p["token_share"]))
+    p["token_rev"] = (p["tok_price_m"] * gpus_total * p["token_share"]
+                      * p["tokens_gpu_s"] * 3600 * 8760
+                      * p["util"] * p["uptime"] / 1e6)
     n = p["horizon"]
     life = p["dep_life"]
     m = {"n": n}

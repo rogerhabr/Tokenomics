@@ -589,11 +589,11 @@ children.push(
       ["Total (facility only)", "9.9–12.2", "100%", "Excludes IT compute silicon"],
     ], [200, 120, 80, 480]),
   ...caveat("TEST-FIT CAPEX BASIS — RESTATED TO THE BENCHMARK MIDPOINT", [
-    `Model input: ${v.capex} all-in for the ${v.itMW} MW test fit — the midpoint of the benchmark build-up below (an earlier draft carried $139.5M, which is credible only with leased or vendor-financed IT).`,
+    `Model CapEx is now derived bottom-up: facility $/MW x IT MW plus per-rack platform prices from the Rack Type Library = ${v.capex} for the test fit (an earlier draft carried a flat $139.5M, credible only with leased or vendor-financed IT).`,
     `Facility-only at ${v.itMW} MW: ${v.benchFac} (midpoint ~${v.facBlockMid}).`,
     `IT hardware: ${m.vr_racks} Vera Rubin NVL72 racks at reported $6.0–8.8M per rack = ${v.benchIt} (GB200-class racks run $3.1–3.9M all-in).`,
     `Benchmark all-in range: ${v.benchAll}; the model sits at the midpoint.`,
-    `If IT is leased, vendor-financed, or customer-owned, restate CapEx_Initial down toward the facility-only ~${v.facBlockMid} — a one-cell change that transforms every return in Section 17.`,
+    `If IT is leased, vendor-financed, or customer-owned, zero the rack-price cells in the Rack Type Library — CapEx then reverts automatically to facility-only (~${v.facBlockMid}) and every return in Section 17 transforms accordingly.`,
   ]),
 );
 
@@ -646,7 +646,7 @@ children.push(
       ["UAE tax", `${pct(m.tax, 0)} with GIDLR ${pct(m.gidlr, 0)}-of-EBITDA interest cap (applied via MIN in the model)`, "Unit economics", `${v.capexGpu}/GPU CapEx; ${v.revGpuHr}/GPU-hr revenue vs ${v.opexGpuHr} cash cost; ${v.costMtok}/M tokens cash cost`],
     ], [200, 250, 200, 330]),
   ...caveat("READING THESE RETURNS — CAPEX RESTATED; REVENUE IS NOW THE SWING FACTOR", [
-    "With CapEx restated to the benchmark all-in midpoint (" + v.capex + ", owned IT), the levered structure fails: minimum DSCR "
+    "With CapEx built bottom-up from benchmark drivers (" + v.capex + ", owned IT), the levered structure fails: minimum DSCR "
       + v.minDscr + " (< 1.0x in Year 1), equity IRR " + v.eqIrr + ", NPV " + v.npv + " at a 15% hurdle. 80% leverage is not financeable on these cash flows — leverage must fall or revenue must rise.",
     "The revenue input is the conservative side: " + v.revGpuHr + "/GPU-hr blended versus $8–11/GPU-hr market rates for GB200-class capacity. At market pricing, revenue roughly doubles and returns re-enter the 128 MW reference frame above.",
     "Both levers are single-cell edits on the Control Panel; the sensitivity engine quantifies tariff x leverage across 16 scenarios automatically.",
@@ -778,7 +778,7 @@ children.push(
         "Arithmetic verified and retained as market reference; explicitly separated from test-fit model outputs.",
         "Recomputation"],
       ["15", "No CapEx/IT reconciliation",
-        "Added and actioned: model CapEx restated from $139.5M to " + v.capex + " (facility " + v.benchFac + " + VR IT " + v.benchIt + " midpoint) — Sections 15/17.",
+        "Added and actioned: CapEx is now derived per-MW + per-rack (currently " + v.capex + "; facility " + v.benchFac + " + VR IT " + v.benchIt + ") — Sections 15/17.",
         "Rack pricing reports"],
       ["16", "128 MW roadmap had no financial linkage",
         "Added a Phased Expansion module (workbook sheet + Section 14 box): 16 blocks, " + v.expMW + " MW, " + v.expCapex + " campus CapEx, peak funding " + v.expPeak + ".",
