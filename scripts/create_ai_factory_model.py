@@ -25,6 +25,8 @@ from openpyxl.drawing.line import LineProperties
 from openpyxl.formatting.rule import CellIsRule, ColorScaleRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
+from openpyxl.workbook.defined_name import DefinedName
+from openpyxl.worksheet.datavalidation import DataValidation
 
 FILE_NAME = "AI_Factory_Model.xlsx"
 
@@ -58,6 +60,41 @@ LIBRARY_FIRST_ROW = 5  # first data row on the library sheet
 
 COOLING_TYPES = ("Liquid", "Air")
 
+# Rack platform library. One row per selectable rack type:
+# (type, class, GPUs/rack, rack power kW, per-GPU TDP W, cooling, notes).
+# Power/TDP are published or reported figures — 'est.' rows need verification.
+# Required LPM is computed live on the sheet from the model's coolant inputs.
+RACK_LIBRARY = [
+    ("Vera Rubin NVL72", "Compute", 72, 227.0, 2300, "Liquid",
+     "Reported envelope 130-250 kW; 227 kW = Max-P design point; TDP est."),
+    ("GB300 NVL72", "Compute", 72, 137.0, 1400, "Liquid",
+     "Vendor ~132-142 kW nominal, ~155 kW peak"),
+    ("GB200 NVL72", "Compute", 72, 121.0, 1200, "Liquid",
+     "~120 kW nominal; 130-132 kW observed at full load"),
+    ("Rubin Ultra NVL576 (Kyber)", "Compute", 576, 600.0, 2300, "Liquid",
+     "Announced; reported up to ~1 MW class — estimate, verify before design"),
+    ("HGX H100 air rack (4x 8-GPU)", "Compute", 32, 44.0, 700, "Air",
+     "Legacy air-cooled baseline"),
+    ("Quantum-X800 IB fabric rack", "Network", 0, 100.0, 0, "Air",
+     "Scale-out leaf/spine block — estimate"),
+    ("Spectrum-X CPO fabric rack", "Network", 0, 80.0, 0, "Liquid",
+     "Co-packaged-optics switch rack — estimate"),
+    ("NVMe flash storage rack", "Storage", 0, 40.0, 0, "Air",
+     "High-performance NVMe tier — estimate"),
+    ("HDD object storage rack", "Storage", 0, 25.0, 0, "Air",
+     "Bulk object tier — estimate"),
+]
+RACK_INDEX = {r[0]: r for r in RACK_LIBRARY}
+RACK_SHEET = "Rack Type Library"
+RACK_FIRST_ROW = 5
+RACK_LAST_ROW = RACK_FIRST_ROW + len(RACK_LIBRARY) - 1
+
+
+def rack_class_range(cls):
+    rows = [RACK_FIRST_ROW + i for i, r in enumerate(RACK_LIBRARY)
+            if r[1] == cls]
+    return min(rows), max(rows)
+
 # Every variable parameter of the model: prompted interactively at generation
 # time (Enter keeps the default). (category, name, default, unit, fmt, notes)
 # Geo_Location is a menu choice from LOCATION_LIBRARY; *_Cooling_Type are
@@ -70,26 +107,18 @@ PARAM_SPEC = [
      "Assumption: Abu Dhabi grid avg (Barakah nuclear + gas + solar mix)"),
     ("Geographic & Climate", "Water_Usage_Effectiveness", 0.15, "L/kWh", "0.000",
      "Assumption: closed-loop dry coolers, minimal adiabatic assist"),
+    ("Technical Specs", "VR_Rack_Type", "Vera Rubin NVL72", "", None,
+     "Dropdown from 'Rack Type Library' — sets power, GPUs, TDP, cooling, LPM"),
     ("Technical Specs", "VR_Rack_Count", 32, "racks", "#,##0",
-     "Vera Rubin NVL72 compute racks"),
-    ("Technical Specs", "VR_Rack_Power_kW", 227.0, "kW/rack", "#,##0.0",
-     "Compute & scale-up busbar load per VR rack"),
-    ("Technical Specs", "VR_Cooling_Type", "Liquid", "Liquid/Air", None,
-     "S45 direct-to-chip liquid loop"),
+     "Any number of compute racks of the selected type"),
+    ("Technical Specs", "Network_Rack_Type", "Quantum-X800 IB fabric rack", "",
+     None, "Dropdown from 'Rack Type Library'"),
     ("Technical Specs", "Network_Rack_Count", 6, "racks", "#,##0",
-     "Scale-out network fabric racks"),
-    ("Technical Specs", "Network_Rack_Power_kW", 100.0, "kW/rack", "#,##0.0",
-     "Switching + optics load per network rack"),
-    ("Technical Specs", "Network_Cooling_Type", "Air", "Liquid/Air", None,
-     "Hot-aisle containment air cooling"),
+     "Any number of network racks of the selected type"),
+    ("Technical Specs", "Storage_Rack_Type", "NVMe flash storage rack", "",
+     None, "Dropdown from 'Rack Type Library'"),
     ("Technical Specs", "Storage_Rack_Count", 10, "racks", "#,##0",
-     "NVMe object/block storage racks"),
-    ("Technical Specs", "Storage_Rack_Power_kW", 40.0, "kW/rack", "#,##0.0",
-     "Load per storage rack"),
-    ("Technical Specs", "Storage_Cooling_Type", "Air", "Liquid/Air", None,
-     "Hot-aisle containment air cooling"),
-    ("Technical Specs", "GPUs_Per_Rack", 72, "GPUs", "#,##0",
-     "NVL72 = 72 Rubin GPUs per VR compute rack"),
+     "Any number of storage racks of the selected type"),
     ("Technical Specs", "Liquid_Cooling_Overhead", 0.05, "kW/kW", "0.0%",
      "Cooling power per kW of liquid-cooled IT (CDU pumps, dry-cooler fans)"),
     ("Technical Specs", "Air_Cooling_Overhead", 0.28, "kW/kW", "0.0%",
@@ -250,6 +279,37 @@ def prompt_for_params(stream=None):
             values[name] = parse_location(line, default)
             continue
 
+        if name.endswith("_Rack_Type"):
+            cls = {"VR_Rack_Type": "Compute",
+                   "Network_Rack_Type": "Network",
+                   "Storage_Rack_Type": "Storage"}[name]
+            options = [r for r in RACK_LIBRARY if r[1] == cls]
+            print(f"{name} — pick a platform (sets power/GPUs/TDP/cooling/LPM"
+                  f" via the Rack Type Library):", flush=True)
+            for i, (rn, _c, g, kw, tdp, cool, _n) in enumerate(options, 1):
+                gpu_s = f", {g} GPUs @ {tdp} W" if g else ""
+                print(f"  {i}) {rn}  ({kw:g} kW, {cool}{gpu_s})", flush=True)
+            print(f"  type (number or name) [{default}]: ", end="", flush=True)
+            line = stream.readline()
+            if line == "":
+                print("(EOF — keeping defaults for remaining parameters)")
+                break
+            raw = line.strip()
+            if raw == "":
+                values[name] = default
+            elif raw.isdigit() and 1 <= int(raw) <= len(options):
+                values[name] = options[int(raw) - 1][0]
+            else:
+                match = [r[0] for r in options
+                         if r[0].lower().startswith(raw.lower())]
+                if match:
+                    values[name] = match[0]
+                else:
+                    print(f"    {raw!r} not in the library — keeping"
+                          f" {default!r}")
+                    values[name] = default
+            continue
+
         if name.endswith("_Cooling_Type"):
             print(f"{name} — {notes}", flush=True)
             print(f"  cooling type (Liquid/Air) [{default}]: ", end="", flush=True)
@@ -391,7 +451,7 @@ def build_inputs(wb, values):
     ws.title = INPUTS_SHEET
     title_block(
         ws,
-        '="NVIDIA VERA RUBIN NVL72 AI FACTORY — "&UPPER($C$5)',
+        "AI FACTORY CONTROL PANEL",  # replaced with a live formula below
         "Master Control Panel — edit only the yellow Value cells; every other"
         " sheet recalculates from them",
         width=5,
@@ -407,19 +467,52 @@ def build_inputs(wb, values):
                 f"MATCH($C${P['Geo_Location']},"
                 f"'{LIBRARY_SHEET}'!$A${LIBRARY_FIRST_ROW}:$A${lib_last},0))")
 
-    # Derived climate rows inserted right after Geo_Location; values are
-    # INDEX/MATCH formulas into the climate library, so retyping the location
-    # cell in Excel re-derives zone, MLC limit and N=20yr peak temperatures.
-    derived_after_geo = [
-        ("ASHRAE_Climate_Zone", "B", "", None,
-         "Derived from location — ASHRAE 169 climate zone"),
-        ("ASHRAE_MLC_Limit", "C", "", "0.000",
-         "Derived from location — ASHRAE 90.4 max design MLC"),
-        ("Peak_Ambient_DryBulb", "D", "°C", "#,##0.0",
-         "Derived from location — ASHRAE N=20yr extreme peak dry-bulb"),
-        ("Coincident_WetBulb", "E", "°C", "#,##0.0",
-         "Derived from location — ASHRAE N=20yr peak wet-bulb"),
-    ]
+    def rack_lookup(col_letter, type_row):
+        return (f"=INDEX('{RACK_SHEET}'!${col_letter}${RACK_FIRST_ROW}"
+                f":${col_letter}${RACK_LAST_ROW},"
+                f"MATCH($C${type_row},"
+                f"'{RACK_SHEET}'!$A${RACK_FIRST_ROW}:$A${RACK_LAST_ROW},0))")
+
+    # Derived rows inserted right after their driving dropdown; values are
+    # INDEX/MATCH formulas, so changing the dropdown re-derives everything.
+    # (name, library column, unit, fmt, notes) — climate uses lib_lookup,
+    # rack classes use rack_lookup.
+    derived_after = {
+        "Geo_Location": ("Geographic & Climate", lib_lookup, [
+            ("ASHRAE_Climate_Zone", "B", "", None,
+             "Derived from location — ASHRAE 169 climate zone"),
+            ("ASHRAE_MLC_Limit", "C", "", "0.000",
+             "Derived from location — ASHRAE 90.4 max design MLC"),
+            ("Peak_Ambient_DryBulb", "D", "°C", "#,##0.0",
+             "Derived from location — ASHRAE N=20yr extreme peak dry-bulb"),
+            ("Coincident_WetBulb", "E", "°C", "#,##0.0",
+             "Derived from location — ASHRAE N=20yr peak wet-bulb"),
+        ]),
+        "VR_Rack_Type": ("Technical Specs", None, [
+            ("VR_Rack_Power_kW", "D", "kW/rack", "#,##0.0",
+             "Derived from rack type — published/reported rack power"),
+            ("GPUs_Per_Rack", "C", "GPUs", "#,##0",
+             "Derived from rack type"),
+            ("VR_GPU_TDP_W", "E", "W/GPU", "#,##0",
+             "Derived from rack type — per-GPU TDP (reported/est.)"),
+            ("VR_Cooling_Type", "F", "Liquid/Air", None,
+             "Derived from rack type"),
+            ("VR_LPM_Per_Rack", "G", "LPM", "#,##0.0",
+             "Derived from rack type — required flow at the model's dT"),
+        ]),
+        "Network_Rack_Type": ("Technical Specs", None, [
+            ("Network_Rack_Power_kW", "D", "kW/rack", "#,##0.0",
+             "Derived from rack type"),
+            ("Network_Cooling_Type", "F", "Liquid/Air", None,
+             "Derived from rack type"),
+        ]),
+        "Storage_Rack_Type": ("Technical Specs", None, [
+            ("Storage_Rack_Power_kW", "D", "kW/rack", "#,##0.0",
+             "Derived from rack type"),
+            ("Storage_Cooling_Type", "F", "Liquid/Air", None,
+             "Derived from rack type"),
+        ]),
+    }
 
     r = 5
     for cat, name, default, unit, fmt, notes in PARAM_SPEC:
@@ -434,12 +527,16 @@ def build_inputs(wb, values):
         vcell.fill = INPUT_FILL
         if fmt:
             vcell.number_format = fmt
+        type_row = r
         r += 1
-        if name == "Geo_Location":
-            for dname, lib_col, dunit, dfmt, dnotes in derived_after_geo:
+        if name in derived_after:
+            dcat, lookup_fn, rows_spec = derived_after[name]
+            for dname, lib_col, dunit, dfmt, dnotes in rows_spec:
                 P[dname] = r
-                row_vals = ((1, "Geographic & Climate"), (2, dname),
-                            (3, lib_lookup(lib_col)), (4, dunit), (5, dnotes))
+                formula = (lookup_fn(lib_col) if lookup_fn
+                           else rack_lookup(lib_col, type_row))
+                row_vals = ((1, dcat), (2, dname), (3, formula),
+                            (4, dunit), (5, dnotes))
                 for col, v in row_vals:
                     cell = ws.cell(row=r, column=col, value=v)
                     cell.font = REGULAR_FONT
@@ -449,6 +546,12 @@ def build_inputs(wb, values):
                 if dfmt:
                     dcell.number_format = dfmt
                 r += 1
+
+    # Live banner: rack count, rack type and location all come from cells
+    ws["A1"] = (f'="AI FACTORY CONTROL PANEL — "'
+                f'&TEXT($C${P["VR_Rack_Count"]},"0")&"x "'
+                f'&UPPER($C${P["VR_Rack_Type"]})'
+                f'&" — "&UPPER($C${P["Geo_Location"]})')
 
     legend_row = r + 1
     ws.cell(row=legend_row, column=1,
@@ -462,6 +565,77 @@ def build_inputs(wb, values):
                   " Library' sheet; the four 'Derived from location' rows update"
                   " automatically. Cooling types must be 'Liquid' or 'Air'.").font = NOTE_FONT
     return ws
+
+
+def build_rack_library(wb):
+    ws = wb.create_sheet(title=RACK_SHEET)
+    title_block(
+        ws,
+        "Rack Type Library — Published Platform Specifications",
+        "Editable reference data (blue cells): rack power and per-GPU TDP are"
+        " published/reported figures; 'est.' rows need verification. Required"
+        " LPM is computed live from the Control Panel's coolant inputs.",
+        width=7,
+    )
+    style_header_row(ws, 4, ["Rack Type", "Class", "GPUs / Rack",
+                             "Rack Power (kW)", "GPU TDP (W)", "Cooling",
+                             "Required LPM / Rack", "Notes / Source"])
+    rho = pref("Coolant_Density")
+    cp = pref("Coolant_Specific_Heat")
+    fws = pref("Liquid_Supply_Temp_FWS")
+    fwr = pref("Liquid_Return_Temp_FWR")
+    for i, (name, cls, gpus, kw, tdp, cool, note) in enumerate(RACK_LIBRARY):
+        r = RACK_FIRST_ROW + i
+        lpm = (f'=IF($F{r}="Liquid",'
+               f"$D{r}/({rho}*{cp}*({fwr}-{fws}))*60,0)")
+        vals = [name, cls, gpus, kw, tdp, cool, lpm, note]
+        fmts = [None, None, "#,##0", "#,##0.0", "#,##0", None, "#,##0.0", None]
+        for col, (v, fmt) in enumerate(zip(vals, fmts), start=1):
+            cell = ws.cell(row=r, column=col, value=v)
+            cell.font = INPUT_FONT if col in (3, 4, 5, 6) else (
+                BOLD_FONT if col == 7 else REGULAR_FONT)
+            cell.border = BORDER_DATA
+            if fmt:
+                cell.number_format = fmt
+    return ws
+
+
+def apply_dropdowns(wb):
+    """In-cell dropdowns: rack types per class, location, cooling overrides.
+    Backed by workbook-level defined names so the lists live on their sheets."""
+    names = {
+        "LocationList":
+            f"'{LIBRARY_SHEET}'!$A${LIBRARY_FIRST_ROW}"
+            f":$A${LIBRARY_FIRST_ROW + len(LOCATION_LIBRARY) - 1}",
+    }
+    for cls in ("Compute", "Network", "Storage"):
+        lo, hi = rack_class_range(cls)
+        names[f"RackTypes{cls}"] = f"'{RACK_SHEET}'!$A${lo}:$A${hi}"
+    for nm, ref in names.items():
+        wb.defined_names[nm] = DefinedName(nm, attr_text=ref)
+
+    ws = wb[INPUTS_SHEET]
+
+    def add_list_dv(named_range, row):
+        dv = DataValidation(type="list", formula1=f"={named_range}",
+                            allow_blank=False, showErrorMessage=True)
+        dv.error = ("Pick a value from the dropdown (or add a new row to the"
+                    " library sheet first).")
+        ws.add_data_validation(dv)
+        dv.add(f"C{row}")
+
+    add_list_dv("LocationList", P["Geo_Location"])
+    add_list_dv("RackTypesCompute", P["VR_Rack_Type"])
+    add_list_dv("RackTypesNetwork", P["Network_Rack_Type"])
+    add_list_dv("RackTypesStorage", P["Storage_Rack_Type"])
+
+    for count_param in ("VR_Rack_Count", "Network_Rack_Count",
+                        "Storage_Rack_Count"):
+        dv = DataValidation(type="whole", operator="between", formula1="0",
+                            formula2="100000", allow_blank=False)
+        dv.error = "Rack count must be a whole number >= 0."
+        ws.add_data_validation(dv)
+        dv.add(f"C{P[count_param]}")
 
 
 def build_climate_library(wb):
@@ -1381,7 +1555,8 @@ def build_dashboard(wb, values):
     title_block(
         ws,
         f'="AI FACTORY DASHBOARD — "&TEXT({pref("VR_Rack_Count")},"0")'
-        f'&"x VERA RUBIN NVL72 · "&UPPER({pref("Geo_Location")})',
+        f'&"x "&UPPER({pref("VR_Rack_Type")})'
+        f'&" · "&UPPER({pref("Geo_Location")})',
         "All values live-linked; edit assumptions on 'Control Panel & Inputs'"
         " and everything on this page recalculates",
         width=11,
@@ -1560,6 +1735,7 @@ def build_dashboard(wb, values):
 TAB_COLORS = {
     "Dashboard": "1F4E78",
     INPUTS_SHEET: "FFC000",
+    RACK_SHEET: "BF8F00",
     LIBRARY_SHEET: "A6A6A6",
     THERMAL_SHEET: "5B9BD5",
     PROFORMA_SHEET: "70AD47",
@@ -1569,7 +1745,7 @@ TAB_COLORS = {
     EXPANSION_SHEET: "00B0A0",
 }
 
-ZEBRA_SHEETS = {INPUTS_SHEET, LIBRARY_SHEET, THERMAL_SHEET,
+ZEBRA_SHEETS = {INPUTS_SHEET, LIBRARY_SHEET, RACK_SHEET, THERMAL_SHEET,
                 "Unit Economics & KPIs"}
 
 
@@ -1626,6 +1802,7 @@ def build_workbook(values=None):
     P.clear(); T.clear(); F.clear(); E.clear(); X.clear()
     wb = openpyxl.Workbook()
     build_inputs(wb, values)
+    build_rack_library(wb)
     build_climate_library(wb)
     build_thermal(wb)
     build_proforma(wb)
@@ -1634,6 +1811,7 @@ def build_workbook(values=None):
     build_matrices(wb)
     build_expansion(wb, values)
     build_dashboard(wb, values)
+    apply_dropdowns(wb)
     autosize(wb)
     polish(wb)
     return wb, {"P": dict(P), "T": dict(T), "F": dict(F), "E": dict(E),
