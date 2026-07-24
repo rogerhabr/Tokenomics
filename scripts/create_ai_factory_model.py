@@ -14,10 +14,151 @@ Every output cell traces back to 'Control Panel & Inputs' by formula, so changin
 any input recalculates the whole workbook including both sensitivity matrices.
 """
 
+import argparse
+import sys
+
 import openpyxl
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
 FILE_NAME = "AI_Factory_32x_Rubin_AbuDhabi.xlsx"
+
+# Every variable parameter of the model: prompted interactively at generation
+# time (Enter keeps the default). (category, name, default, unit, fmt, notes)
+PARAM_SPEC = [
+    ("Geographic & Climate", "Geo_Location", "Abu Dhabi, UAE", "", None,
+     "ASHRAE Climate Zone 1A"),
+    ("Geographic & Climate", "Peak_Ambient_DryBulb", 50.0, "°C", "#,##0.0",
+     "Extreme peak dry-bulb temperature"),
+    ("Geographic & Climate", "Coincident_WetBulb", 30.0, "°C", "#,##0.0",
+     "Peak summer wet-bulb condition"),
+    ("Geographic & Climate", "Grid_Carbon_Intensity", 0.39, "kgCO2/kWh", "0.000",
+     "Assumption: Abu Dhabi grid avg (Barakah nuclear + gas + solar mix)"),
+    ("Geographic & Climate", "Water_Usage_Effectiveness", 0.15, "L/kWh", "0.000",
+     "Assumption: closed-loop dry coolers, minimal adiabatic assist"),
+    ("Technical Specs", "Rack_Count", 32, "racks", "#,##0",
+     "Vera Rubin NVL72 racks"),
+    ("Technical Specs", "GPUs_Per_Rack", 72, "GPUs", "#,##0",
+     "NVL72 = 72 Rubin GPUs per rack"),
+    ("Technical Specs", "Peak_Power_Per_Rack", 227.0, "kW", "#,##0.0",
+     "Compute & scale-up busbar load"),
+    ("Technical Specs", "Air_Cooled_Load", 1000.0, "kW", "#,##0.0",
+     "1.0 MW network & NVMe storage"),
+    ("Technical Specs", "Liquid_Supply_Temp_FWS", 45.0, "°C", "#,##0.0",
+     "S45 direct-to-chip loop"),
+    ("Technical Specs", "Target_Annualized_PUE", 1.08, "", "0.000",
+     "Drives facility energy = IT energy x PUE"),
+    ("Technical Specs", "Cluster_Utilization", 0.85, "%", "0.0%",
+     "Assumption: avg power/capacity utilization of the fleet"),
+    ("Technical Specs", "Uptime_Availability", 0.995, "%", "0.00%",
+     "Assumption: contractual availability SLA"),
+    ("Technical Specs", "Tokens_Per_GPU_Sec", 1800, "tok/s/GPU", "#,##0",
+     "Assumption: blended inference throughput per Rubin GPU"),
+    ("Technical Specs", "Token_Fleet_Share", 0.30, "%", "0.0%",
+     "Share of fleet serving the API token market"),
+    ("Financial & Fiscal", "Electricity_Tariff", 0.06, "$/kWh", "$#,##0.000",
+     "Abu Dhabi industrial rate (Year 1)"),
+    ("Financial & Fiscal", "Tariff_Escalation", 0.02, "%/yr", "0.0%",
+     "Assumption: annual power price escalation"),
+    ("Financial & Fiscal", "CapEx_Initial", 139500000, "USD", "$#,##0",
+     "Total turnkey deployment"),
+    ("Financial & Fiscal", "Residual_Value_Pct", 0.10, "%", "0.0%",
+     "Assumption: pre-tax residual recovery of CapEx at end of Year 5"),
+    ("Financial & Fiscal", "Debt_Ratio", 0.80, "%", "0.0%",
+     "User adjustable (50% - 80%)"),
+    ("Financial & Fiscal", "Interest_Rate", 0.065, "%", "0.0%",
+     "Senior debt facility rate"),
+    ("Financial & Fiscal", "Debt_Tenor", 5, "Years", "#,##0",
+     "Annual amortization schedule"),
+    ("Financial & Fiscal", "UAE_Corporate_Tax", 0.09, "%", "0.0%",
+     "Statutory corporate tax rate"),
+    ("Financial & Fiscal", "GIDLR_EBITDA_Cap", 0.30, "%", "0.0%",
+     "UAE interest deduction limit — applied via MIN() in the tax calc"),
+    ("Financial & Fiscal", "Equity_Discount_Rate", 0.15, "%", "0.0%",
+     "Assumption: hurdle rate for equity NPV"),
+    ("Financial & Fiscal", "Fixed_OpEx_Annual", 10877000, "USD/yr", "$#,##0",
+     "Staff, maintenance, insurance, connectivity (Year 1)"),
+    ("Financial & Fiscal", "OpEx_Escalation", 0.03, "%/yr", "0.0%",
+     "Assumption: annual fixed-OpEx inflation"),
+    ("Revenue Strategy", "Lease_Revenue_70pct", 58800000, "USD/yr", "$#,##0",
+     "70% bare-metal capacity leases (Year 1, pre-ramp)"),
+    ("Revenue Strategy", "Token_Revenue_30pct", 25200000, "USD/yr", "$#,##0",
+     "30% dynamic API token market (Year 1, pre-ramp)"),
+    ("Revenue Strategy", "Year1_Ramp_Factor", 0.90, "%", "0.0%",
+     "Assumption: Year 1 commissioning / fill-up ramp"),
+    ("Revenue Strategy", "Lease_Price_Escalation", 0.00, "%/yr", "0.0%",
+     "Assumption: lease repricing per year"),
+    ("Revenue Strategy", "Token_Price_Decline", 0.15, "%/yr", "0.0%",
+     "Core tokenomics: $/token deflation per year"),
+    ("Revenue Strategy", "Token_Volume_Growth", 0.25, "%/yr", "0.0%",
+     "Token demand growth (partially offsets price decline)"),
+]
+
+DEFAULTS = {name: default for _, name, default, *_ in PARAM_SPEC}
+
+
+def _is_pct(fmt):
+    return bool(fmt) and "%" in fmt
+
+
+def parse_param_value(name, raw, default, fmt):
+    """Parse one prompted value. Percent params accept '85%', '0.85' or '85'."""
+    raw = raw.strip()
+    if raw == "":
+        return default
+    if isinstance(default, str):
+        return raw
+    had_pct = raw.endswith("%")
+    if had_pct:
+        raw = raw[:-1].strip()
+    val = float(raw.replace(",", "").replace("$", ""))
+    if had_pct:
+        val /= 100.0
+    elif _is_pct(fmt) and val > 1.5:
+        # e.g. user typed "80" for Debt_Ratio — clearly meant 80%
+        print(f"    (interpreting {val:g} as {val:g}% = {val / 100:g})")
+        val /= 100.0
+    if isinstance(default, int) and not isinstance(default, bool):
+        return int(round(val))
+    return val
+
+
+def prompt_for_params(stream=None):
+    """Interactively prompt for every parameter; Enter keeps the default."""
+    stream = stream or sys.stdin
+    values = {}
+    print("AI Factory model — parameter setup"
+          " (press Enter to keep each default)\n", flush=True)
+    category = None
+    for cat, name, default, unit, fmt, notes in PARAM_SPEC:
+        if cat != category:
+            category = cat
+            print(f"--- {cat} ---", flush=True)
+        if isinstance(default, str):
+            shown = default
+        elif _is_pct(fmt):
+            shown = f"{default:.4g} (= {default * 100:g}%)"
+        else:
+            shown = f"{default:,}" if isinstance(default, int) else f"{default:g}"
+        unit_s = f" [{unit}]" if unit else ""
+        print(f"{name}{unit_s} — {notes}", flush=True)
+        print(f"  value [{shown}]: ", end="", flush=True)
+        line = stream.readline()
+        if line == "":  # EOF: keep defaults for the rest
+            print("(EOF — keeping defaults for remaining parameters)")
+            break
+        try:
+            values[name] = parse_param_value(name, line, default, fmt)
+        except ValueError:
+            print(f"    invalid number {line.strip()!r} — keeping default {shown}")
+            values[name] = default
+        if values[name] < 0 if isinstance(values[name], (int, float)) else False:
+            print(f"    negative value rejected — keeping default {shown}")
+            values[name] = default
+    out = dict(DEFAULTS)
+    out.update(values)
+    print("\nParameter setup complete.\n", flush=True)
+    return out
+
 FONT_FAMILY = "Calibri"
 
 # Fonts (financial-model color convention: blue = hardcoded input,
@@ -100,7 +241,7 @@ def title_block(ws, title, subtitle):
 # ---------------------------------------------------------------------------
 # Sheet: Control Panel & Inputs
 # ---------------------------------------------------------------------------
-def build_inputs(wb):
+def build_inputs(wb, values):
     ws = wb.active
     ws.title = INPUTS_SHEET
     title_block(
@@ -111,77 +252,8 @@ def build_inputs(wb):
     )
     style_header_row(ws, 4, ["Category", "Parameter", "Value", "Unit", "Notes / Constraints"])
 
-    rows = [
-        # (category, param, value, unit, fmt, notes)
-        ("Geographic & Climate", "Geo_Location", "Abu Dhabi, UAE", "", None,
-         "ASHRAE Climate Zone 1A"),
-        ("Geographic & Climate", "Peak_Ambient_DryBulb", 50.0, "°C", FMT_NUM_1DP,
-         "Extreme peak dry-bulb temperature"),
-        ("Geographic & Climate", "Coincident_WetBulb", 30.0, "°C", FMT_NUM_1DP,
-         "Peak summer wet-bulb condition"),
-        ("Geographic & Climate", "Grid_Carbon_Intensity", 0.39, "kgCO2/kWh", FMT_3DP,
-         "Assumption: Abu Dhabi grid avg (Barakah nuclear + gas + solar mix)"),
-        ("Geographic & Climate", "Water_Usage_Effectiveness", 0.15, "L/kWh", FMT_3DP,
-         "Assumption: closed-loop dry coolers, minimal adiabatic assist"),
-        ("Technical Specs", "Rack_Count", 32, "racks", FMT_NUM,
-         "Vera Rubin NVL72 racks"),
-        ("Technical Specs", "GPUs_Per_Rack", 72, "GPUs", FMT_NUM,
-         "NVL72 = 72 Rubin GPUs per rack"),
-        ("Technical Specs", "Peak_Power_Per_Rack", 227.0, "kW", FMT_NUM_1DP,
-         "Compute & scale-up busbar load"),
-        ("Technical Specs", "Air_Cooled_Load", 1000.0, "kW", FMT_NUM_1DP,
-         "1.0 MW network & NVMe storage"),
-        ("Technical Specs", "Liquid_Supply_Temp_FWS", 45.0, "°C", FMT_NUM_1DP,
-         "S45 direct-to-chip loop"),
-        ("Technical Specs", "Target_Annualized_PUE", 1.08, "", FMT_3DP,
-         "Drives facility energy = IT energy x PUE"),
-        ("Technical Specs", "Cluster_Utilization", 0.85, "%", FMT_PCT,
-         "Assumption: avg power/capacity utilization of the fleet"),
-        ("Technical Specs", "Uptime_Availability", 0.995, "%", FMT_PCT_2DP,
-         "Assumption: contractual availability SLA"),
-        ("Technical Specs", "Tokens_Per_GPU_Sec", 1800, "tok/s/GPU", FMT_NUM,
-         "Assumption: blended inference throughput per Rubin GPU"),
-        ("Technical Specs", "Token_Fleet_Share", 0.30, "%", FMT_PCT,
-         "Share of fleet serving the API token market"),
-        ("Financial & Fiscal", "Electricity_Tariff", 0.06, "$/kWh", "$#,##0.000",
-         "Abu Dhabi industrial rate (Year 1)"),
-        ("Financial & Fiscal", "Tariff_Escalation", 0.02, "%/yr", FMT_PCT,
-         "Assumption: annual power price escalation"),
-        ("Financial & Fiscal", "CapEx_Initial", 139500000, "USD", FMT_MONEY,
-         "Total turnkey deployment"),
-        ("Financial & Fiscal", "Residual_Value_Pct", 0.10, "%", FMT_PCT,
-         "Assumption: pre-tax residual recovery of CapEx at end of Year 5"),
-        ("Financial & Fiscal", "Debt_Ratio", 0.80, "%", FMT_PCT,
-         "User adjustable (50% - 80%)"),
-        ("Financial & Fiscal", "Interest_Rate", 0.065, "%", FMT_PCT,
-         "Senior debt facility rate"),
-        ("Financial & Fiscal", "Debt_Tenor", 5, "Years", FMT_NUM,
-         "Annual amortization schedule"),
-        ("Financial & Fiscal", "UAE_Corporate_Tax", 0.09, "%", FMT_PCT,
-         "Statutory corporate tax rate"),
-        ("Financial & Fiscal", "GIDLR_EBITDA_Cap", 0.30, "%", FMT_PCT,
-         "UAE interest deduction limit — applied via MIN() in the tax calc"),
-        ("Financial & Fiscal", "Equity_Discount_Rate", 0.15, "%", FMT_PCT,
-         "Assumption: hurdle rate for equity NPV"),
-        ("Financial & Fiscal", "Fixed_OpEx_Annual", 10877000, "USD/yr", FMT_MONEY,
-         "Staff, maintenance, insurance, connectivity (Year 1)"),
-        ("Financial & Fiscal", "OpEx_Escalation", 0.03, "%/yr", FMT_PCT,
-         "Assumption: annual fixed-OpEx inflation"),
-        ("Revenue Strategy", "Lease_Revenue_70pct", 58800000, "USD/yr", FMT_MONEY,
-         "70% bare-metal capacity leases (Year 1, pre-ramp)"),
-        ("Revenue Strategy", "Token_Revenue_30pct", 25200000, "USD/yr", FMT_MONEY,
-         "30% dynamic API token market (Year 1, pre-ramp)"),
-        ("Revenue Strategy", "Year1_Ramp_Factor", 0.90, "%", FMT_PCT,
-         "Assumption: Year 1 commissioning / fill-up ramp"),
-        ("Revenue Strategy", "Lease_Price_Escalation", 0.00, "%/yr", FMT_PCT,
-         "Assumption: lease repricing per year"),
-        ("Revenue Strategy", "Token_Price_Decline", 0.15, "%/yr", FMT_PCT,
-         "Core tokenomics: $/token deflation per year"),
-        ("Revenue Strategy", "Token_Volume_Growth", 0.25, "%/yr", FMT_PCT,
-         "Token demand growth (partially offsets price decline)"),
-    ]
-
-    for i, (cat, name, val, unit, fmt, notes) in enumerate(rows):
+    for i, (cat, name, default, unit, fmt, notes) in enumerate(PARAM_SPEC):
+        val = values.get(name, default)
         r = 5 + i
         P[name] = r
         for col, v in ((1, cat), (2, name), (3, val), (4, unit), (5, notes)):
@@ -194,7 +266,7 @@ def build_inputs(wb):
         if fmt:
             vcell.number_format = fmt
 
-    legend_row = 5 + len(rows) + 1
+    legend_row = 5 + len(PARAM_SPEC) + 1
     ws.cell(row=legend_row, column=1,
             value="Legend: yellow cells with blue text are the editable inputs;"
                   " all other cells in this workbook are formulas.").font = SUBTITLE_FONT
@@ -958,10 +1030,11 @@ def autosize(wb):
             ws.column_dimensions[col_letter].width = min(max(max_len + 4, 14), 44)
 
 
-def build_workbook():
+def build_workbook(values=None):
+    values = dict(DEFAULTS, **(values or {}))
     P.clear(); T.clear(); F.clear(); E.clear()
     wb = openpyxl.Workbook()
-    build_inputs(wb)
+    build_inputs(wb, values)
     build_thermal(wb)
     build_proforma(wb)
     build_unit_economics(wb)
@@ -973,7 +1046,33 @@ def build_workbook():
                 "U": dict(globals()["U"])}
 
 
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        description="Generate the AI Factory Excel model. By default every"
+                    " variable parameter is prompted interactively"
+                    " (Enter keeps the default).")
+    parser.add_argument("--defaults", action="store_true",
+                        help="skip all prompts and use the built-in defaults")
+    parser.add_argument("--interactive", action="store_true",
+                        help="force prompting even when stdin is not a TTY"
+                             " (answers can be piped, one per line)")
+    parser.add_argument("--output", default=FILE_NAME,
+                        help=f"output .xlsx path (default: {FILE_NAME})")
+    args = parser.parse_args(argv)
+
+    interactive = args.interactive or (not args.defaults and sys.stdin.isatty())
+    if interactive:
+        values = prompt_for_params()
+    else:
+        if not args.defaults:
+            print("stdin is not a TTY — using built-in defaults"
+                  " (pass --interactive to pipe answers)")
+        values = dict(DEFAULTS)
+
+    wb, _maps = build_workbook(values)
+    wb.save(args.output)
+    print(f"Successfully generated financial & engineering model: {args.output}")
+
+
 if __name__ == "__main__":
-    wb, _maps = build_workbook()
-    wb.save(FILE_NAME)
-    print(f"Successfully generated financial & engineering model: {FILE_NAME}")
+    main()
