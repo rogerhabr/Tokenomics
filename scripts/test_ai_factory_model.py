@@ -15,6 +15,7 @@ import openpyxl
 from create_ai_factory_model import (
     DEBT_RATIOS,
     FILE_NAME,
+    LOCATION_INDEX,
     TARIFFS,
     YEAR_COLS,
     build_workbook,
@@ -24,7 +25,12 @@ from create_ai_factory_model import (
 # Independent model implementation
 # ---------------------------------------------------------------------------
 INP = dict(
-    rack_count=32, gpus_per_rack=72, power_per_rack=227.0, air_load=1000.0,
+    location="Abu Dhabi, UAE",
+    vr_count=32, vr_kw=227.0, vr_cool="Liquid",
+    net_count=6, net_kw=100.0, net_cool="Air",
+    sto_count=10, sto_kw=40.0, sto_cool="Air",
+    liq_oh=0.05, air_oh=0.28,
+    gpus_per_rack=72,
     pue=1.08, util=0.85, uptime=0.995, tokens_gpu_s=1800, token_share=0.30,
     tariff=0.06, tariff_esc=0.02, capex=139_500_000, resid_pct=0.10,
     debt_ratio=0.80, rate=0.065, tenor=5, tax=0.09, gidlr=0.30,
@@ -59,11 +65,25 @@ def irr(cashflows, lo=-0.99, hi=10.0, tol=1e-10):
 
 def compute_model(p):
     m = {}
-    it_kw = p["rack_count"] * p["power_per_rack"] + p["air_load"]
+    loads = {
+        "vr": p["vr_count"] * p["vr_kw"],
+        "net": p["net_count"] * p["net_kw"],
+        "sto": p["sto_count"] * p["sto_kw"],
+    }
+    it_kw = sum(loads.values())
     m["it_kw"] = it_kw
-    m["mlc"] = (p["rack_count"] * p["power_per_rack"] * 0.05
-                + p["air_load"] * 0.28) / it_kw
-    m["mlc_margin"] = (0.260 - m["mlc"]) / 0.260
+    liquid_kw = sum(loads[k] for k in loads
+                    if p[f"{k}_cool"] == "Liquid")
+    air_kw = it_kw - liquid_kw
+    m["liquid_kw"] = liquid_kw
+    m["liquid_racks"] = sum(
+        p[f"{k}_count"] for k in ("vr", "net", "sto")
+        if p[f"{k}_cool"] == "Liquid")
+    m["flow_lpm"] = 195.0 * m["liquid_racks"]
+    m["mlc"] = (liquid_kw * p["liq_oh"] + air_kw * p["air_oh"]) / it_kw
+    loc = LOCATION_INDEX[p["location"]]
+    m["zone"], m["mlc_limit"], m["db20"], m["wb20"] = loc[1], loc[2], loc[3], loc[4]
+    m["mlc_margin"] = (m["mlc_limit"] - m["mlc"]) / m["mlc_limit"]
     avg_it_kw = it_kw * p["util"] * p["uptime"]
     m["energy_mwh"] = avg_it_kw * 8760 * p["pue"] / 1000
     kwh = m["energy_mwh"] * 1000
@@ -131,7 +151,7 @@ def compute_model(p):
     m["project_irr"] = irr(m["fcff"])
 
     # Unit economics (Year 2 = index 1, post-ramp)
-    gpus = p["rack_count"] * p["gpus_per_rack"]
+    gpus = p["vr_count"] * p["gpus_per_rack"]
     avail = gpus * 8760 * p["uptime"]
     sold = avail * p["util"]
     m["gpus"] = gpus
@@ -207,6 +227,15 @@ def main():
         thermal[f"B{T['Peak Mechanical Load Component (MLC)']}"].value, m["mlc"])
     chk("Thermal: MLC margin",
         thermal[f"B{T['Safety Compliance Margin']}"].value, m["mlc_margin"])
+    chk("Thermal: liquid-cooled kW",
+        thermal[f"B{T['Liquid-Cooled IT Load']}"].value, m["liquid_kw"])
+    chk("Thermal: S45 flow LPM",
+        thermal[f"B{T['Total S45 Cluster Flow Rate']}"].value, m["flow_lpm"])
+    chk("Thermal: MLC limit (location)",
+        thermal[f"B{T['ASHRAE 90.4 MLC Limit (from location)']}"].value,
+        m["mlc_limit"])
+    chk("Thermal: N=20yr peak DB (location)",
+        thermal[f"B{T['Peak Ambient Dry-Bulb (N=20yr)']}"].value, m["db20"])
     chk("Thermal: energy MWh",
         thermal[f"B{T['Annual Facility Energy']}"].value, m["energy_mwh"])
     chk("Thermal: water m3",

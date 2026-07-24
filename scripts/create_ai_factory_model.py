@@ -22,27 +22,72 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
 FILE_NAME = "AI_Factory_32x_Rubin_AbuDhabi.xlsx"
 
+# ASHRAE climate reference library. One row per selectable location:
+# (location, ASHRAE 169 climate zone, ASHRAE 90.4 max design MLC,
+#  N=20yr extreme peak dry-bulb °C, coincident/peak wet-bulb °C, note).
+# MLC limits and temperatures are editable reference values — verify against
+# ASHRAE 90.4-2019 (Table 6.5.1.1) and ASHRAE Fundamentals climatic data
+# (n=20yr return-period extremes) before relying on them for design.
+LOCATION_LIBRARY = [
+    ("Abu Dhabi, UAE", "1A", 0.260, 50.0, 30.0,
+     "Project baseline; ASHRAE 169-2021 may reclassify as 0B"),
+    ("Dubai, UAE", "0B", 0.280, 49.5, 31.0, ""),
+    ("Riyadh, Saudi Arabia", "0B", 0.280, 49.0, 24.0, "Dry extreme heat"),
+    ("Singapore", "0A", 0.280, 36.5, 29.5, "High wet-bulb year-round"),
+    ("Mumbai, India", "0A", 0.280, 39.5, 30.0, ""),
+    ("Phoenix, AZ, USA", "2B", 0.250, 48.5, 26.5, ""),
+    ("Dallas, TX, USA", "3A", 0.210, 43.5, 27.5, ""),
+    ("Ashburn, VA, USA", "4A", 0.190, 39.0, 27.0, "N. Virginia hub"),
+    ("Chicago, IL, USA", "5A", 0.160, 38.5, 27.0, ""),
+    ("Frankfurt, Germany", "5A", 0.160, 37.5, 23.0, ""),
+    ("Amsterdam, Netherlands", "5A", 0.160, 35.0, 22.0, ""),
+    ("Dublin, Ireland", "5A", 0.160, 28.5, 19.5, "Free-cooling friendly"),
+    ("Oslo, Norway", "6A", 0.150, 32.0, 21.0, ""),
+    ("Tokyo, Japan", "3A", 0.210, 37.5, 27.5, ""),
+    ("Sydney, Australia", "3A", 0.210, 43.0, 24.5, ""),
+]
+LOCATION_INDEX = {row[0]: row for row in LOCATION_LIBRARY}
+LIBRARY_SHEET = "ASHRAE Climate Library"
+LIBRARY_FIRST_ROW = 5  # first data row on the library sheet
+
+COOLING_TYPES = ("Liquid", "Air")
+
 # Every variable parameter of the model: prompted interactively at generation
 # time (Enter keeps the default). (category, name, default, unit, fmt, notes)
+# Geo_Location is a menu choice from LOCATION_LIBRARY; *_Cooling_Type are
+# Liquid/Air choices. Climate zone, MLC limit and N=20yr peak temperatures are
+# NOT prompted — they are derived from the location via INDEX/MATCH.
 PARAM_SPEC = [
     ("Geographic & Climate", "Geo_Location", "Abu Dhabi, UAE", "", None,
-     "ASHRAE Climate Zone 1A"),
-    ("Geographic & Climate", "Peak_Ambient_DryBulb", 50.0, "°C", "#,##0.0",
-     "Extreme peak dry-bulb temperature"),
-    ("Geographic & Climate", "Coincident_WetBulb", 30.0, "°C", "#,##0.0",
-     "Peak summer wet-bulb condition"),
+     "Menu choice — drives ASHRAE zone, 90.4 MLC limit and N=20yr peaks"),
     ("Geographic & Climate", "Grid_Carbon_Intensity", 0.39, "kgCO2/kWh", "0.000",
      "Assumption: Abu Dhabi grid avg (Barakah nuclear + gas + solar mix)"),
     ("Geographic & Climate", "Water_Usage_Effectiveness", 0.15, "L/kWh", "0.000",
      "Assumption: closed-loop dry coolers, minimal adiabatic assist"),
-    ("Technical Specs", "Rack_Count", 32, "racks", "#,##0",
-     "Vera Rubin NVL72 racks"),
+    ("Technical Specs", "VR_Rack_Count", 32, "racks", "#,##0",
+     "Vera Rubin NVL72 compute racks"),
+    ("Technical Specs", "VR_Rack_Power_kW", 227.0, "kW/rack", "#,##0.0",
+     "Compute & scale-up busbar load per VR rack"),
+    ("Technical Specs", "VR_Cooling_Type", "Liquid", "Liquid/Air", None,
+     "S45 direct-to-chip liquid loop"),
+    ("Technical Specs", "Network_Rack_Count", 6, "racks", "#,##0",
+     "Scale-out network fabric racks"),
+    ("Technical Specs", "Network_Rack_Power_kW", 100.0, "kW/rack", "#,##0.0",
+     "Switching + optics load per network rack"),
+    ("Technical Specs", "Network_Cooling_Type", "Air", "Liquid/Air", None,
+     "Hot-aisle containment air cooling"),
+    ("Technical Specs", "Storage_Rack_Count", 10, "racks", "#,##0",
+     "NVMe object/block storage racks"),
+    ("Technical Specs", "Storage_Rack_Power_kW", 40.0, "kW/rack", "#,##0.0",
+     "Load per storage rack"),
+    ("Technical Specs", "Storage_Cooling_Type", "Air", "Liquid/Air", None,
+     "Hot-aisle containment air cooling"),
     ("Technical Specs", "GPUs_Per_Rack", 72, "GPUs", "#,##0",
-     "NVL72 = 72 Rubin GPUs per rack"),
-    ("Technical Specs", "Peak_Power_Per_Rack", 227.0, "kW", "#,##0.0",
-     "Compute & scale-up busbar load"),
-    ("Technical Specs", "Air_Cooled_Load", 1000.0, "kW", "#,##0.0",
-     "1.0 MW network & NVMe storage"),
+     "NVL72 = 72 Rubin GPUs per VR compute rack"),
+    ("Technical Specs", "Liquid_Cooling_Overhead", 0.05, "kW/kW", "0.0%",
+     "Cooling power per kW of liquid-cooled IT (CDU pumps, dry-cooler fans)"),
+    ("Technical Specs", "Air_Cooling_Overhead", 0.28, "kW/kW", "0.0%",
+     "Cooling power per kW of air-cooled IT (high-ambient chillers, CRAHs)"),
     ("Technical Specs", "Liquid_Supply_Temp_FWS", 45.0, "°C", "#,##0.0",
      "S45 direct-to-chip loop"),
     ("Technical Specs", "Target_Annualized_PUE", 1.08, "", "0.000",
@@ -122,6 +167,39 @@ def parse_param_value(name, raw, default, fmt):
     return val
 
 
+def parse_location(raw, default):
+    """Resolve a location answer: menu number, exact or case-insensitive name."""
+    raw = raw.strip()
+    if raw == "":
+        return default
+    if raw.isdigit():
+        i = int(raw)
+        if 1 <= i <= len(LOCATION_LIBRARY):
+            return LOCATION_LIBRARY[i - 1][0]
+        print(f"    choice {i} out of range — keeping default {default!r}")
+        return default
+    for loc in LOCATION_INDEX:
+        if loc.lower() == raw.lower() or loc.lower().startswith(raw.lower()):
+            return loc
+    print(f"    {raw!r} is not in the ASHRAE Climate Library — keeping"
+          f" default {default!r} (add the city to LOCATION_LIBRARY or to the"
+          f" library sheet to support it)")
+    return default
+
+
+def parse_cooling(raw, default):
+    raw = raw.strip().lower()
+    if raw == "":
+        return default
+    if raw in ("l", "liquid"):
+        return "Liquid"
+    if raw in ("a", "air"):
+        return "Air"
+    print(f"    {raw!r} is not a cooling type (Liquid/Air) — keeping"
+          f" default {default!r}")
+    return default
+
+
 def prompt_for_params(stream=None):
     """Interactively prompt for every parameter; Enter keeps the default."""
     stream = stream or sys.stdin
@@ -133,6 +211,32 @@ def prompt_for_params(stream=None):
         if cat != category:
             category = cat
             print(f"--- {cat} ---", flush=True)
+
+        if name == "Geo_Location":
+            print("Geo_Location — sets ASHRAE 169 zone, 90.4 MLC limit and"
+                  " N=20yr peak dry/wet-bulb via the Climate Library:",
+                  flush=True)
+            for i, (loc, zone, mlc, db, wbt, _n) in enumerate(LOCATION_LIBRARY, 1):
+                print(f"  {i:2d}) {loc}  (zone {zone}, MLC limit {mlc:.3f},"
+                      f" {db:.1f}°C DB / {wbt:.1f}°C WB)", flush=True)
+            print(f"  location (number or name) [{default}]: ", end="", flush=True)
+            line = stream.readline()
+            if line == "":
+                print("(EOF — keeping defaults for remaining parameters)")
+                break
+            values[name] = parse_location(line, default)
+            continue
+
+        if name.endswith("_Cooling_Type"):
+            print(f"{name} — {notes}", flush=True)
+            print(f"  cooling type (Liquid/Air) [{default}]: ", end="", flush=True)
+            line = stream.readline()
+            if line == "":
+                print("(EOF — keeping defaults for remaining parameters)")
+                break
+            values[name] = parse_cooling(line, default)
+            continue
+
         if isinstance(default, str):
             shown = default
         elif _is_pct(fmt):
@@ -252,9 +356,32 @@ def build_inputs(wb, values):
     )
     style_header_row(ws, 4, ["Category", "Parameter", "Value", "Unit", "Notes / Constraints"])
 
-    for i, (cat, name, default, unit, fmt, notes) in enumerate(PARAM_SPEC):
+    n_lib = len(LOCATION_LIBRARY)
+    lib_last = LIBRARY_FIRST_ROW + n_lib - 1
+
+    def lib_lookup(col_letter):
+        return (f"=INDEX('{LIBRARY_SHEET}'!${col_letter}${LIBRARY_FIRST_ROW}"
+                f":${col_letter}${lib_last},"
+                f"MATCH($C${P['Geo_Location']},"
+                f"'{LIBRARY_SHEET}'!$A${LIBRARY_FIRST_ROW}:$A${lib_last},0))")
+
+    # Derived climate rows inserted right after Geo_Location; values are
+    # INDEX/MATCH formulas into the climate library, so retyping the location
+    # cell in Excel re-derives zone, MLC limit and N=20yr peak temperatures.
+    derived_after_geo = [
+        ("ASHRAE_Climate_Zone", "B", "", None,
+         "Derived from location — ASHRAE 169 climate zone"),
+        ("ASHRAE_MLC_Limit", "C", "", "0.000",
+         "Derived from location — ASHRAE 90.4 max design MLC"),
+        ("Peak_Ambient_DryBulb", "D", "°C", "#,##0.0",
+         "Derived from location — ASHRAE N=20yr extreme peak dry-bulb"),
+        ("Coincident_WetBulb", "E", "°C", "#,##0.0",
+         "Derived from location — ASHRAE N=20yr peak wet-bulb"),
+    ]
+
+    r = 5
+    for cat, name, default, unit, fmt, notes in PARAM_SPEC:
         val = values.get(name, default)
-        r = 5 + i
         P[name] = r
         for col, v in ((1, cat), (2, name), (3, val), (4, unit), (5, notes)):
             cell = ws.cell(row=r, column=col, value=v)
@@ -265,14 +392,59 @@ def build_inputs(wb, values):
         vcell.fill = INPUT_FILL
         if fmt:
             vcell.number_format = fmt
+        r += 1
+        if name == "Geo_Location":
+            for dname, lib_col, dunit, dfmt, dnotes in derived_after_geo:
+                P[dname] = r
+                row_vals = ((1, "Geographic & Climate"), (2, dname),
+                            (3, lib_lookup(lib_col)), (4, dunit), (5, dnotes))
+                for col, v in row_vals:
+                    cell = ws.cell(row=r, column=col, value=v)
+                    cell.font = REGULAR_FONT
+                    cell.border = BORDER_DATA
+                dcell = ws.cell(row=r, column=3)
+                dcell.font = LINK_FONT
+                if dfmt:
+                    dcell.number_format = dfmt
+                r += 1
 
-    legend_row = 5 + len(PARAM_SPEC) + 1
+    legend_row = r + 1
     ws.cell(row=legend_row, column=1,
             value="Legend: yellow cells with blue text are the editable inputs;"
                   " all other cells in this workbook are formulas.").font = SUBTITLE_FONT
     ws.cell(row=legend_row + 1, column=1,
             value="Rows marked 'Assumption' are user-supplied estimates, not"
                   " sourced market data — revisit before investment use.").font = SUBTITLE_FONT
+    ws.cell(row=legend_row + 2, column=1,
+            value="Geo_Location must exactly match a row on the 'ASHRAE Climate"
+                  " Library' sheet; the four 'Derived from location' rows update"
+                  " automatically. Cooling types must be 'Liquid' or 'Air'.").font = SUBTITLE_FONT
+    return ws
+
+
+def build_climate_library(wb):
+    ws = wb.create_sheet(title=LIBRARY_SHEET)
+    title_block(
+        ws,
+        "ASHRAE Climate & 90.4 Compliance Library",
+        "Editable reference data — verify MLC limits against ASHRAE 90.4-2019"
+        " Table 6.5.1.1 and temperatures against ASHRAE Fundamentals n=20yr"
+        " return-period extremes before design use",
+    )
+    style_header_row(ws, 4, ["Location", "ASHRAE 169 Zone",
+                             "ASHRAE 90.4 Max Design MLC",
+                             "N=20yr Peak Dry-Bulb (°C)",
+                             "N=20yr Peak Wet-Bulb (°C)", "Notes"])
+    for i, (loc, zone, mlc, db, wb_, note) in enumerate(LOCATION_LIBRARY):
+        r = LIBRARY_FIRST_ROW + i
+        vals = [loc, zone, mlc, db, wb_, note]
+        fmts = [None, None, "0.000", "#,##0.0", "#,##0.0", None]
+        for col, (v, fmt) in enumerate(zip(vals, fmts), start=1):
+            cell = ws.cell(row=r, column=col, value=v)
+            cell.font = INPUT_FONT if col in (3, 4, 5) else REGULAR_FONT
+            cell.border = BORDER_DATA
+            if fmt:
+                cell.number_format = fmt
     return ws
 
 
@@ -291,14 +463,23 @@ def build_thermal(wb):
 
     def rows():
         # (metric, formula_or_value, unit, fmt, notes)
-        yield ("Compute IT Load",
-               f"={pref('Rack_Count')}*{pref('Peak_Power_Per_Rack')}",
-               "kW", FMT_NUM_1DP, "Racks x kW/rack")
-        yield ("Network & Storage Air Load",
-               f"={pref('Air_Cooled_Load')}",
-               "kW", FMT_NUM_1DP, "Continuous air-cooled load")
+        yield ("VR Compute Rack Load",
+               f"={pref('VR_Rack_Count')}*{pref('VR_Rack_Power_kW')}",
+               "kW", FMT_NUM_1DP, "VR racks x kW/rack")
+        yield ("Network Rack Load",
+               f"={pref('Network_Rack_Count')}*{pref('Network_Rack_Power_kW')}",
+               "kW", FMT_NUM_1DP, "Network racks x kW/rack")
+        yield ("Storage Rack Load",
+               f"={pref('Storage_Rack_Count')}*{pref('Storage_Rack_Power_kW')}",
+               "kW", FMT_NUM_1DP, "Storage racks x kW/rack")
         yield ("Total Combined IT Load", None, "kW", FMT_NUM_1DP,
-               "Compute + network/storage")
+               "VR compute + network + storage")
+        yield ("Liquid-Cooled IT Load", None, "kW", FMT_NUM_1DP,
+               "Sum of rack classes whose cooling type is 'Liquid'")
+        yield ("Air-Cooled IT Load", None, "kW", FMT_NUM_1DP,
+               "Total IT load minus liquid-cooled load")
+        yield ("Liquid-Cooled Rack Count", None, "racks", FMT_NUM,
+               "Racks on the S45 loop (cooling type = 'Liquid')")
         yield ("S45 Loop Supply Temperature",
                f"={pref('Liquid_Supply_Temp_FWS')}",
                "°C", FMT_NUM_1DP, "Facility Water Supply (FWS)")
@@ -309,24 +490,27 @@ def build_thermal(wb):
         yield ("S45 Liquid Flow Rate per Rack", 195.0, "LPM", FMT_NUM_1DP,
                "PG25 water/glycol mixture — vendor spec")
         yield ("Total S45 Cluster Flow Rate", None, "LPM", FMT_NUM_1DP,
-               "Primary CDU manifold demand")
-        yield ("Peak Ambient Dry-Bulb",
+               "Flow per rack x liquid-cooled rack count")
+        yield ("Peak Ambient Dry-Bulb (N=20yr)",
                f"={pref('Peak_Ambient_DryBulb')}",
-               "°C", FMT_NUM_1DP, "Abu Dhabi extreme condition")
+               "°C", FMT_NUM_1DP, "ASHRAE n=20yr extreme — derived from location")
+        yield ("Peak Wet-Bulb (N=20yr)",
+               f"={pref('Coincident_WetBulb')}",
+               "°C", FMT_NUM_1DP, "ASHRAE n=20yr — derived from location")
         yield ("S45 Peak Rejection Approach", None, "K", FMT_NUM_1DP,
                "FWR minus peak dry-bulb (positive = dry cooling viable)")
-        yield ("S45 Dry Cooler / CDU Cooling Power", None, "kW", FMT_NUM_1DP,
-               "5% of liquid-cooled load — CDU pumps & EC fans (assumption)")
-        yield ("Air Loop Chiller Cooling Power", None, "kW", FMT_NUM_1DP,
-               "28% of air-cooled load — high-ambient screw chillers (assumption)")
+        yield ("Liquid Loop Cooling Power", None, "kW", FMT_NUM_1DP,
+               "Liquid-cooled load x liquid cooling overhead input")
+        yield ("Air Loop Cooling Power", None, "kW", FMT_NUM_1DP,
+               "Air-cooled load x air cooling overhead input")
         yield ("Total Cooling Peak Power", None, "kW", FMT_NUM_1DP,
                "Combined cooling power")
         yield ("Peak Mechanical Load Component (MLC)", None, "", FMT_3DP,
                "Cooling power / total IT load")
-        yield ("ASHRAE 90.4 Zone 1A Limit", 0.260, "", FMT_3DP,
-               "Maximum allowable peak MLC threshold")
+        yield ("ASHRAE 90.4 MLC Limit (from location)", None, "", FMT_3DP,
+               "Max design MLC for the selected location's climate zone")
         yield ("Safety Compliance Margin", None, "%", FMT_PCT,
-               "Operational margin under the Zone 1A limit")
+               "Operational margin under the location's 90.4 limit")
         yield ("Average Utilized IT Power", None, "kW", FMT_NUM_1DP,
                "Total IT x utilization x uptime")
         yield ("Annualized PUE",
@@ -343,29 +527,50 @@ def build_thermal(wb):
     for i, (metric, _f, unit, fmt, notes) in enumerate(items):
         T[metric] = 5 + i
 
+    def liq(class_prefix, load_row):
+        return (f'IF({pref(class_prefix + "_Cooling_Type")}="Liquid",'
+                f'B{load_row},0)')
+
+    def liq_count(class_prefix):
+        return (f'IF({pref(class_prefix + "_Cooling_Type")}="Liquid",'
+                f'{pref(class_prefix + "_Rack_Count")},0)')
+
     # Formulas that need T populated first
     formulas = {
         "Total Combined IT Load":
-            f"=B{T['Compute IT Load']}+B{T['Network & Storage Air Load']}",
+            f"=B{T['VR Compute Rack Load']}+B{T['Network Rack Load']}"
+            f"+B{T['Storage Rack Load']}",
+        "Liquid-Cooled IT Load":
+            f"={liq('VR', T['VR Compute Rack Load'])}"
+            f"+{liq('Network', T['Network Rack Load'])}"
+            f"+{liq('Storage', T['Storage Rack Load'])}",
+        "Air-Cooled IT Load":
+            f"=B{T['Total Combined IT Load']}-B{T['Liquid-Cooled IT Load']}",
+        "Liquid-Cooled Rack Count":
+            f"={liq_count('VR')}+{liq_count('Network')}+{liq_count('Storage')}",
         "S45 Loop Delta T":
             f"=B{T['S45 Loop Return Temperature']}-B{T['S45 Loop Supply Temperature']}",
         "Total S45 Cluster Flow Rate":
-            f"=B{T['S45 Liquid Flow Rate per Rack']}*{pref('Rack_Count')}",
+            f"=B{T['S45 Liquid Flow Rate per Rack']}"
+            f"*B{T['Liquid-Cooled Rack Count']}",
         "S45 Peak Rejection Approach":
-            f"=B{T['S45 Loop Return Temperature']}-B{T['Peak Ambient Dry-Bulb']}",
-        "S45 Dry Cooler / CDU Cooling Power":
-            f"=B{T['Compute IT Load']}*0.05",
-        "Air Loop Chiller Cooling Power":
-            f"=B{T['Network & Storage Air Load']}*0.28",
+            f"=B{T['S45 Loop Return Temperature']}"
+            f"-B{T['Peak Ambient Dry-Bulb (N=20yr)']}",
+        "Liquid Loop Cooling Power":
+            f"=B{T['Liquid-Cooled IT Load']}*{pref('Liquid_Cooling_Overhead')}",
+        "Air Loop Cooling Power":
+            f"=B{T['Air-Cooled IT Load']}*{pref('Air_Cooling_Overhead')}",
         "Total Cooling Peak Power":
-            f"=B{T['S45 Dry Cooler / CDU Cooling Power']}"
-            f"+B{T['Air Loop Chiller Cooling Power']}",
+            f"=B{T['Liquid Loop Cooling Power']}"
+            f"+B{T['Air Loop Cooling Power']}",
         "Peak Mechanical Load Component (MLC)":
             f"=B{T['Total Cooling Peak Power']}/B{T['Total Combined IT Load']}",
+        "ASHRAE 90.4 MLC Limit (from location)":
+            f"={pref('ASHRAE_MLC_Limit')}",
         "Safety Compliance Margin":
-            f"=(B{T['ASHRAE 90.4 Zone 1A Limit']}"
+            f"=(B{T['ASHRAE 90.4 MLC Limit (from location)']}"
             f"-B{T['Peak Mechanical Load Component (MLC)']})"
-            f"/B{T['ASHRAE 90.4 Zone 1A Limit']}",
+            f"/B{T['ASHRAE 90.4 MLC Limit (from location)']}",
         "Average Utilized IT Power":
             f"=B{T['Total Combined IT Load']}*{pref('Cluster_Utilization')}"
             f"*{pref('Uptime_Availability')}",
@@ -682,7 +887,7 @@ def build_unit_economics(wb):
 
     kpis = [
         ("Total GPU Count",
-         f"={pref('Rack_Count')}*{pref('GPUs_Per_Rack')}",
+         f"={pref('VR_Rack_Count')}*{pref('GPUs_Per_Rack')}",
          "GPUs", FMT_NUM, "Racks x GPUs per rack"),
         ("Available GPU-hours / yr", None, "GPU-hrs", FMT_NUM,
          "GPUs x 8760h x uptime"),
@@ -999,6 +1204,12 @@ def build_dashboard(wb):
         ("Breakeven Power Tariff",
          f"='{ue}'!B{U['Breakeven Power Tariff (EBITDA = 0)']}",
          "$/kWh", "$#,##0.000", ue),
+        ("Location / ASHRAE 169 Zone",
+         f"={pref('Geo_Location')}&\"  (zone \"&{pref('ASHRAE_Climate_Zone')}&\")\"",
+         "", "@", INPUTS_SHEET),
+        ("ASHRAE 90.4 MLC Limit (location)",
+         f"={pref('ASHRAE_MLC_Limit')}",
+         "(design max)", FMT_3DP, INPUTS_SHEET),
     ]
     for i, (name, formula, unit, fmt, src) in enumerate(kpis):
         r = 5 + i
@@ -1035,6 +1246,7 @@ def build_workbook(values=None):
     P.clear(); T.clear(); F.clear(); E.clear()
     wb = openpyxl.Workbook()
     build_inputs(wb, values)
+    build_climate_library(wb)
     build_thermal(wb)
     build_proforma(wb)
     build_unit_economics(wb)
