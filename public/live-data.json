@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-24T08:24:41.523Z",
+  "lastUpdated": "2026-07-25T08:03:18.335Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 208.76,
-      "prevClose": 207.4,
-      "changePct": 0.66,
+      "price": 206.84,
+      "prevClose": 202.81,
+      "changePct": 1.99,
       "marketCap": null
     },
     "MSFT": {
-      "price": 381.58,
-      "prevClose": 401.1,
-      "changePct": -4.87,
+      "price": 381.7,
+      "prevClose": 393.82,
+      "changePct": -3.08,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 317.69,
-      "prevClose": 354.46,
-      "changePct": -10.37,
+      "price": 319.74,
+      "prevClose": 346.77,
+      "changePct": -7.79,
       "marketCap": null
     },
     "AMZN": {
-      "price": 233.66,
-      "prevClose": 249.89,
-      "changePct": -6.49,
+      "price": 232.11,
+      "prevClose": 247.23,
+      "changePct": -6.12,
       "marketCap": null
     },
     "META": {
-      "price": 606.1,
-      "prevClose": 664.54,
-      "changePct": -8.79,
+      "price": 595.19,
+      "prevClose": 646.01,
+      "changePct": -7.87,
       "marketCap": null
     },
     "AMD": {
-      "price": 539.69,
-      "prevClose": 500.94,
-      "changePct": 7.74,
+      "price": 521.95,
+      "prevClose": 495.76,
+      "changePct": 5.28,
       "marketCap": null
     },
     "ORCL": {
-      "price": 120.04,
-      "prevClose": 124.21,
-      "changePct": -3.36,
+      "price": 114.99,
+      "prevClose": 126.41,
+      "changePct": -9.03,
       "marketCap": null
     }
   },
@@ -307,6 +307,13 @@
       "outputPerM": 50,
       "provider": "Anthropic",
       "displayName": "Claude Fable 5",
+      "contextK": 1000
+    },
+    "claude-opus-5": {
+      "inputPerM": 5,
+      "outputPerM": 25,
+      "provider": "Anthropic",
+      "displayName": "Claude Opus 5",
       "contextK": 1000
     },
     "claude-opus-4-8": {
