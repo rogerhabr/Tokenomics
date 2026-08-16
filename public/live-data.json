@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-15T06:33:44.750Z",
+  "lastUpdated": "2026-08-16T06:35:31.529Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -1657,6 +1657,13 @@
       "outputPerM": 6,
       "provider": "xAI",
       "displayName": "Xai/Grok 4.5 Latest",
+      "contextK": 500
+    },
+    "xai/grok-4.6": {
+      "inputPerM": 2,
+      "outputPerM": 6,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.6",
       "contextK": 500
     },
     "xai/grok-beta": {
