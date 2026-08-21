@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-20T06:40:37.001Z",
+  "lastUpdated": "2026-08-21T06:41:18.086Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 217.56,
-      "prevClose": 224.09,
-      "changePct": -2.91,
+      "price": 216.85,
+      "prevClose": 225.3,
+      "changePct": -3.75,
       "marketCap": null
     },
     "MSFT": {
-      "price": 484.31,
-      "prevClose": 492.43,
-      "changePct": -1.65,
+      "price": 481.15,
+      "prevClose": 496.88,
+      "changePct": -3.17,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 344.72,
-      "prevClose": 343.54,
-      "changePct": 0.34,
+      "price": 340.67,
+      "prevClose": 346.36,
+      "changePct": -1.64,
       "marketCap": null
     },
     "AMZN": {
-      "price": 265.84,
-      "prevClose": 267.28,
-      "changePct": -0.54,
+      "price": 260.11,
+      "prevClose": 265.13,
+      "changePct": -1.89,
       "marketCap": null
     },
     "META": {
-      "price": 546.03,
-      "prevClose": 578.85,
-      "changePct": -5.67,
+      "price": 545.83,
+      "prevClose": 594.97,
+      "changePct": -8.26,
       "marketCap": null
     },
     "AMD": {
-      "price": 466.42,
-      "prevClose": 482.93,
-      "changePct": -3.42,
+      "price": 469.455,
+      "prevClose": 483.01,
+      "changePct": -2.81,
       "marketCap": null
     },
     "ORCL": {
-      "price": 143.81,
-      "prevClose": 153.28,
-      "changePct": -6.18,
+      "price": 142.07,
+      "prevClose": 156.22,
+      "changePct": -9.06,
       "marketCap": null
     }
   },
@@ -692,28 +692,56 @@
       "outputPerM": 30,
       "provider": "OpenAI",
       "displayName": "Gpt 5.6",
-      "contextK": 1050
+      "contextK": 922
     },
     "gpt-5.6-sol": {
       "inputPerM": 5,
       "outputPerM": 30,
       "provider": "OpenAI",
       "displayName": "Gpt 5.6 Sol",
-      "contextK": 1050
+      "contextK": 922
     },
     "gpt-5.6-terra": {
       "inputPerM": 2,
       "outputPerM": 12,
       "provider": "OpenAI",
       "displayName": "Gpt 5.6 Terra",
-      "contextK": 1050
+      "contextK": 922
     },
     "gpt-5.6-luna": {
       "inputPerM": 0.19999999999999998,
       "outputPerM": 1.2,
       "provider": "OpenAI",
       "displayName": "Gpt 5.6 Luna",
+      "contextK": 922
+    },
+    "gpt-5.6-cyber": {
+      "inputPerM": 12.5,
+      "outputPerM": 75,
+      "provider": "OpenAI",
+      "displayName": "Gpt 5.6 Cyber",
+      "contextK": 400
+    },
+    "daybreak-red-latest": {
+      "inputPerM": 12.5,
+      "outputPerM": 75,
+      "provider": "OpenAI",
+      "displayName": "Daybreak Red Latest",
+      "contextK": 400
+    },
+    "daybreak-blue-latest": {
+      "inputPerM": 5,
+      "outputPerM": 30,
+      "provider": "OpenAI",
+      "displayName": "Daybreak Blue Latest",
       "contextK": 1050
+    },
+    "chat-latest": {
+      "inputPerM": 5,
+      "outputPerM": 30,
+      "provider": "OpenAI",
+      "displayName": "Chat Latest",
+      "contextK": 400
     },
     "gpt-5.5": {
       "inputPerM": 5,
@@ -832,14 +860,14 @@
       "outputPerM": 0.8999999999999999,
       "provider": "Mistral AI",
       "displayName": "Mistral/Codestral 2508",
-      "contextK": 256
+      "contextK": 128
     },
     "mistral/codestral-latest": {
-      "inputPerM": 1,
-      "outputPerM": 3,
+      "inputPerM": 0.3,
+      "outputPerM": 0.8999999999999999,
       "provider": "Mistral AI",
       "displayName": "Mistral/Codestral Latest",
-      "contextK": 32
+      "contextK": 128
     },
     "mistral/codestral-mamba-latest": {
       "inputPerM": 0.25,
@@ -903,6 +931,20 @@
       "provider": "Mistral AI",
       "displayName": "Mistral/Devstral 2512",
       "contextK": 256
+    },
+    "mistral/zai-glm-5-2": {
+      "inputPerM": 1.4,
+      "outputPerM": 4.4,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Zai Glm 5 2",
+      "contextK": 1049
+    },
+    "mistral/glm-5-2": {
+      "inputPerM": 1.4,
+      "outputPerM": 4.4,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Glm 5 2",
+      "contextK": 1049
     },
     "mistral/magistral-medium-2506": {
       "inputPerM": 2,
@@ -1059,11 +1101,11 @@
       "contextK": 32
     },
     "mistral/mistral-small-latest": {
-      "inputPerM": 0.06,
-      "outputPerM": 0.18,
+      "inputPerM": 0.15,
+      "outputPerM": 0.6,
       "provider": "Mistral AI",
       "displayName": "Mistral/Mistral Small Latest",
-      "contextK": 131
+      "contextK": 262
     },
     "mistral/mistral-small-3-2-2506": {
       "inputPerM": 0.06,
@@ -1211,6 +1253,13 @@
       "provider": "Moonshot",
       "displayName": "Moonshot/Kimi K2.6",
       "contextK": 262
+    },
+    "moonshot/kimi-k3": {
+      "inputPerM": 3,
+      "outputPerM": 15,
+      "provider": "Moonshot",
+      "displayName": "Moonshot/Kimi K3",
+      "contextK": 1049
     },
     "moonshot/kimi-latest": {
       "inputPerM": 2,
@@ -1717,29 +1766,29 @@
       "contextK": 272
     },
     "deepseek-v4-flash": {
-      "inputPerM": 0.14,
-      "outputPerM": 0.28,
+      "inputPerM": 0.44,
+      "outputPerM": 1.32,
       "provider": "DeepSeek",
       "displayName": "Deepseek V4 Flash",
       "contextK": 1000
     },
     "deepseek-v4-pro": {
-      "inputPerM": 0.435,
-      "outputPerM": 0.87,
+      "inputPerM": 1.32,
+      "outputPerM": 3.9600000000000004,
       "provider": "DeepSeek",
       "displayName": "Deepseek V4 Pro",
       "contextK": 1000
     },
     "deepseek/deepseek-v4-flash": {
-      "inputPerM": 0.14,
-      "outputPerM": 0.28,
+      "inputPerM": 0.44,
+      "outputPerM": 1.32,
       "provider": "DeepSeek",
       "displayName": "Deepseek/Deepseek V4 Flash",
       "contextK": 1000
     },
     "deepseek/deepseek-v4-pro": {
-      "inputPerM": 0.435,
-      "outputPerM": 0.87,
+      "inputPerM": 1.32,
+      "outputPerM": 3.9600000000000004,
       "provider": "DeepSeek",
       "displayName": "Deepseek/Deepseek V4 Pro",
       "contextK": 1000
