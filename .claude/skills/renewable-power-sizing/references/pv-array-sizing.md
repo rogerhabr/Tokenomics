@@ -57,8 +57,27 @@ If someone is making a financial decision, they need the P-value, not just a mea
 - **Flat roofs**: 5–10° tilt, often east-west back-to-back, which loses ~10–15% of
   annual yield but nearly doubles the kW per roof area and flattens the profile.
 
-Sensitivity is forgiving. ±15° of azimuth or tilt from optimum typically costs less
-than 3% of annual energy — worth knowing before redesigning a layout to chase it.
+Sensitivity is forgiving **for annual energy**. ±15° of azimuth or tilt from optimum
+typically costs less than 3% of annual production — worth knowing before redesigning a
+layout to chase it.
+
+**It is not forgiving for a winter-critical system.** Where the binding case is the
+worst month rather than the year — any off-grid site, any system sized on December —
+tilt stops being a minor optimisation and becomes the dominant design variable:
+
+- A typical **roof pitch of 18–27°** loses roughly **25–30% of December yield** against
+  a 55–60° winter rack at mid latitudes, because the low winter sun strikes a shallow
+  plane at a poor incidence angle.
+- A shallow tilt also **holds snow**, which a steep rack sheds. A snow-covered array
+  produces nothing, and the outage falls exactly in the month with the least margin.
+- The array is often sized on December, so a 25–30% December penalty means 25–30% more
+  modules — a far larger cost than re-racking at a steeper angle.
+
+So for off-grid and winter-critical work, ask about tilt **before** sizing the array,
+and price a steeper winter rack against the extra modules a roof-pitch mount would
+need. "Plenty of south-facing roof" is not the same as a usable winter array. Where the
+roof must be used, size on the roof's actual December plane-of-array figure, not the
+site optimum, and say which you used.
 
 ## 3. Array capacity from an energy target
 

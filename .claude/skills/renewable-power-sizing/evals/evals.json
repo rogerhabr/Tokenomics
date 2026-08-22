@@ -46,7 +46,8 @@
       "expected_output": "Sizes PV on the WORST MONTH (December) not the annual average, flags that annual-average sizing blacks out in winter, recommends 3-5 days autonomy with no generator, does not fabricate a site-specific irradiance figure, notes the peak/surge drives inverter sizing.",
       "files": [],
       "assertions": [
-        "Sizes the PV array on the WORST MONTH (December/winter) rather than the annual average",
+        "Identifies shallow roof tilt as the binding winter constraint - quantifies or ranges the December penalty of a roof pitch vs a steeper winter rack, and/or flags snow retention",
+        "Recommends a steeper winter tilt (or prices extra modules against it) rather than accepting the roof pitch silently",
         "Explicitly warns that annual-average sizing leaves the system short in winter",
         "Recommends 3 or more days of autonomy given there is no generator",
         "Notes the 3 kW peak drives inverter sizing, and flags well-pump starting surge (typically 3-8x running current)",
