@@ -1,0 +1,60 @@
+{
+  "skill_name": "renewable-power-sizing",
+  "evals": [
+    {
+      "id": 0,
+      "name": "datacenter-feeder-and-transformer",
+      "prompt": "We're speccing the electrical for a 2.5 MW GPU hall. Service is 480V 3-phase, load is basically continuous (it's training workloads, they run flat out for weeks). I need to know what feeder conductors and breaker to spec from the switchgear to the PDU, the transformer rating, and whether voltage drop is going to bite us - the run is about 400 ft. The electrical room runs hot, call it 40C, and we're pulling 6 current-carrying conductors through each raceway. Also what AIC rating do the breakers need? Assume 0.95 PF.",
+      "expected_output": "Feeder conductor size (likely parallel sets) with derating shown, standard OCPD rating, transformer kVA + available fault current + minimum AIC, voltage drop percentage, assumptions listed.",
+      "files": [],
+      "assertions": [
+        "Computes feeder load current within 5% of 3,165 A (2.5 MW / (sqrt3 x 480 V x 0.95 PF))",
+        "Applies the 125% continuous-load factor, giving roughly 3,957 A required",
+        "Applies BOTH the 40 C ambient temperature correction AND the 6-conductor raceway fill adjustment",
+        "Concludes parallel conductor sets are required and states how many sets per phase",
+        "Recommends a transformer from the standard kVA rating list (not an arbitrary number)",
+        "States an available fault current AND a minimum breaker AIC rating",
+        "Reports voltage drop for the 400 ft run as a percentage",
+        "Notes the 75 C termination temperature limit (NEC 110.14(C)) caps the final conductor selection",
+        "Lists assumptions in a distinct, clearly-labeled section",
+        "States the result is feasibility-grade and needs a stamped design / AHJ coordination"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "pv-plus-storage-datacenter-offset",
+      "prompt": "Client wants to offset a chunk of a datacenter's grid draw with on-site solar. Site is outside Phoenix AZ, load is 5 MW pretty much flat 24/7, and they want solar to cover about 60% of annual consumption plus a 4-hour battery so they can ride through the evening peak. Give me array size in MW-dc, roughly how much land, what the string configuration looks like against 1500V central inverters (modules are 585W, Voc 52.1, Vmp 43.4, Isc 14.2, Voc tempco -0.25%/C), and the battery size. Ballpark is fine, this is for a feasibility memo.",
+      "expected_output": "MW_dc array with PR and PSH stated, land estimate in acres, valid string length range from temperature-corrected Voc and MPPT window, battery kWh/kW with energy-vs-power governing constraint identified, explicit assumptions.",
+      "files": [],
+      "assertions": [
+        "Computes annual consumption as approximately 43,800 MWh (5 MW x 8760 h)",
+        "Targets 60% of that, roughly 26,300 MWh/yr, as the solar energy target",
+        "Array size falls between 12 and 18 MW_dc",
+        "Explicitly states both the peak sun hours (PSH) and performance ratio (PR) used",
+        "Gives a land estimate in acres in the 50-150 acre range",
+        "Computes max modules per string from temperature-corrected Voc, landing between 24 and 28",
+        "Sizes the battery with BOTH an energy rating (MWh) and a power rating (MW)",
+        "Does NOT present a Phoenix irradiance figure as measured fact - either names a source (PVGIS/NSRDB/PVWatts) or labels it an assumption",
+        "Keeps DC and AC capacity distinct (states kW_dc/MW_dc separately from kW_ac/MW_ac or the ILR)",
+        "Lists assumptions in a distinct, clearly-labeled section"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "offgrid-worst-month-trap",
+      "prompt": "my brother in law is building an off grid cabin up in montana, no utility and he doesnt want a generator. he figures about 12 kwh a day, maybe 3kw peak when the well pump and everything kicks on at once. how many panels and how much battery does he need? he's got plenty of south facing roof",
+      "expected_output": "Sizes PV on the WORST MONTH (December) not the annual average, flags that annual-average sizing blacks out in winter, recommends 3-5 days autonomy with no generator, does not fabricate a site-specific irradiance figure, notes the peak/surge drives inverter sizing.",
+      "files": [],
+      "assertions": [
+        "Sizes the PV array on the WORST MONTH (December/winter) rather than the annual average",
+        "Explicitly warns that annual-average sizing leaves the system short in winter",
+        "Recommends 3 or more days of autonomy given there is no generator",
+        "Notes the 3 kW peak drives inverter sizing, and flags well-pump starting surge (typically 3-8x running current)",
+        "Does NOT state a Montana-specific irradiance value as fact without labeling it assumed or naming a source",
+        "Gives both an array size (panel count or kW_dc) and a battery capacity in kWh",
+        "States the depth of discharge used, or recommends LFP over lead-acid with a reason",
+        "Asks for or flags the missing site detail needed to firm the number up (exact location, load profile, or winter irradiance)"
+      ]
+    }
+  ]
+}

@@ -75,6 +75,9 @@ npm run lint     # ESLint via next lint
 - `src/app/global-error.tsx` — Root error boundary; reports uncaught React render errors to Sentry
 - `next.config.js` — Wrapped with `withSentryConfig` for source map upload; skipped automatically (not a build failure) unless `SENTRY_ORG`/`SENTRY_PROJECT`/`SENTRY_AUTH_TOKEN` are set
 
+### Skills
+- `.claude/skills/renewable-power-sizing/` — electrical engineering and solar PV + battery storage sizing (load calcs, conductor/OCPD sizing and derating, voltage drop, transformers, fault current, PV array and string sizing, BESS energy/power sizing). `scripts/sizing.py` holds stdlib-only calculators; the four files under `references/` are loaded on demand. Use it for any power, capacity, or on-site-generation figure that feeds the datacenter cost and tokenomics models, so the assumptions behind those numbers stay traceable.
+
 ### UI Structure
 - `src/app/page.tsx` — Root page; renders sidebar + header + section content; sections are lazy-loaded with `next/dynamic`. Protected by `middleware.ts`, not a client-side gate.
 - `src/components/Sidebar.tsx` — Navigation sidebar (16 sections grouped into Dashboard / Supply / Demand / Economics / Tokenomics / Methodology)
