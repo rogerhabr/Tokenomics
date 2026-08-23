@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-22T06:35:35.937Z",
+  "lastUpdated": "2026-08-23T06:36:33.711Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -688,15 +688,15 @@
       "contextK": 128
     },
     "gpt-5.6": {
-      "inputPerM": 5,
-      "outputPerM": 30,
+      "inputPerM": 4,
+      "outputPerM": 20,
       "provider": "OpenAI",
       "displayName": "Gpt 5.6",
       "contextK": 922
     },
     "gpt-5.6-sol": {
-      "inputPerM": 5,
-      "outputPerM": 30,
+      "inputPerM": 4,
+      "outputPerM": 20,
       "provider": "OpenAI",
       "displayName": "Gpt 5.6 Sol",
       "contextK": 922
@@ -730,8 +730,8 @@
       "contextK": 400
     },
     "daybreak-blue-latest": {
-      "inputPerM": 5,
-      "outputPerM": 30,
+      "inputPerM": 4,
+      "outputPerM": 20,
       "provider": "OpenAI",
       "displayName": "Daybreak Blue Latest",
       "contextK": 1050
