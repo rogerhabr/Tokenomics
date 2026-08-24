@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-23T06:36:33.711Z",
+  "lastUpdated": "2026-08-24T06:53:17.236Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
