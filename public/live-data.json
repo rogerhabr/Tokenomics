@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-27T17:19:13.008Z",
+  "lastUpdated": "2026-08-28T18:11:40.972Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 229.775,
-      "prevClose": 216.85,
-      "changePct": 5.96,
+      "price": 218.72,
+      "prevClose": 214.72,
+      "changePct": 1.86,
       "marketCap": null
     },
     "MSFT": {
-      "price": 504.31,
-      "prevClose": 481.15,
-      "changePct": 4.81,
+      "price": 515.195,
+      "prevClose": 483.24,
+      "changePct": 6.61,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 340.995,
-      "prevClose": 340.67,
-      "changePct": 0.1,
+      "price": 346.78,
+      "prevClose": 344.82,
+      "changePct": 0.57,
       "marketCap": null
     },
     "AMZN": {
-      "price": 255.74,
-      "prevClose": 260.11,
-      "changePct": -1.68,
+      "price": 265.17,
+      "prevClose": 258.63,
+      "changePct": 2.53,
       "marketCap": null
     },
     "META": {
-      "price": 571.29,
-      "prevClose": 545.83,
-      "changePct": 4.66,
+      "price": 576.931,
+      "prevClose": 549.9,
+      "changePct": 4.92,
       "marketCap": null
     },
     "AMD": {
-      "price": 475.04,
-      "prevClose": 469.46,
-      "changePct": 1.19,
+      "price": 471.5,
+      "prevClose": 473.25,
+      "changePct": -0.37,
       "marketCap": null
     },
     "ORCL": {
-      "price": 148.85,
-      "prevClose": 142.07,
-      "changePct": 4.77,
+      "price": 150.8001,
+      "prevClose": 146.47,
+      "changePct": 2.96,
       "marketCap": null
     }
   },
@@ -932,6 +932,55 @@
       "displayName": "Mistral/Devstral 2512",
       "contextK": 256
     },
+    "mistral/ministral-14b-2512": {
+      "inputPerM": 0.19999999999999998,
+      "outputPerM": 0.19999999999999998,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Ministral 14b 2512",
+      "contextK": 262
+    },
+    "mistral/ministral-14b-latest": {
+      "inputPerM": 0.19999999999999998,
+      "outputPerM": 0.19999999999999998,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Ministral 14b Latest",
+      "contextK": 262
+    },
+    "mistral/ministral-3b-2512": {
+      "inputPerM": 0.09999999999999999,
+      "outputPerM": 0.09999999999999999,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Ministral 3b 2512",
+      "contextK": 131
+    },
+    "mistral/ministral-3b-latest": {
+      "inputPerM": 0.09999999999999999,
+      "outputPerM": 0.09999999999999999,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Ministral 3b Latest",
+      "contextK": 131
+    },
+    "mistral/mistral-medium-3": {
+      "inputPerM": 1.5,
+      "outputPerM": 7.5,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Mistral Medium 3",
+      "contextK": 262
+    },
+    "mistral/voxtral-small-2507": {
+      "inputPerM": 0.09999999999999999,
+      "outputPerM": 0.39999999999999997,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Voxtral Small 2507",
+      "contextK": 33
+    },
+    "mistral/voxtral-small-latest": {
+      "inputPerM": 0.09999999999999999,
+      "outputPerM": 0.39999999999999997,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Voxtral Small Latest",
+      "contextK": 33
+    },
     "mistral/zai-glm-5-2": {
       "inputPerM": 1.4,
       "outputPerM": 4.4,
@@ -1464,48 +1513,6 @@
       "displayName": "Vertex_ai/Xai/Grok 4.20 Reasoning",
       "contextK": 2000
     },
-    "xai/grok-2": {
-      "inputPerM": 2,
-      "outputPerM": 10,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 2",
-      "contextK": 131
-    },
-    "xai/grok-2-1212": {
-      "inputPerM": 2,
-      "outputPerM": 10,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 2 1212",
-      "contextK": 131
-    },
-    "xai/grok-2-latest": {
-      "inputPerM": 2,
-      "outputPerM": 10,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 2 Latest",
-      "contextK": 131
-    },
-    "xai/grok-2-vision": {
-      "inputPerM": 2,
-      "outputPerM": 10,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 2 Vision",
-      "contextK": 33
-    },
-    "xai/grok-2-vision-1212": {
-      "inputPerM": 2,
-      "outputPerM": 10,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 2 Vision 1212",
-      "contextK": 33
-    },
-    "xai/grok-2-vision-latest": {
-      "inputPerM": 2,
-      "outputPerM": 10,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 2 Vision Latest",
-      "contextK": 33
-    },
     "xai/grok-3": {
       "inputPerM": 3,
       "outputPerM": 15,
@@ -1653,13 +1660,6 @@
       "displayName": "Xai/Grok 4 1 Fast Non Reasoning Latest",
       "contextK": 2000
     },
-    "xai/grok-4.20-multi-agent-beta-0309": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 4.20 Multi Agent Beta 0309",
-      "contextK": 1000
-    },
     "xai/grok-4.20-beta-0309-reasoning": {
       "inputPerM": 1.25,
       "outputPerM": 2.5,
@@ -1716,13 +1716,6 @@
       "displayName": "Xai/Grok 4.6",
       "contextK": 500
     },
-    "xai/grok-beta": {
-      "inputPerM": 5,
-      "outputPerM": 15,
-      "provider": "xAI",
-      "displayName": "Xai/Grok Beta",
-      "contextK": 131
-    },
     "xai/grok-code-fast": {
       "inputPerM": 1,
       "outputPerM": 2,
@@ -1743,13 +1736,6 @@
       "provider": "xAI",
       "displayName": "Xai/Grok Code Fast 1 0825",
       "contextK": 256
-    },
-    "xai/grok-vision-beta": {
-      "inputPerM": 5,
-      "outputPerM": 15,
-      "provider": "xAI",
-      "displayName": "Xai/Grok Vision Beta",
-      "contextK": 8
     },
     "gpt-5-search-api": {
       "inputPerM": 1.25,
@@ -1772,6 +1758,13 @@
       "displayName": "Deepseek V4 Flash",
       "contextK": 1000
     },
+    "deepseek-v4-flash-vision-exp": {
+      "inputPerM": 0.44,
+      "outputPerM": 1.32,
+      "provider": "DeepSeek",
+      "displayName": "Deepseek V4 Flash Vision Exp",
+      "contextK": 1000
+    },
     "deepseek-v4-pro": {
       "inputPerM": 1.32,
       "outputPerM": 3.9600000000000004,
@@ -1786,6 +1779,13 @@
       "displayName": "Deepseek/Deepseek V4 Flash",
       "contextK": 1000
     },
+    "deepseek/deepseek-v4-flash-vision-exp": {
+      "inputPerM": 0.44,
+      "outputPerM": 1.32,
+      "provider": "DeepSeek",
+      "displayName": "Deepseek/Deepseek V4 Flash Vision Exp",
+      "contextK": 1000
+    },
     "deepseek/deepseek-v4-pro": {
       "inputPerM": 1.32,
       "outputPerM": 3.9600000000000004,
@@ -1798,13 +1798,6 @@
       "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 4.20 0309 Non Reasoning",
-      "contextK": 1000
-    },
-    "xai/grok-4.20-multi-agent-0309": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 4.20 Multi Agent 0309",
       "contextK": 1000
     },
     "xai/grok-build-0.1": {
