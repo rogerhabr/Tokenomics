@@ -1,27 +1,37 @@
 'use client';
 
-import { ShoppingCart } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
+import { formatPrice } from '@/lib/products';
 
+/**
+ * The order tray, shown as a running line rather than a glyph with a bubble:
+ * `Order · 2 · $328.00`.
+ *
+ * A visible subtotal in the header is a documented recovery driver, and it is
+ * more on-register than an icon on a site whose whole voice is printed data.
+ */
 export default function CartButton({ className = '' }: { className?: string }) {
-  const { itemCount, setDrawerOpen, hydrated } = useCart();
+  const { itemCount, subtotalCents, setDrawerOpen, hydrated } = useCart();
+
+  // The server cannot see the visitor's stored cart, so painting a count
+  // before hydration would flash a wrong number.
+  const label =
+    hydrated && itemCount > 0
+      ? `Order · ${itemCount} · ${formatPrice(subtotalCents)}`
+      : 'Order';
 
   return (
     <button
       type="button"
       onClick={() => setDrawerOpen(true)}
-      aria-label={itemCount > 0 ? `Cart, ${itemCount} items` : 'Cart, empty'}
-      className={`focus-ring relative rounded-md p-2.5 text-axis-navy transition-colors hover:text-axis-blue ${className}`}
+      aria-label={
+        hydrated && itemCount > 0
+          ? `Open order, ${itemCount} items, subtotal ${formatPrice(subtotalCents)}`
+          : 'Open order, empty'
+      }
+      className={`t-2 inline-flex min-h-[38px] items-center rounded-plate border border-axis-rule-3 px-[13px] text-axis-ink transition-colors duration-[--dur-1] hover:bg-axis-sunk ${className}`}
     >
-      <ShoppingCart size={20} />
-      {/* Rendered only after hydration: the server has no access to the
-          visitor's stored cart, so painting a count before then would flash a
-          wrong number. */}
-      {hydrated && itemCount > 0 && (
-        <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-axis-blue px-1 text-[10px] font-bold text-white">
-          {itemCount > 99 ? '99+' : itemCount}
-        </span>
-      )}
+      {label}
     </button>
   );
 }

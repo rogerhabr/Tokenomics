@@ -1,120 +1,151 @@
 'use client';
 
 import Link from 'next/link';
-import { Trash2, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
-import { formatPrice } from '@/lib/products';
+import { formatPrice, getVariant } from '@/lib/products';
+import { centsPerMg, formatPerMg } from '@/lib/pricing';
+import { OrderLink, ArrowLink, Rule } from './ui';
 
 export default function CartView() {
   const { resolved, subtotalCents, setQuantity, remove, hydrated } = useCart();
 
-  // The cart lives in the visitor's browser, so there is nothing meaningful to
-  // render server-side. Hold a neutral placeholder until it is read.
+  // The order lives in the visitor's browser, so there is nothing meaningful to
+  // render server-side. Hold a neutral block until it is read, rather than
+  // painting an empty state that would flash and then be replaced.
   if (!hydrated) {
-    return <div className="h-64 animate-pulse rounded-xl border border-axis-border bg-axis-surface" />;
+    return <div className="h-[280px] border border-axis-rule-1 bg-axis-sunk" />;
   }
 
   if (resolved.length === 0) {
     return (
-      <div className="rounded-xl border border-axis-border bg-axis-surface px-6 py-20 text-center">
-        <ShoppingCart size={32} className="mx-auto text-axis-faint" />
-        <h2 className="mt-4 text-xl font-bold text-axis-navy">Your cart is empty.</h2>
-        <p className="mt-2 text-sm text-axis-muted">
-          Browse the catalogue to add research compounds.
+      <div className="border-y border-axis-rule-2 py-[52px]">
+        <h2 className="t-6 text-axis-ink">Your order is empty.</h2>
+        <p className="t-3 mt-[13px] max-w-measure text-axis-ink-500">
+          The register lists every compound we supply, with molecular mass and price per
+          milligram.
         </p>
-        <Link
-          href="/products"
-          className="focus-ring mt-7 inline-block rounded-lg bg-axis-blue px-5 py-3 text-sm font-semibold text-white hover:bg-axis-blue-hover"
-        >
-          Browse the catalogue
-        </Link>
+        <div className="mt-[26px]">
+          <ArrowLink href="/products">Open the register</ArrowLink>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[1.6fr_1fr]">
-      <div className="overflow-hidden rounded-xl border border-axis-border">
-        <ul className="divide-y divide-axis-border">
-          {resolved.map((line) => (
-            <li key={line.variantId} className="flex flex-wrap items-start gap-4 p-5 sm:p-6">
-              <div className="min-w-0 flex-1">
-                <Link
-                  href={`/products/${line.productSlug}`}
-                  className="focus-ring rounded text-base font-bold text-axis-navy hover:text-axis-blue"
+    <div className="grid gap-[52px] lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:gap-[78px]">
+      <div>
+        <table className="w-full border-collapse text-left">
+          <caption className="sr-only">Compounds in your order</caption>
+          <thead>
+            <tr className="hidden border-b border-axis-rule-3 lg:table-row">
+              <th scope="col" className="t-1 py-[10px] pr-[20px] text-axis-ink-300">
+                Compound
+              </th>
+              <th scope="col" className="t-1 py-[10px] pr-[20px] text-axis-ink-300">
+                Quantity
+              </th>
+              <th scope="col" className="t-1 py-[10px] text-right text-axis-ink-300">
+                Total
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {resolved.map((line) => {
+              const found = getVariant(line.variantId);
+              const rate = found ? centsPerMg(found.variant) : null;
+              return (
+                <tr
+                  key={line.variantId}
+                  className="block border-b border-axis-rule-1 py-[13px] lg:table-row lg:py-0"
                 >
-                  {line.productName}
-                </Link>
-                <p className="mt-1 text-sm text-axis-faint">{line.variantLabel}</p>
-                <p className="mt-1 text-sm text-axis-muted">
-                  {formatPrice(line.unitPriceCents)} each
-                </p>
-              </div>
+                  <td className="block pr-[20px] align-top lg:table-cell lg:py-[16px]">
+                    <Link
+                      href={`/products/${line.productSlug}`}
+                      className="t-4 text-axis-ink underline decoration-axis-rule-2 underline-offset-[4px]"
+                    >
+                      {line.productName}
+                    </Link>
+                    <span className="t-2 mt-[2px] block text-axis-ink-500">
+                      {line.variantLabel} · {formatPrice(line.unitPriceCents)} each
+                      {rate !== null && ` · ${formatPerMg(rate)}`}
+                    </span>
+                  </td>
 
-              <div className="flex items-center gap-3">
-                <div className="flex items-center rounded-lg border border-axis-border">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(line.variantId, line.quantity - 1)}
-                    aria-label={`Decrease quantity of ${line.productName}`}
-                    className="focus-ring rounded-l-lg px-3 py-2 leading-none text-axis-navy hover:bg-axis-tint"
-                  >
-                    −
-                  </button>
-                  <span className="min-w-[2.25rem] text-center text-sm font-semibold text-axis-navy">
-                    {line.quantity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(line.variantId, line.quantity + 1)}
-                    aria-label={`Increase quantity of ${line.productName}`}
-                    className="focus-ring rounded-r-lg px-3 py-2 leading-none text-axis-navy hover:bg-axis-tint"
-                  >
-                    +
-                  </button>
-                </div>
-                <span className="min-w-[5rem] text-right text-base font-bold text-axis-navy">
-                  {formatPrice(line.lineTotalCents)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => remove(line.variantId)}
-                  aria-label={`Remove ${line.productName} from cart`}
-                  className="focus-ring rounded-md p-2 text-axis-faint hover:text-axis-navy"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+                  <td className="block pt-[13px] align-top lg:table-cell lg:py-[16px] lg:pr-[20px]">
+                    <div className="flex items-center gap-[13px]">
+                      <div className="flex items-stretch rounded-plate border border-axis-rule-3">
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(line.variantId, line.quantity - 1)}
+                          aria-label={`Decrease quantity of ${line.productName}`}
+                          className="t-4 min-h-[44px] w-[40px] text-axis-ink hover:bg-axis-plate"
+                        >
+                          −
+                        </button>
+                        <span className="data t-2 flex min-w-[40px] items-center justify-center text-axis-ink">
+                          {line.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(line.variantId, line.quantity + 1)}
+                          aria-label={`Increase quantity of ${line.productName}`}
+                          className="t-4 min-h-[44px] w-[40px] text-axis-ink hover:bg-axis-plate"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => remove(line.variantId)}
+                        className="t-2 min-h-[44px] text-axis-ink-500 underline underline-offset-[4px] hover:text-axis-ink"
+                      >
+                        Remove
+                        <span className="sr-only"> {line.productName}</span>
+                      </button>
+                    </div>
+                  </td>
+
+                  <td className="block pt-[8px] align-top lg:table-cell lg:py-[16px] lg:text-right">
+                    <span className="data t-4 text-axis-ink">
+                      {formatPrice(line.lineTotalCents)}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
-      <aside className="lg:sticky lg:top-28 lg:self-start">
-        <div className="rounded-xl border border-axis-border bg-axis-surface p-7">
-          <h2 className="text-sm font-bold uppercase tracking-[0.12em] text-axis-navy">
-            Order summary
-          </h2>
-          <div className="mt-5 flex items-center justify-between border-b border-axis-border pb-4">
-            <span className="text-sm text-axis-muted">Subtotal</span>
-            <span className="text-lg font-bold text-axis-navy">{formatPrice(subtotalCents)}</span>
+      <aside className="lg:sticky lg:top-[calc(var(--header-h)+26px)] lg:self-start">
+        <div className="border border-axis-rule-3 bg-axis-sunk p-[26px]">
+          <h2 className="t-1 text-axis-ink-300">Summary</h2>
+
+          <dl className="mt-[20px] border-t border-axis-rule-2">
+            <div className="flex items-baseline justify-between border-b border-axis-rule-1 py-[13px]">
+              <dt className="t-3 text-axis-ink-500">Subtotal</dt>
+              <dd className="data t-5 text-axis-ink">{formatPrice(subtotalCents)}</dd>
+            </div>
+            <div className="flex items-baseline justify-between py-[13px]">
+              <dt className="t-3 text-axis-ink-500">Shipping</dt>
+              <dd className="t-2 text-axis-ink-500">Quoted on the invoice</dd>
+            </div>
+          </dl>
+
+          <Rule className="mt-[13px]" />
+
+          <div className="mt-[26px]">
+            <OrderLink href="/checkout">Continue to order details</OrderLink>
           </div>
-          <div className="mt-4 flex items-center justify-between">
-            <span className="text-sm text-axis-muted">Shipping</span>
-            <span className="text-sm text-axis-muted">Calculated at checkout</span>
+
+          <p className="t-2 mt-[20px] text-axis-ink-500">
+            Nothing is charged on this site. We confirm stock, allocate a lot, and reply with an
+            itemised invoice and the lot certificate.
+          </p>
+
+          <div className="mt-[20px]">
+            <ArrowLink href="/products">Add another compound</ArrowLink>
           </div>
-          <Link
-            href="/checkout"
-            className="focus-ring mt-7 block rounded-lg bg-axis-blue px-5 py-3 text-center text-sm font-semibold text-white hover:bg-axis-blue-hover"
-          >
-            Proceed to checkout
-          </Link>
-          <Link
-            href="/products"
-            className="focus-ring mt-3 block rounded-lg px-5 py-2 text-center text-sm font-semibold text-axis-blue hover:text-axis-blue-hover"
-          >
-            Continue shopping
-          </Link>
         </div>
       </aside>
     </div>

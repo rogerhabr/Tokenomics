@@ -1,129 +1,164 @@
 import type { Metadata } from 'next';
-import { FlaskConical, FileCheck2, PackageCheck, Snowflake, ScrollText, Microscope } from 'lucide-react';
-import { Button, Card, Container, Section, SectionTitle, PageHero, ResearchNotice } from '@/components/marketing/ui';
+import {
+  Container,
+  PageHead,
+  Section,
+  SectionHead,
+  Rail,
+  ArrowLink,
+  ResearchNotice,
+} from '@/components/marketing/ui';
+import { RELEASE_SPEC_PCT } from '@/lib/lots';
 
 export const metadata: Metadata = {
-  title: 'Quality & Testing — Verified Purity | Axis Labs',
+  title: 'Release Specification & Method | Axis Labs',
   description:
-    'How Axis Labs verifies every batch: independent third-party HPLC and mass spectrometry analysis, published certificates of analysis, and batch-level traceability.',
+    'How Axis Labs releases a lot: independent HPLC assay against a ≥99.0% release specification, mass spectrometry identity confirmation, and a certificate carrying the batch code.',
 };
 
 const STEPS = [
   {
     n: '01',
-    icon: Microscope,
     title: 'Raw material qualification',
-    body: 'Every synthesis run starts from material that has been qualified against our own specification. Suppliers who cannot evidence consistency do not stay on the list.',
+    body: 'A synthesis run starts from material qualified against our own specification. Suppliers who cannot evidence consistency do not stay on the list.',
   },
   {
     n: '02',
-    icon: FlaskConical,
     title: 'Independent assay',
-    body: 'Each finished lot is sent to an external analytical laboratory. We do not self-certify purity, because a purity claim from the party selling the vial is not evidence.',
+    body: 'The finished lot goes to an external analytical laboratory. We do not self-certify, because a purity figure issued by the party selling the vial is not independent evidence.',
   },
   {
     n: '03',
-    icon: FileCheck2,
-    title: 'Certificate of analysis',
-    body: 'The lab issues a certificate carrying the batch code, the HPLC chromatogram, and the mass spectrometry result. It is supplied with your order and available on request at any time.',
+    title: 'Release decision',
+    body: `The lot is measured against the ${RELEASE_SPEC_PCT.toFixed(1)}% release specification. Above it, the lot is released. Below it, the lot is not sold — it is not repriced, reclassified, or moved to a second line.`,
   },
   {
     n: '04',
-    icon: PackageCheck,
     title: 'Batch-matched dispatch',
-    body: 'The batch code on the certificate matches the code on your vial. If the two do not correspond, the material is not ours and we want to know about it.',
+    body: 'The batch code on the certificate matches the code on the vial. If the two do not correspond, the material is not ours and we want to know about it.',
   },
 ];
 
 const CHECKS = [
   {
-    icon: FlaskConical,
+    n: '01',
     title: 'HPLC purity',
-    body: 'High-performance liquid chromatography establishes the purity percentage. Our specification is 99%+; lots that assay below threshold are rejected rather than downgraded.',
+    body: 'High-performance liquid chromatography establishes the purity percentage on the specific lot. This is the figure the release decision is made on.',
   },
   {
-    icon: Microscope,
+    n: '02',
     title: 'Mass spectrometry',
-    body: 'Confirms molecular identity and weight, so purity is verified against the right molecule rather than a well-purified wrong one.',
+    body: 'Confirms molecular identity and mass, so purity is verified against the right molecule rather than a well-purified wrong one.',
   },
   {
-    icon: Snowflake,
+    n: '03',
     title: 'Cold-chain integrity',
-    body: 'Compounds that require it ship with appropriate cold packaging. Storage conditions are stated on every product page and repeated on the vial.',
+    body: 'Compounds that require it ship with appropriate cold packaging. Storage conditions are stated on every compound page and repeated on the vial.',
   },
   {
-    icon: ScrollText,
+    n: '04',
     title: 'Batch traceability',
-    body: 'Every vial traces to a lot, and every lot to a certificate. Records are retained so a result can be reconciled long after the material has been used.',
+    body: 'Every vial traces to a lot and every lot to a certificate. Records are retained so a result can be reconciled long after the material has been used.',
   },
 ];
 
 export default function QualityPage() {
   return (
     <>
-      <PageHero
-        eyebrow="Quality"
-        title="Every batch tested by someone other than us."
-        lede="The research peptide market runs on unverifiable purity claims. Our answer is procedural rather than rhetorical: independent assay on every lot, a published certificate, and a batch code you can match to the vial in your hand."
+      <PageHead
+        index="01"
+        rail="Specification"
+        title="One number, and what stands behind it."
+        standfirst="The research compound market runs on purity claims that cannot be checked. Our answer is procedural rather than rhetorical: an independent assay on every lot, measured against a specification we publish, and a batch code you can match to the vial in your hand."
       />
 
-      <Section>
-        <SectionTitle
-          eyebrow="Process"
-          title="From raw material to your bench."
-          lede="Four checkpoints, each of which a lot must clear before it is allowed to ship."
-        />
-        <div className="mt-12 grid gap-6 md:grid-cols-2">
-          {STEPS.map(({ n, icon: Icon, title, body }) => (
-            <Card key={n}>
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-axis-tint-strong">
-                  <Icon size={19} className="text-axis-blue" />
-                </span>
-                <span className="text-sm font-bold text-axis-blue">{n}</span>
-              </div>
-              <h3 className="mt-4 text-lg font-bold text-axis-navy">{title}</h3>
-              <p className="mt-2.5 text-sm leading-relaxed text-axis-muted">{body}</p>
-            </Card>
-          ))}
-        </div>
+      {/* The counter-form: the specification at scale, on its own line. */}
+      <Section className="py-[52px] lg:py-[78px]">
+        <Container>
+          <Rail label="Release specification" index="02">
+            <div className="border-y border-axis-rule-2 py-[39px]">
+              <p className="t-8 text-axis-ink">≥{RELEASE_SPEC_PCT.toFixed(1)}%</p>
+              <div className="spec-rule draw mt-[13px]" />
+              <p className="t-3 mt-[20px] max-w-measure text-axis-ink-500">
+                Purity by HPLC, established on the specific lot by an external laboratory and
+                stated on that lot&rsquo;s certificate. Molecular identity is separately confirmed
+                by mass spectrometry, so the figure describes the correct molecule.
+              </p>
+            </div>
+          </Rail>
+        </Container>
       </Section>
 
-      <div className="border-y border-axis-border bg-axis-surface">
-        <Section>
-          <SectionTitle eyebrow="What we test for" title="Four checks on every lot." />
-          <div className="mt-12 grid gap-8 md:grid-cols-2">
-            {CHECKS.map(({ icon: Icon, title, body }) => (
-              <div key={title} className="flex gap-5">
-                <Icon size={22} className="mt-0.5 shrink-0 text-axis-blue" />
+      <Section className="pt-0">
+        <Container>
+          <SectionHead
+            index="03"
+            rail="Method"
+            title="From raw material to your bench."
+            standfirst="Four checkpoints, each of which a lot must clear before it is allowed to ship."
+          />
+          <div className="mt-[39px] grid gap-x-[52px] gap-y-[39px] lg:grid-cols-2">
+            {STEPS.map((s) => (
+              <div key={s.n} className="grid grid-cols-[36px_minmax(0,1fr)] gap-[13px]">
+                <span className="t-1 pt-[4px] text-axis-ink-300">{s.n}</span>
                 <div>
-                  <h3 className="text-base font-bold text-axis-navy">{title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-axis-muted">{body}</p>
+                  <h3 className="t-4 text-axis-ink">{s.title}</h3>
+                  <p className="t-3 mt-[8px] text-axis-ink-500">{s.body}</p>
                 </div>
               </div>
             ))}
           </div>
-        </Section>
+        </Container>
+      </Section>
+
+      <Section className="pt-0">
+        <Container>
+          <SectionHead index="04" rail="Tests" title="What is measured on every lot." />
+          <div className="mt-[39px] grid gap-x-[52px] gap-y-[39px] lg:grid-cols-2">
+            {CHECKS.map((c) => (
+              <div key={c.n} className="grid grid-cols-[36px_minmax(0,1fr)] gap-[13px]">
+                <span className="t-1 pt-[4px] text-axis-ink-300">{c.n}</span>
+                <div>
+                  <h3 className="t-4 text-axis-ink">{c.title}</h3>
+                  <p className="t-3 mt-[8px] text-axis-ink-500">{c.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Container>
+      </Section>
+
+      <div className="bg-[#101215] text-[#eae7e0]">
+        <Container className="py-[78px] lg:py-[104px]">
+          <div className="max-w-[46ch]">
+            <p className="t-1 text-[#9ca0a7]">05 — Verification</p>
+            <h2 className="t-6 mt-[20px] text-[#eae7e0]">
+              Ask for the certificate before you order.
+            </h2>
+            <p className="t-3 mt-[20px] text-[#9ca0a7]">
+              Tell us the compound and we will send the current batch certificate of analysis. We
+              would rather you check the paperwork first than take the claim on trust.
+            </p>
+            <a
+              href="/contact"
+              className="t-3 mt-[39px] inline-flex min-h-[44px] items-center gap-[8px] rounded-plate border border-[#606570] px-[20px] text-[#eae7e0] transition-colors duration-[--dur-1] hover:bg-[#1a1d22]"
+            >
+              Request a certificate of analysis
+              <span aria-hidden="true" className="data">
+                →
+              </span>
+            </a>
+          </div>
+        </Container>
       </div>
 
       <Section>
-        <div className="rounded-2xl border border-axis-border bg-axis-tint p-10 sm:p-14">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl font-bold tracking-tight text-axis-navy">
-              Want the certificate before you order?
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-axis-muted">
-              Send us the compound and we will return the current batch certificate of analysis.
-              We would rather you check the paperwork first than take the claim on trust.
-            </p>
-            <div className="mt-8">
-              <Button href="/contact">Request a certificate of analysis</Button>
-            </div>
-          </div>
-        </div>
-
-        <ResearchNotice className="mt-12" />
+        <Container>
+          <ArrowLink href="/lots">See the lot register</ArrowLink>
+        </Container>
       </Section>
+
+      <ResearchNotice />
     </>
   );
 }

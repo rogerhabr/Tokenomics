@@ -1,125 +1,141 @@
 import type { Metadata } from 'next';
-import { Button, Container, Section, SectionTitle, PageHero, StatBlock, ResearchNotice } from '@/components/marketing/ui';
+import {
+  Container,
+  PageHead,
+  Section,
+  SectionHead,
+  ArrowLink,
+  ResearchNotice,
+} from '@/components/marketing/ui';
 
 export const metadata: Metadata = {
-  title: 'About Axis Labs — Verified Research Peptide Supplier',
+  title: 'About Axis Labs — Verification, Not Assurances',
   description:
-    'Axis Labs was founded to fix the verification problem in research peptides: independent testing on every batch, published certificates, and honest specifications.',
+    'Axis Labs exists to close the verification gap in research compounds: independent assay on every lot, a published release specification, and honest specifications.',
 };
 
-const VALUES = [
+const PRINCIPLES = [
   {
     n: '01',
     title: 'Evidence over adjectives',
-    body: 'Words like premium and pharmaceutical-grade mean nothing without an assay behind them. We publish the certificate and let it speak.',
+    body: 'Words like premium and pharmaceutical-grade mean nothing without an assay behind them. We publish the number and let it speak.',
   },
   {
     n: '02',
     title: 'One specification, no tiers',
-    body: 'We do not run a budget line alongside a premium line. There is a single purity standard, and material that misses it is rejected rather than repriced.',
+    body: 'We do not run a budget line alongside a premium line. There is a single release specification, and material that misses it is rejected rather than repriced.',
   },
   {
     n: '03',
     title: 'Say what we do not know',
-    body: 'Where a specification comes from the certificate rather than our own claim, the product page says so. Blank is more useful than invented.',
+    body: 'Where a value comes from a public registry rather than our own certificate, the page says so — and where we cannot confirm a field at all, it prints as unconfirmed. Blank is more useful than invented.',
   },
   {
     n: '04',
     title: 'Research context, always',
-    body: 'Every listing is written for laboratory use. We do not publish dosing guidance, human-use suggestions, or anything that reads as clinical advice.',
+    body: 'Every listing is written for laboratory use. We do not publish dosing guidance, reconstitution protocols, human-use suggestions, or anything that reads as clinical advice.',
   },
-];
-
-const FACTS = [
-  { value: '99%+', label: 'Single purity standard' },
-  { value: 'US', label: 'Fulfilment facility' },
-  { value: '100%', label: 'Batches independently assayed' },
 ];
 
 export default function AboutPage() {
   return (
     <>
-      <PageHero
-        eyebrow="About"
+      <PageHead
+        index="01"
+        rail="About"
         title="Built around one unglamorous problem: verification."
-        lede="Axis Labs exists because researchers routinely cannot confirm what is in the vial they just bought. Purity claims are printed without evidence, batch codes lead nowhere, and certificates — when they exist at all — cannot be matched to the material."
+        standfirst="Researchers routinely cannot confirm what is in the vial they just bought. Purity claims are printed without evidence, batch codes lead nowhere, and certificates — when they exist at all — cannot be matched to the material."
       />
 
-      <Section>
-        <div className="grid gap-14 lg:grid-cols-[1.5fr_1fr]">
-          <div>
-            <SectionTitle eyebrow="Our story" title="Why we started." />
-            <div className="mt-8 space-y-5 text-base leading-relaxed text-axis-muted">
-              <p>
-                The research peptide market has a structural honesty problem. Purity is the entire
+      <Section className="py-[52px] lg:py-[78px]">
+        <Container>
+          <div className="grid gap-[52px] lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-[78px]">
+            <div className="prose-measure space-y-[26px]">
+              <p className="t-4 text-axis-ink-500">
+                The research compound market has a structural honesty problem. Purity is the entire
                 basis on which a compound is selected, and it is also the one property a buyer
                 cannot assess by looking. That gap invites exactly the behaviour you would expect:
                 confident numbers printed on labels, with nothing standing behind them.
               </p>
-              <p>
+              <p className="t-4 text-axis-ink-500">
                 For a researcher this is not an inconvenience, it is a contaminated result. An
                 experiment run on material that is 87% pure when the label said 99% does not fail
                 loudly. It produces a number that looks plausible and is quietly wrong, and the
-                error is usually discovered — if at all — long after the work has been built on.
+                error is usually discovered — if at all — long after the work has been built on it.
               </p>
-              <p>
+              <p className="t-4 text-axis-ink-500">
                 Axis Labs was founded to close that gap procedurally rather than by asking for
                 trust. Every lot we sell is assayed by an independent laboratory that has no stake
-                in the result. The certificate carries a batch code that matches the vial. If our
+                in the result. The certificate carries a batch code that matches the vial. If
                 material does not meet specification, the certificate says so and the lot does not
                 ship.
               </p>
-              <p>
+              <p className="t-4 text-axis-ink">
                 That is the whole proposition. We are not asking anyone to believe our purity
                 claims. We are handing over the evidence and inviting the check.
               </p>
             </div>
-          </div>
 
-          <div className="space-y-10 lg:pt-24">
-            {FACTS.map((f) => (
-              <StatBlock key={f.label} value={f.value} label={f.label} />
-            ))}
+            <aside className="lg:pt-[26px]">
+              <div className="border-y border-axis-rule-2 py-[26px]">
+                <p className="t-1 text-axis-ink-300">The check</p>
+                <p className="t-3 mt-[13px] text-axis-ink-500">
+                  Every assay we publish appears in the lot register, including the lots that
+                  failed specification and were never sold.
+                </p>
+                <div className="mt-[20px]">
+                  <ArrowLink href="/lots">Lot register</ArrowLink>
+                </div>
+              </div>
+            </aside>
           </div>
-        </div>
+        </Container>
       </Section>
 
-      <div className="border-y border-axis-border bg-axis-surface">
-        <Section id="principles">
-          <SectionTitle
-            eyebrow="Principles"
+      <Section className="pt-0" id="principles">
+        <Container>
+          <SectionHead
+            index="02"
+            rail="Principles"
             title="Four rules we hold to."
-            lede="These occasionally cost us a sale. That is the point of having them."
+            standfirst="These occasionally cost us a sale. That is the point of having them."
           />
-          <div className="mt-12 grid gap-x-12 gap-y-10 md:grid-cols-2">
-            {VALUES.map((v) => (
-              <div key={v.n} className="flex gap-5">
-                <span className="text-sm font-bold text-axis-blue">{v.n}</span>
+          <div className="mt-[39px] grid gap-x-[52px] gap-y-[39px] lg:grid-cols-2">
+            {PRINCIPLES.map((p) => (
+              <div key={p.n} className="grid grid-cols-[36px_minmax(0,1fr)] gap-[13px]">
+                <span className="t-1 pt-[4px] text-axis-ink-300">{p.n}</span>
                 <div>
-                  <h3 className="text-base font-bold text-axis-navy">{v.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-axis-muted">{v.body}</p>
+                  <h3 className="t-4 text-axis-ink">{p.title}</h3>
+                  <p className="t-3 mt-[8px] text-axis-ink-500">{p.body}</p>
                 </div>
               </div>
             ))}
           </div>
-        </Section>
-      </div>
+        </Container>
+      </Section>
 
-      <Section>
-        <div className="flex flex-col items-start justify-between gap-6 rounded-2xl border border-axis-border bg-axis-tint p-10 sm:flex-row sm:items-center">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-axis-navy">
-              Questions about our process?
-            </h2>
-            <p className="mt-2 text-sm text-axis-muted">
-              We answer specification and testing questions directly.
+      <Section className="pt-0" id="supplier-record">
+        <Container>
+          <SectionHead index="03" rail="Supply" title="How we operate." />
+          <div className="mt-[39px] grid gap-[26px] lg:grid-cols-2 lg:gap-[78px]">
+            <p className="t-3 text-axis-ink-500">
+              Orders ship from our US facility with cold-chain packaging where the compound
+              requires it. We supply laboratories, universities, research institutions and
+              independent researchers purchasing for legitimate research purposes.
+            </p>
+            <p className="t-3 text-axis-ink-500">
+              We do not handle payment details on this site. An order is a request; we confirm
+              stock, allocate a lot, and reply with an itemised invoice and the lot certificate
+              before anything is paid.
             </p>
           </div>
-          <Button href="/contact">Get in touch</Button>
-        </div>
-
-        <ResearchNotice className="mt-12" />
+          <div className="mt-[26px]">
+            <ArrowLink href="/ordering">How ordering works</ArrowLink>
+          </div>
+        </Container>
       </Section>
+
+      <ResearchNotice />
     </>
   );
 }

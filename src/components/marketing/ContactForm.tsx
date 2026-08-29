@@ -1,13 +1,18 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import { Loader2, Check } from 'lucide-react';
+import { OrderButton } from './ui';
 
 type Status = 'idle' | 'sending' | 'sent' | 'error';
 
+/**
+ * Fields sit on the plate ground with a rule-3 border — the only borders on the
+ * site that clear 3:1, which is what WCAG 1.4.11 requires of a control
+ * boundary. 16px minimum text size prevents iOS zooming on focus.
+ */
 const FIELD =
-  'w-full rounded-lg border border-axis-border bg-white px-3.5 py-2.5 text-sm text-axis-text placeholder:text-axis-faint outline-none transition-colors focus:border-axis-blue';
-const LABEL = 'block text-xs font-bold uppercase tracking-[0.12em] text-axis-navy';
+  'mt-[8px] w-full rounded-plate border border-axis-rule-3 bg-axis-plate px-[13px] py-[11px] text-[16px] text-axis-ink outline-none placeholder:text-axis-ink-300';
+const LABEL = 't-1 block text-axis-ink-300';
 
 export default function ContactForm() {
   const [status, setStatus] = useState<Status>('idle');
@@ -44,17 +49,17 @@ export default function ContactForm() {
 
   if (status === 'sent') {
     return (
-      <div className="rounded-xl border border-axis-border bg-axis-card p-8">
-        <Check size={22} className="text-axis-signal" />
-        <h3 className="mt-4 text-lg font-bold text-axis-navy">Enquiry received.</h3>
-        <p className="mt-2 text-sm leading-relaxed text-axis-muted">
-          Thank you. We answer specification, certificate, and pricing enquiries directly, and
-          will be in touch shortly.
+      <div className="border border-axis-rule-3 bg-axis-sunk p-[26px]">
+        <p className="t-1 text-axis-released">Enquiry received</p>
+        <h3 className="t-6 mt-[13px] text-axis-ink">Thank you.</h3>
+        <p className="t-3 mt-[13px] max-w-measure text-axis-ink-500">
+          We answer specification, certificate and pricing enquiries directly, and will be in
+          touch shortly.
         </p>
         <button
           type="button"
           onClick={() => setStatus('idle')}
-          className="focus-ring mt-6 rounded-md text-sm font-semibold text-axis-blue hover:text-axis-blue-hover"
+          className="t-3 mt-[26px] text-axis-ink underline underline-offset-[4px]"
         >
           Send another message
         </button>
@@ -63,19 +68,26 @@ export default function ContactForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="rounded-xl border border-axis-border bg-axis-surface p-8">
+    <form onSubmit={onSubmit} className="border border-axis-rule-3 bg-axis-sunk p-[26px]">
       {/* Honeypot — hidden from people, tempting to bots. */}
       <div aria-hidden="true" className="absolute h-0 w-0 overflow-hidden">
         <label htmlFor="website">Website</label>
         <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid gap-[20px] sm:grid-cols-2">
         <div>
           <label className={LABEL} htmlFor="name">
             Name
           </label>
-          <input id="name" name="name" required maxLength={120} className={`mt-2 ${FIELD}`} />
+          <input
+            id="name"
+            name="name"
+            required
+            maxLength={120}
+            autoComplete="name"
+            className={FIELD}
+          />
         </div>
         <div>
           <label className={LABEL} htmlFor="email">
@@ -87,24 +99,27 @@ export default function ContactForm() {
             type="email"
             required
             maxLength={200}
-            className={`mt-2 ${FIELD}`}
+            autoComplete="email"
+            inputMode="email"
+            className={FIELD}
           />
         </div>
       </div>
 
-      <div className="mt-5">
+      <div className="mt-[20px]">
         <label className={LABEL} htmlFor="organization">
-          Institution / Organisation <span className="font-medium normal-case tracking-normal text-axis-faint">(optional)</span>
+          Institution or organisation <span className="normal-case">(optional)</span>
         </label>
         <input
           id="organization"
           name="organization"
           maxLength={160}
-          className={`mt-2 ${FIELD}`}
+          autoComplete="organization"
+          className={FIELD}
         />
       </div>
 
-      <div className="mt-5">
+      <div className="mt-[20px]">
         <label className={LABEL} htmlFor="message">
           Message
         </label>
@@ -115,24 +130,21 @@ export default function ContactForm() {
           rows={6}
           maxLength={4000}
           placeholder="Which compound, what purity specification, and what quantity?"
-          className={`mt-2 resize-y ${FIELD}`}
+          className={`${FIELD} resize-y`}
         />
       </div>
 
       {status === 'error' && (
-        <p role="alert" className="mt-5 text-sm text-red-400">
+        <p role="alert" className="t-3 mt-[20px] text-axis-rejected">
           {error}
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={status === 'sending'}
-        className="focus-ring mt-7 inline-flex items-center justify-center rounded-lg bg-axis-blue px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-axis-blue-hover disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {status === 'sending' && <Loader2 size={16} className="mr-2 animate-spin" />}
-        {status === 'sending' ? 'Sending…' : 'Send enquiry'}
-      </button>
+      <div className="mt-[26px]">
+        <OrderButton disabled={status === 'sending'}>
+          {status === 'sending' ? 'Sending…' : 'Send enquiry'}
+        </OrderButton>
+      </div>
     </form>
   );
 }

@@ -1,24 +1,28 @@
 import type { Metadata } from 'next';
-import { Container, PageHero, ResearchNotice } from '@/components/marketing/ui';
+import { Container, PageHead, Section, ResearchNotice } from '@/components/marketing/ui';
 import CheckoutForm from '@/components/marketing/CheckoutForm';
 
 export const metadata: Metadata = {
-  title: 'Checkout — Axis Labs',
-  description: 'Complete your Axis Labs research compound order.',
+  title: 'Place your order — Axis Labs',
+  description:
+    'Place a research compound order with Axis Labs. No payment is taken on this site; we confirm stock, allocate a lot, and invoice with the certificate of analysis.',
 };
 
 export default function CheckoutPage() {
   return (
     <>
-      <PageHero
-        eyebrow="Checkout"
-        title="Complete your order."
-        lede="We confirm stock and current batch availability, then send your invoice with a secure payment link and the certificate of analysis for the lot you will receive."
+      <PageHead
+        index="01"
+        rail="Order"
+        title="Place your order."
+        standfirst="No payment is taken here. We confirm stock and allocate a lot, then reply by email with an itemised invoice and the certificate of analysis for the material you will receive."
       />
-      <Container className="py-12">
-        <CheckoutForm />
-        <ResearchNotice className="mt-12" />
-      </Container>
+      <Section className="py-[52px] lg:py-[78px]">
+        <Container>
+          <CheckoutForm />
+        </Container>
+      </Section>
+      <ResearchNotice />
     </>
   );
 }

@@ -1,164 +1,204 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { ArrowRight, FlaskConical, FileCheck2, Truck, ShieldCheck } from 'lucide-react';
-import { Button, Card, Container, Section, SectionTitle, StatBlock, ResearchNotice } from '@/components/marketing/ui';
-import { CATEGORIES, PRODUCTS } from '@/lib/products';
-import HelixMark from '@/components/marketing/HelixMark';
+import {
+  Container,
+  Section,
+  PageHead,
+  SectionHead,
+  Rail,
+  Rule,
+  ArrowLink,
+  HairlineLink,
+  ResearchNotice,
+} from '@/components/marketing/ui';
+import { RegisterExtract } from '@/components/marketing/Register';
+import PurityPlot from '@/components/marketing/PurityPlot';
+import { PRODUCTS } from '@/lib/products';
+import { getAllLots, summarise, RELEASE_SPEC_PCT } from '@/lib/lots';
 
 export const metadata: Metadata = {
-  title: 'Axis Labs — Research Peptides at 99%+ Purity',
+  title: 'Axis Labs — Research Compounds, Assayed Against a Published Specification',
   description:
-    'Axis Labs supplies third-party tested research peptides at 99%+ purity for neuroscience, metabolic, tissue repair, endocrine, and cosmetic research. Research use only.',
+    'Axis Labs supplies research compounds for laboratory and in vitro study. Every lot is assayed by an independent laboratory against a ≥99.0% release specification, and the record is published.',
 };
 
-const PILLARS = [
+// The register is read at request time but changes rarely; an hour of cache
+// keeps the home page fast without letting a newly published lot go unseen for
+// long.
+export const revalidate = 3600;
+
+const METHOD = [
   {
-    icon: FileCheck2,
-    title: 'Third-party tested, every batch',
-    body: 'Each lot is independently assayed by an external analytical laboratory. Certificates of analysis are published against a batch code you can match to your vial.',
+    n: '01',
+    title: 'Independent assay',
+    body: 'Every finished lot goes to an external analytical laboratory. We do not self-certify, because a purity figure issued by the party selling the vial is not evidence.',
   },
   {
-    icon: FlaskConical,
-    title: '99%+ HPLC purity',
-    body: 'We specify purity by HPLC and publish the chromatogram. Where a compound assays below our threshold, the lot does not ship.',
+    n: '02',
+    title: 'One specification',
+    body: `A lot either meets the ${RELEASE_SPEC_PCT.toFixed(1)}% release specification or it does not ship. There is no second line, no downgrade tier, and no repricing of out-of-specification material.`,
   },
   {
-    icon: Truck,
-    title: 'Shipped from the US',
-    body: 'Orders leave our US facility with cold-chain packaging where the compound requires it. Domestic delivery typically lands in 2–5 business days.',
+    n: '03',
+    title: 'Identity, not just purity',
+    body: 'Mass spectrometry confirms the molecule before purity means anything. A well-purified wrong compound is still a wrong compound.',
   },
   {
-    icon: ShieldCheck,
-    title: 'Research-first, always',
-    body: 'We supply laboratories, universities, and independent researchers. Every listing is written for research context and nothing else.',
+    n: '04',
+    title: 'The record is published',
+    body: 'Assays are recorded against a lot code you can match to the vial. Rejections are recorded in the same register as releases.',
   },
 ];
 
-const STATS = [
-  { value: '99%+', label: 'HPLC purity specification' },
-  { value: '100%', label: 'Batches third-party assayed' },
-  { value: '2–5', label: 'Business days, US delivery' },
-  { value: `${PRODUCTS.length}`, label: 'Compounds in catalogue' },
-];
+export default async function HomePage() {
+  const { lots, available } = await getAllLots();
+  const counts = summarise(lots);
 
-export default function HomePage() {
   return (
     <>
-      {/* Hero */}
-      <div className="border-b border-axis-border bg-gradient-to-b from-axis-tint to-white">
-        <Container className="py-16 sm:py-24">
-          <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_1fr]">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-axis-blue">
-                Advancing peptide research
-              </p>
-              <h1 className="mt-4 text-4xl font-bold leading-[1.08] tracking-tight text-axis-navy sm:text-[56px]">
-                Research peptides you can actually verify.
-              </h1>
-              <p className="mt-6 max-w-xl text-lg leading-relaxed text-axis-muted">
-                Axis Labs supplies third-party tested research peptides at 99%+ HPLC purity, with
-                a certificate of analysis published for every batch. No unverifiable claims — just
-                the assay, the chromatogram, and the batch code.
-              </p>
-              <div className="mt-9 flex flex-wrap gap-3">
-                <Button href="/products">
-                  Browse the catalogue
-                  <ArrowRight size={16} className="ml-2" />
-                </Button>
-                <Button href="/quality" variant="secondary">
-                  See our testing
-                </Button>
-              </div>
-            </div>
+      <PageHead
+        index="01"
+        rail="Axis Labs"
+        title="Purity you can check, not purity we assert."
+        standfirst="Axis Labs supplies research compounds for laboratory and in vitro study. Every lot is assayed by an independent laboratory against a release specification you can see, and the result is recorded whether it passes or fails."
+      >
+        <div className="mt-[26px] flex flex-wrap gap-[13px]">
+          <HairlineLink href="/products">Browse the register</HairlineLink>
+          <HairlineLink href="/quality">How a lot is released</HairlineLink>
+        </div>
+      </PageHead>
 
-            {/* Decorative helix panel */}
-            <div className="relative hidden aspect-square items-center justify-center rounded-2xl border border-axis-border bg-white lg:flex">
-              <HelixMark size={330} strokeWidth={2.9} idPrefix="axis-hero-helix" />
+      {/* The counter-form. One non-list object at scale: the release
+          specification itself, drawn against the line the whole site is
+          measured against. This is a statement of the standard we hold, not a
+          claim about any particular batch. */}
+      <Section>
+        <Container>
+          <Rail label="Release specification" index="02">
+            <div className="border-y border-axis-rule-2 py-[39px]">
+              <p className="t-8 text-axis-ink">≥{RELEASE_SPEC_PCT.toFixed(1)}%</p>
+              <div className="spec-rule draw mt-[13px]" />
+              <p className="t-3 mt-[20px] max-w-measure text-axis-ink-500">
+                Purity by high-performance liquid chromatography, established on the specific lot
+                by an external laboratory. This is the number every assay on this site is drawn
+                against — above the line a lot is released, below it a lot is not sold.
+              </p>
             </div>
+          </Rail>
+        </Container>
+      </Section>
+
+      {/* The register extract. Real catalogue data, no invented figures. */}
+      <Section className="pt-0">
+        <Container>
+          <SectionHead
+            index="03"
+            rail="Catalogue"
+            title={`${PRODUCTS.length} compounds, one standard.`}
+            standfirst="Every compound is supplied as a lyophilised powder and held to the same specification, whichever research class it belongs to."
+          />
+          <div className="mt-[39px]">
+            <RegisterExtract products={PRODUCTS.slice(0, 8)} />
+          </div>
+          <div className="mt-[26px]">
+            <ArrowLink href="/products">
+              All {PRODUCTS.length} compounds, with mass and rate
+            </ArrowLink>
           </div>
         </Container>
-      </div>
+      </Section>
 
-      {/* Stats */}
-      <div className="border-b border-axis-border bg-white">
-        <Container className="py-12">
-          <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
-            {STATS.map((s) => (
-              <StatBlock key={s.label} value={s.value} label={s.label} />
+      {/* The lot register. Renders an honest empty state until real records
+          are loaded — never a placeholder curve or a designed example. */}
+      <Section className="pt-0">
+        <Container>
+          <SectionHead
+            index="04"
+            rail="Lot records"
+            title="Every assay, including the failures."
+            standfirst="A supplier who only publishes the lots that passed has published nothing. The register carries releases, retentions and rejections in the same table."
+          />
+
+          <div className="mt-[39px]">
+            <PurityPlot lots={lots} scope="the catalogue" />
+          </div>
+
+          {available && counts.assayed > 0 ? (
+            <dl className="mt-[26px] grid gap-[26px] sm:grid-cols-3">
+              <div>
+                <dt className="t-1 text-axis-ink-300">Lots assayed</dt>
+                <dd className="data t-6 mt-[4px] text-axis-ink">{counts.assayed}</dd>
+              </div>
+              <div>
+                <dt className="t-1 text-axis-ink-300">Released</dt>
+                <dd className="data t-6 mt-[4px] text-axis-ink">{counts.released}</dd>
+              </div>
+              <div>
+                <dt className="t-1 text-axis-ink-300">Rejected</dt>
+                <dd className="data t-6 mt-[4px] text-axis-ink">{counts.rejected}</dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="t-3 mt-[26px] max-w-measure text-axis-ink-500">
+              The public register is not yet populated. Certificates of analysis are supplied with
+              every order and available on request before you order — ask us for the current batch
+              certificate on any compound.
+            </p>
+          )}
+
+          <div className="mt-[26px]">
+            <ArrowLink href="/lots">Open the lot register</ArrowLink>
+          </div>
+        </Container>
+      </Section>
+
+      {/* Method. Numbered marginalia rather than icons in tinted squares. */}
+      <Section className="pt-0">
+        <Container>
+          <SectionHead index="05" rail="Method" title="How a lot is released." />
+          <div className="mt-[39px] grid gap-x-[52px] gap-y-[39px] lg:grid-cols-2">
+            {METHOD.map((m) => (
+              <div key={m.n} className="grid grid-cols-[36px_minmax(0,1fr)] gap-[13px]">
+                <span className="t-1 pt-[4px] text-axis-ink-300">{m.n}</span>
+                <div>
+                  <h3 className="t-4 text-axis-ink">{m.title}</h3>
+                  <p className="t-3 mt-[8px] text-axis-ink-500">{m.body}</p>
+                </div>
+              </div>
             ))}
           </div>
         </Container>
-      </div>
-
-      {/* Research areas */}
-      <Section className="bg-axis-surface">
-        <SectionTitle
-          eyebrow="Research areas"
-          title="Every catalogue, one standard."
-          lede="Every compound we list is held to the same purity specification and the same testing regime, whichever area it belongs to."
-        />
-        <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {CATEGORIES.map((c) => (
-            <Link key={c.id} href={`/products?category=${c.id}`} className="focus-ring rounded-xl">
-              <Card className="h-full">
-                <h3 className="text-lg font-bold text-axis-navy">{c.name}</h3>
-                <p className="mt-2.5 text-sm leading-relaxed text-axis-muted">{c.blurb}</p>
-                <span className="mt-5 inline-flex items-center text-sm font-semibold text-axis-blue">
-                  View compounds
-                  <ArrowRight size={15} className="ml-1.5" />
-                </span>
-              </Card>
-            </Link>
-          ))}
-        </div>
       </Section>
 
-      {/* Why Axis */}
-      <Section>
-        <SectionTitle
-          eyebrow="Why Axis Labs"
-          title="Verification, not assurances."
-          lede="Purity claims are easy to make and hard to check. We built the process so you never have to take our word for it."
-        />
-        <div className="mt-12 grid gap-8 md:grid-cols-2">
-          {PILLARS.map(({ icon: Icon, title, body }) => (
-            <div key={title} className="flex gap-5">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-axis-tint-strong">
-                <Icon size={20} className="text-axis-blue" />
-              </span>
-              <div>
-                <h3 className="text-base font-bold text-axis-navy">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-axis-muted">{body}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      {/* CTA */}
-      <div className="bg-axis-navy">
-        <Container className="py-16 sm:py-20">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Need a compound that is not listed?
+      {/* Ink band — one of two full-bleed dark registers on this page. */}
+      <div className="bg-[#101215] text-[#eae7e0]">
+        <Container className="py-[78px] lg:py-[104px]">
+          <div className="max-w-[46ch]">
+            <p className="t-1 text-[#9ca0a7]">06 — Custom sourcing</p>
+            <h2 className="t-6 mt-[20px] text-[#eae7e0]">
+              Need a compound that is not in the register?
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-white/75">
-              We source and assay custom research peptides for laboratory and institutional
-              programmes. Tell us the compound, the purity you need, and the quantity.
+            <p className="t-3 mt-[20px] text-[#9ca0a7]">
+              Tell us the molecule, the purity specification and the quantity. We will tell you
+              whether we can source and assay it, and what the lead time is — including when the
+              answer is no.
             </p>
-            <div className="mt-8">
-              <Button href="/contact" variant="onDark">
-                Talk to our team
-                <ArrowRight size={16} className="ml-2" />
-              </Button>
+            <div className="mt-[39px]">
+              <Rule />
+              <a
+                href="/contact"
+                className="t-3 mt-[20px] inline-flex min-h-[44px] items-center gap-[8px] rounded-plate border border-[#606570] px-[20px] text-[#eae7e0] transition-colors duration-[--dur-1] hover:bg-[#1a1d22]"
+              >
+                Send a sourcing enquiry
+                <span aria-hidden="true" className="data">
+                  →
+                </span>
+              </a>
             </div>
           </div>
         </Container>
       </div>
 
-      <Container className="py-12">
-        <ResearchNotice />
-      </Container>
+      <ResearchNotice />
     </>
   );
 }

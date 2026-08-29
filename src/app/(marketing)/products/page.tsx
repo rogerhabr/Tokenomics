@@ -1,103 +1,128 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
-import { Card, Container, PageHero, ResearchNotice } from '@/components/marketing/ui';
-import { CATEGORIES, PRODUCTS, formatPrice, fromPriceCents, type CategoryId } from '@/lib/products';
+import { Container, PageHead, Section, ResearchNotice } from '@/components/marketing/ui';
+import Register from '@/components/marketing/Register';
+import { CATEGORIES, PRODUCTS, type CategoryId, type Product } from '@/lib/products';
 
 export const metadata: Metadata = {
-  title: 'Research Peptides — All Categories | Axis Labs',
+  title: 'Research Compounds — The Register | Axis Labs',
   description:
-    'The full Axis Labs research peptide catalogue: metabolic, neuroscience, tissue repair, growth factor, endocrine, and cosmetic research compounds at 99%+ purity.',
+    'The full Axis Labs catalogue: molecular formula, mass and price per milligram for every research compound, with the release specification each is assayed against.',
 };
 
 function isCategoryId(value: string | undefined): value is CategoryId {
   return !!value && CATEGORIES.some((c) => c.id === value);
 }
 
+/**
+ * Matches a compound against a free-text query.
+ *
+ * Researchers search by code as often as by name — BPC-157, PT-141, LY3437943,
+ * TH9507 — so aliases are matched as well as names, and punctuation is
+ * normalised so "bpc157" and "BPC-157" both resolve.
+ */
+function matches(product: Product, query: string): boolean {
+  const normalise = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const q = normalise(query);
+  if (!q) return true;
+
+  const category = CATEGORIES.find((c) => c.id === product.category);
+  const haystack = [
+    product.name,
+    product.alias ?? '',
+    product.summary,
+    category?.name ?? '',
+    ...product.researchAreas,
+  ].map(normalise);
+
+  return haystack.some((h) => h.includes(q));
+}
+
 export default function ProductsPage({
   searchParams,
 }: {
-  searchParams: { category?: string };
+  searchParams: { class?: string; q?: string };
 }) {
-  const selected = isCategoryId(searchParams.category) ? searchParams.category : null;
-  const products = selected ? PRODUCTS.filter((p) => p.category === selected) : PRODUCTS;
+  const selected = isCategoryId(searchParams.class) ? searchParams.class : null;
+  const query = (searchParams.q ?? '').trim();
+
+  let products = PRODUCTS;
+  if (selected) products = products.filter((p) => p.category === selected);
+  if (query) products = products.filter((p) => matches(p, query));
+
   const activeCategory = selected ? CATEGORIES.find((c) => c.id === selected) : null;
 
   return (
     <>
-      <PageHero
-        eyebrow="Catalogue"
-        title={activeCategory ? activeCategory.name : 'Research peptides'}
-        lede={
+      <PageHead
+        index="01"
+        rail="Register"
+        title={activeCategory ? activeCategory.name : 'The compound register'}
+        standfirst={
           activeCategory
             ? activeCategory.blurb
-            : 'Every compound is supplied as a lyophilised powder at 99%+ HPLC purity, independently assayed by batch, and shipped with a certificate of analysis.'
+            : 'Every compound is supplied as a lyophilised powder, assayed on the lot by an external laboratory, and shipped with its certificate of analysis.'
         }
       />
 
-      <Container className="py-12">
-        {/* Filter — plain links, so the catalogue works without JavaScript and
-            every filtered view has its own shareable URL. */}
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/products"
-            className={`focus-ring rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-              !selected
-                ? 'border-axis-blue bg-axis-blue text-white'
-                : 'border-axis-border bg-white text-axis-navy hover:border-axis-blue hover:text-axis-blue'
-            }`}
-          >
-            All ({PRODUCTS.length})
-          </Link>
-          {CATEGORIES.map((c) => {
-            const count = PRODUCTS.filter((p) => p.category === c.id).length;
-            const active = selected === c.id;
-            return (
-              <Link
-                key={c.id}
-                href={`/products?category=${c.id}`}
-                className={`focus-ring rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                  active
-                    ? 'border-axis-blue bg-axis-blue text-white'
-                    : 'border-axis-border bg-white text-axis-navy hover:border-axis-blue hover:text-axis-blue'
-                }`}
-              >
-                {c.name} ({count})
-              </Link>
-            );
-          })}
-        </div>
+      <Section className="py-[52px] lg:py-[78px]">
+        <Container>
+          {/* Plain links, so every filtered view has a shareable URL and the
+              catalogue works with JavaScript disabled. */}
+          <nav aria-label="Filter by research class" className="flex flex-wrap gap-[8px]">
+            <Link
+              href="/products"
+              aria-current={!selected ? 'true' : undefined}
+              className={`t-2 inline-flex min-h-[36px] items-center rounded-plate border px-[13px] transition-colors duration-[--dur-1] ${
+                !selected
+                  ? 'border-axis-ink bg-axis-ink text-axis-paper'
+                  : 'border-axis-rule-3 text-axis-ink hover:bg-axis-sunk'
+              }`}
+            >
+              All {PRODUCTS.length}
+            </Link>
+            {CATEGORIES.map((c) => {
+              const count = PRODUCTS.filter((p) => p.category === c.id).length;
+              const active = selected === c.id;
+              return (
+                <Link
+                  key={c.id}
+                  href={`/products?class=${c.id}`}
+                  aria-current={active ? 'true' : undefined}
+                  className={`t-2 inline-flex min-h-[36px] items-center rounded-plate border px-[13px] transition-colors duration-[--dur-1] ${
+                    active
+                      ? 'border-axis-ink bg-axis-ink text-axis-paper'
+                      : 'border-axis-rule-3 text-axis-ink hover:bg-axis-sunk'
+                  }`}
+                >
+                  {c.name} <span className="data ml-[6px] text-[0.9em] opacity-70">{count}</span>
+                </Link>
+              );
+            })}
+          </nav>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {products.map((p) => {
-            const category = CATEGORIES.find((c) => c.id === p.category);
-            const from = fromPriceCents(p.slug);
-            return (
-              <Link key={p.slug} href={`/products/${p.slug}`} className="focus-ring rounded-xl">
-                <Card className="flex h-full flex-col">
-                  <span className="text-xs font-bold uppercase tracking-[0.12em] text-axis-blue">
-                    {category?.name}
-                  </span>
-                  <h2 className="mt-3 text-xl font-bold text-axis-navy">{p.name}</h2>
-                  {p.alias && <p className="mt-1 text-sm text-axis-faint">{p.alias}</p>}
-                  <p className="mt-3 flex-1 text-sm leading-relaxed text-axis-muted">{p.summary}</p>
-                  <div className="mt-5 flex items-center justify-between border-t border-axis-border pt-4">
-                    <span className="text-sm font-bold text-axis-navy">
-                      {from === null ? p.purity : `From ${formatPrice(from)}`}
-                    </span>
-                    <span className="inline-flex items-center text-sm font-semibold text-axis-blue">
-                      Details
-                      <ArrowRight size={15} className="ml-1.5" />
-                    </span>
-                  </div>
-                </Card>
+          {query && (
+            <p className="t-2 mt-[20px] text-axis-ink-500">
+              {products.length} {products.length === 1 ? 'result' : 'results'} for{' '}
+              <span className="text-axis-ink">&ldquo;{query}&rdquo;</span>.{' '}
+              <Link href="/products" className="underline underline-offset-[4px]">
+                Clear
               </Link>
-            );
-          })}
-        </div>
+            </p>
+          )}
 
-        <ResearchNotice className="mt-14" />
-      </Container>
+          <div className="mt-[39px]">
+            <Register products={products} />
+          </div>
+
+          <p className="t-2 mt-[26px] text-axis-ink-300">
+            Rate is the lowest price per milligram across a compound&rsquo;s vial sizes. Molecular
+            formula and mass are reference values from PubChem, not lot measurements.
+          </p>
+        </Container>
+      </Section>
+
+      <ResearchNotice />
     </>
   );
 }

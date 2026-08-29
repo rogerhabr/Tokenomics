@@ -2,55 +2,434 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===========================================================================
+   AXIS LABS — design tokens
+   ===========================================================================
+
+   Warm-neutral paper against cool ink. That temperature tension is most of
+   what makes the surface read as printed rather than as a dashboard, and it is
+   why the grounds are never pure white: white appears only *inside* a bordered
+   data cell, so it behaves as an object placed on the page.
+
+   Every ratio in the comments is measured with the WCAG relative-luminance
+   formula against all three light grounds, not just one.
+   =========================================================================== */
+
+:root {
+  /* Grounds ------------------------------------------------------------- */
+  --paper: #f2f0ea; /* default page ground */
+  --paper-sunk: #e8e5dd; /* inset registers: folio, zebra, fields, order panel */
+  --plate: #ffffff; /* only inside a bordered data cell */
+
+  /* Ink — contrast against paper / sunk / plate ------------------------- */
+  --ink-900: #101215; /* 16.46 / 14.90 / 18.76 — text, display, CTA fill */
+  --ink-700: #2a2d33; /* 12.11 / 10.96 / 13.80 */
+  --ink-500: #54575e; /*  6.35 /  5.75 /  7.24 — muted prose */
+  --ink-300: #63666e; /*  5.04 /  4.56 /  5.74 — the floor; nothing lighter carries a word */
+
+  /* Rules. 1 and 2 are decorative and below 3:1 by design — they may never
+     carry meaning alone. 3 clears 3:1 on all three grounds, so every border
+     that signals state or bounds a control uses it. */
+  --rule-1: #d6d3cb; /* 1.31 / 1.19 / 1.50 */
+  --rule-2: #a6a39a; /* 2.21 / 2.00 / 2.52 */
+  --rule-3: #78756c; /* 4.04 / 3.66 / 4.61 */
+
+  /* Lot status — the only colour on the site. Always encoded redundantly
+     (glyph + label + colour) so it survives greyscale print and CVD. */
+  --released: #1c6b45; /* 5.69 / 5.15 / 6.48 */
+  --retained: #8a5109; /* 5.65 / 5.12 / 6.44 */
+  --rejected: #ae2a20; /* 5.85 / 5.29 / 6.66 */
+
+  --focus-ink: #101215;
+  --focus-halo: #f2f0ea;
+
+  --molecule-hetero: var(--rule-3);
+
+  /* Layout -------------------------------------------------------------- */
+  --measure: 62ch;
+  --content: 1280px;
+  --gutter: 20px;
+  --baseline: 26px;
+  --header-h: 60px;
+
+  /* Type scale — eight named steps. If a size is not a step, it does not
+     exist. Sizes re-declare at 640px and 1100px; tracking and leading are
+     bound to the step so they can never drift apart. */
+  --fs-1: 0.6875rem;
+  --fs-2: 0.8125rem;
+  --fs-3: 0.9375rem;
+  --fs-4: 1rem;
+  --fs-5: 1.1875rem;
+  --fs-6: 1.625rem;
+  --fs-7: 2.5rem;
+  --fs-8: 4.5rem;
+
+  /* Motion. Durations are zeroed under reduced-motion at the root, so a
+     component author cannot forget to honour it. */
+  --dur-1: 120ms;
+  --dur-2: 240ms;
+  --dur-3: 480ms;
+  --ease-out: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-mech: cubic-bezier(0.66, 0, 0.1, 1); /* the house curve: draws, wipes */
+}
+
+@media (min-width: 640px) {
+  :root {
+    --gutter: 32px;
+    --fs-1: 0.75rem;
+    --fs-2: 0.875rem;
+    --fs-3: 1rem;
+    --fs-5: 1.25rem;
+    --fs-6: 1.875rem;
+    --fs-7: 3.25rem;
+    --fs-8: 6rem;
+  }
+}
+
+@media (min-width: 1100px) {
+  :root {
+    --gutter: 40px;
+    --header-h: 68px;
+    --fs-4: 1.0625rem;
+    --fs-5: 1.375rem;
+    --fs-6: 2.125rem;
+    --fs-7: 4.25rem;
+    --fs-8: clamp(4.5rem, 10vw, 9rem);
+  }
+}
+
+/* Dark is honoured from the system preference only — there is no toggle. A
+   theme switch on a chemical supplier is portfolio signalling. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0d0f12;
+    --paper-sunk: #101318;
+    --plate: #15181c;
+
+    --ink-900: #e9e6df; /* 15.40 / 14.29 */
+    --ink-700: #cfccc4;
+    --ink-500: #989ca3; /*  6.96 /  6.46 */
+    --ink-300: #898d94;
+
+    --rule-1: #1e2126;
+    --rule-2: #383c43;
+    --rule-3: #606570; /*  3.28 /  3.05 */
+
+    --released: #57c48c;
+    --retained: #d99b3e;
+    --rejected: #f0705f;
+
+    --focus-ink: #e9e6df;
+    --focus-halo: #0d0f12;
+  }
+}
+
+/* ===========================================================================
+   Base
+   =========================================================================== */
+
 * {
   box-sizing: border-box;
 }
 
-body {
-  /* White base for the AXIS LABS site. The dashboard and login screens paint
-     their own full-height `bg-sa-bg`, so their dark theme is unaffected — this
-     only changes what shows behind/around the page (e.g. overscroll). The
-     inherited text colour is left as-is so dashboard components that rely on it
-     keep rendering unchanged; marketing components set their own. */
-  background-color: #ffffff;
-  color: #e2e8f0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  margin: 0;
-  padding: 0;
+html {
+  /* Sticky-header offset for in-page anchors. Without this, focusing a target
+     scrolls it under the header — W3C failure F110 against SC 2.4.11. */
+  scroll-padding-top: calc(var(--header-h) + 1.5rem);
 }
 
-::-webkit-scrollbar {
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--paper);
+  color: var(--ink-900);
+  font-family: var(--font-grot), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* One focus system, applied once, so no component can forget it. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--focus-ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--focus-halo);
+  border-radius: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 12px 20px;
+  background: var(--ink-900);
+  color: var(--paper);
+  font-size: var(--fs-3);
+}
+.skip-link:focus {
+  left: 0;
+}
+
+/* Data numerals. Applied to every price, spec value, table cell, quantity,
+   purity figure, CAS and lot code — running prose keeps proportional figures. */
+.data {
+  font-family: var(--font-data), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Alphanumeric identifiers (InChIKey, lot codes) need a little air to stay
+   transcribable. */
+.ident {
+  letter-spacing: 0.04em;
+}
+
+/* --- Type steps ---------------------------------------------------------- */
+
+.t-1 {
+  font-size: var(--fs-1);
+  line-height: 1.45;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--font-data), ui-monospace, monospace;
+  font-variation-settings: 'wght' 500, 'wdth' 87.5;
+}
+.t-2 {
+  font-size: var(--fs-2);
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  font-family: var(--font-data), ui-monospace, monospace;
+  font-variation-settings: 'wght' 400, 'wdth' 87.5;
+}
+.t-3 {
+  font-size: var(--fs-3);
+  line-height: 1.55;
+}
+.t-4 {
+  font-size: var(--fs-4);
+  line-height: 1.6;
+}
+.t-5 {
+  font-size: var(--fs-5);
+  line-height: 1.38;
+  letter-spacing: -0.005em;
+}
+.t-6 {
+  font-size: var(--fs-6);
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+  font-variation-settings: 'wght' 500, 'wdth' 104;
+  text-wrap: balance;
+}
+.t-7 {
+  font-size: var(--fs-7);
+  line-height: 1;
+  letter-spacing: -0.022em;
+  font-variation-settings: 'wght' 550, 'wdth' 112;
+  text-wrap: balance;
+}
+/* The specimen is a molecular formula, and a formula is data — so step 8 is
+   the only display size set in the mono. */
+.t-8 {
+  font-size: var(--fs-8);
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  font-family: var(--font-data), ui-monospace, monospace;
+  font-variation-settings: 'wght' 500, 'wdth' 100;
+}
+
+.t-rail {
+  font-size: var(--fs-1);
+  line-height: 1.45;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-variation-settings: 'wght' 500, 'wdth' 84;
+}
+
+.prose-measure {
+  max-width: var(--measure);
+  text-wrap: pretty;
+}
+
+/* --- The spec line ------------------------------------------------------- */
+
+/* The site's recurring graphic: a dashed hairline drawn at a constant position
+   under every page head and above every table header, and at exactly the
+   99.0% coordinate on every purity plot. */
+.spec-rule {
+  border-top: 1px dashed var(--rule-2);
+  transform-origin: left;
+}
+
+/* ===========================================================================
+   Motion
+
+   Authored default-OFF: every rule lives inside `no-preference`, so reduced
+   motion is the absence of these rules rather than an override of them. We
+   never ship `* { animation: none !important }` — that breaks anything whose
+   visible end state is a keyframe's 100%.
+   =========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-1: 0s;
+    --dur-2: 0s;
+    --dur-3: 0s;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* There is deliberately NO scroll-reveal on content. An entrance animation
+     that starts from a hidden state hides real text whenever its timeline does
+     not advance — which happens below the fold in a screenshot, in print, and
+     in any browser that resolves the scroller differently. The catalogue is
+     the thing a buyer came for; it never waits on an animation.
+
+     `@supports` may only ADD a hidden initial state, never remove one —
+     otherwise the content vanishes for Firefox, print, and any reader that
+     arrives before paint. Nothing on this site is scaleX(0) or opacity:0 in
+     authored CSS outside this block. */
+  @supports (animation-timeline: view()) {
+    .draw {
+      animation: draw linear both;
+      /* animation-timeline is reset-only in the `animation` shorthand, so it
+         has to be declared after it. */
+      animation-timeline: view();
+      animation-range: entry 15% cover 35%;
+    }
+  }
+}
+
+@keyframes draw {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* ===========================================================================
+   Forced colours
+
+   Windows High Contrast strips background-painted grounds, and this system's
+   only depth cue is a ground change — so the structure has to come back as
+   borders.
+   =========================================================================== */
+
+@media (forced-colors: active) {
+  .register-row,
+  .data-cell,
+  input,
+  select,
+  textarea,
+  .order-panel {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* ===========================================================================
+   Print
+
+   Buyers of research compounds print spec sheets and staple them into methods
+   files. The scale is re-declared in points and the research-use clause is
+   pinned to the running foot — a detached artefact must carry its own
+   disclosure.
+   =========================================================================== */
+
+@media print {
+  :root {
+    --paper: #ffffff;
+    --paper-sunk: #ffffff;
+    --plate: #ffffff;
+    --ink-900: #000000;
+    --ink-700: #1a1a1a;
+    --ink-500: #333333;
+    --ink-300: #444444;
+    --rule-1: #cccccc;
+    --rule-2: #999999;
+    --rule-3: #555555;
+
+    --fs-1: 7pt;
+    --fs-2: 8pt;
+    --fs-3: 9pt;
+    --fs-4: 10pt;
+    --fs-5: 12pt;
+    --fs-6: 14pt;
+    --fs-7: 20pt;
+    --fs-8: 28pt;
+  }
+
+  @page {
+    margin: 14mm;
+  }
+
+  .print-hide {
+    display: none !important;
+  }
+
+  /* Resolve external references so a printed sheet stays checkable. */
+  .print-refs a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 7pt;
+    word-break: break-all;
+  }
+
+  a {
+    text-decoration: none;
+  }
+}
+
+/* ===========================================================================
+   Dashboard (/dashboard, /login)
+
+   Scoped under .dashboard-scope. These rules used to be global, which meant a
+   dark 6px scrollbar and a #141b2d <select> were being applied to the light
+   marketing surface too — invisible today only because no marketing page
+   happens to render a <select> yet.
+   =========================================================================== */
+
+.dashboard-scope {
+  color: #e2e8f0;
+}
+
+.dashboard-scope ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-::-webkit-scrollbar-track {
+.dashboard-scope ::-webkit-scrollbar-track {
   background: #0f1623;
 }
-::-webkit-scrollbar-thumb {
+.dashboard-scope ::-webkit-scrollbar-thumb {
   background: #1e2a42;
   border-radius: 3px;
 }
-::-webkit-scrollbar-thumb:hover {
+.dashboard-scope ::-webkit-scrollbar-thumb:hover {
   background: #2d3f5e;
 }
 
-.recharts-cartesian-grid-horizontal line,
-.recharts-cartesian-grid-vertical line {
+.dashboard-scope .recharts-cartesian-grid-horizontal line,
+.dashboard-scope .recharts-cartesian-grid-vertical line {
   stroke: #1e2a42;
 }
 
-.recharts-tooltip-wrapper .recharts-default-tooltip {
+.dashboard-scope .recharts-tooltip-wrapper .recharts-default-tooltip {
   background-color: #141b2d !important;
   border: 1px solid #1e2a42 !important;
   border-radius: 8px !important;
 }
 
-.number-cell {
+.dashboard-scope .number-cell {
   font-variant-numeric: tabular-nums;
   font-family: 'JetBrains Mono', 'Menlo', monospace;
 }
 
-input[type="range"] {
+.dashboard-scope input[type='range'] {
   -webkit-appearance: none;
   width: 100%;
   height: 4px;
@@ -58,7 +437,7 @@ input[type="range"] {
   border-radius: 2px;
   outline: none;
 }
-input[type="range"]::-webkit-slider-thumb {
+.dashboard-scope input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 16px;
   height: 16px;
@@ -67,7 +446,7 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
 }
 
-select {
+.dashboard-scope select {
   background-color: #141b2d;
   border: 1px solid #1e2a42;
   color: #e2e8f0;
@@ -76,30 +455,12 @@ select {
   font-size: 13px;
   outline: none;
 }
-select:focus {
+.dashboard-scope select:focus {
   border-color: #f97316;
 }
 
-/* ---------------------------------------------------------------------------
-   AXIS LABS marketing site
-   --------------------------------------------------------------------------- */
-
-html {
-  scroll-behavior: smooth;
-}
-
-/* Keyboard-visible focus ring used across the marketing site. Applied via a
-   utility class so every interactive element gets the same treatment. */
-.focus-ring:focus-visible {
-  outline: 2px solid #2E4C9E;
+/* The dashboard's old focus treatment, kept for that surface only. */
+.dashboard-scope .focus-ring:focus-visible {
+  outline: 2px solid #f97316;
   outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-  .animate-fade-up {
-    animation: none;
-  }
 }

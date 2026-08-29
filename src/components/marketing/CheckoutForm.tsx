@@ -1,15 +1,29 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
-import { Loader2, Lock } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { formatPrice } from '@/lib/products';
+import { OrderButton, ArrowLink, Rule } from './ui';
 
 const FIELD =
-  'w-full rounded-lg border border-axis-border bg-white px-3.5 py-2.5 text-sm text-axis-text placeholder:text-axis-faint outline-none transition-colors focus:border-axis-blue';
-const LABEL = 'block text-xs font-bold uppercase tracking-[0.12em] text-axis-navy';
+  'mt-[8px] w-full rounded-plate border border-axis-rule-3 bg-axis-plate px-[13px] py-[11px] text-[16px] text-axis-ink outline-none placeholder:text-axis-ink-300';
+const LABEL = 't-1 block text-axis-ink-300';
+const OPTIONAL = <span className="normal-case">(optional)</span>;
+
+/**
+ * The order sequence, stated once. Baymard's finding is that perceived
+ * security comes from ENCAPSULATION rather than from real card fields — so the
+ * absence of a payment step is given the same bordered, sunk panel a card form
+ * would get, and framed as procurement rather than as a missing feature.
+ */
+const SEQUENCE = [
+  'You place this order — nothing is charged.',
+  'We confirm stock and allocate a lot.',
+  'We reply by email with an itemised invoice and the lot certificate.',
+  'Payment clears.',
+  'Dispatch.',
+];
 
 export default function CheckoutForm() {
   const { resolved, subtotalCents, clear, hydrated } = useCart();
@@ -18,20 +32,19 @@ export default function CheckoutForm() {
   const [error, setError] = useState('');
 
   if (!hydrated) {
-    return <div className="h-96 animate-pulse rounded-xl border border-axis-border bg-axis-surface" />;
+    return <div className="h-[420px] border border-axis-rule-1 bg-axis-sunk" />;
   }
 
   if (resolved.length === 0) {
     return (
-      <div className="rounded-xl border border-axis-border bg-axis-surface px-6 py-20 text-center">
-        <h2 className="text-xl font-bold text-axis-navy">Your cart is empty.</h2>
-        <p className="mt-2 text-sm text-axis-muted">Add compounds before checking out.</p>
-        <Link
-          href="/products"
-          className="focus-ring mt-7 inline-block rounded-lg bg-axis-blue px-5 py-3 text-sm font-semibold text-white hover:bg-axis-blue-hover"
-        >
-          Browse the catalogue
-        </Link>
+      <div className="border-y border-axis-rule-2 py-[52px]">
+        <h2 className="t-6 text-axis-ink">Your order is empty.</h2>
+        <p className="t-3 mt-[13px] text-axis-ink-500">
+          Add compounds to the order before continuing.
+        </p>
+        <div className="mt-[26px]">
+          <ArrowLink href="/products">Open the register</ArrowLink>
+        </div>
       </div>
     );
   }
@@ -73,7 +86,10 @@ export default function CheckoutForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-10 lg:grid-cols-[1.5fr_1fr]">
+    <form
+      onSubmit={onSubmit}
+      className="grid gap-[52px] lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-[78px]"
+    >
       <div>
         {/* Honeypot — hidden from people, tempting to bots. */}
         <div aria-hidden="true" className="absolute h-0 w-0 overflow-hidden">
@@ -81,147 +97,246 @@ export default function CheckoutForm() {
           <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
         </div>
 
-        <fieldset>
-          <legend className="text-sm font-bold uppercase tracking-[0.12em] text-axis-blue">
-            Contact
-          </legend>
-          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+        {/* Stated once, at the top, in procurement language. */}
+        <div className="border border-axis-rule-3 bg-axis-sunk p-[26px]">
+          <h2 className="t-1 text-axis-ink-300">How this order is processed</h2>
+          <ol className="mt-[16px] border-t border-axis-rule-2">
+            {SEQUENCE.map((step, i) => (
+              <li
+                key={step}
+                className="grid grid-cols-[36px_minmax(0,1fr)] gap-[13px] border-b border-axis-rule-1 py-[10px]"
+              >
+                <span className="data t-1 text-axis-ink-300">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span className="t-3 text-axis-ink">{step}</span>
+              </li>
+            ))}
+          </ol>
+          <p className="t-2 mt-[16px] text-axis-ink-500">
+            Axis Labs invoices against a purchase order or a proforma. No payment details are
+            handled by this site.
+          </p>
+        </div>
+
+        <fieldset className="mt-[52px] border-0 p-0">
+          <legend className="t-1 text-axis-ink-300">01 — Contact</legend>
+          <div className="mt-[20px] grid gap-[20px] sm:grid-cols-2">
             <div>
-              <label className={LABEL} htmlFor="name">Full name</label>
-              <input id="name" name="name" required maxLength={120} autoComplete="name" className={`mt-2 ${FIELD}`} />
+              <label className={LABEL} htmlFor="name">
+                Full name
+              </label>
+              <input
+                id="name"
+                name="name"
+                required
+                maxLength={120}
+                autoComplete="name"
+                className={FIELD}
+              />
             </div>
             <div>
-              <label className={LABEL} htmlFor="email">Email</label>
-              <input id="email" name="email" type="email" required maxLength={200} autoComplete="email" className={`mt-2 ${FIELD}`} />
+              <label className={LABEL} htmlFor="email">
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                maxLength={200}
+                autoComplete="email"
+                inputMode="email"
+                className={FIELD}
+              />
             </div>
             <div>
               <label className={LABEL} htmlFor="organization">
-                Institution <span className="font-medium normal-case tracking-normal text-axis-faint">(optional)</span>
+                Institution {OPTIONAL}
               </label>
-              <input id="organization" name="organization" maxLength={160} autoComplete="organization" className={`mt-2 ${FIELD}`} />
+              <input
+                id="organization"
+                name="organization"
+                maxLength={160}
+                autoComplete="organization"
+                className={FIELD}
+              />
             </div>
             <div>
               <label className={LABEL} htmlFor="phone">
-                Phone <span className="font-medium normal-case tracking-normal text-axis-faint">(optional)</span>
+                Phone {OPTIONAL}
               </label>
-              <input id="phone" name="phone" maxLength={40} autoComplete="tel" className={`mt-2 ${FIELD}`} />
+              <input
+                id="phone"
+                name="phone"
+                maxLength={40}
+                autoComplete="tel"
+                inputMode="tel"
+                className={FIELD}
+              />
             </div>
           </div>
         </fieldset>
 
-        <fieldset className="mt-10">
-          <legend className="text-sm font-bold uppercase tracking-[0.12em] text-axis-blue">
-            Shipping address
-          </legend>
-          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+        <fieldset className="mt-[52px] border-0 p-0">
+          <legend className="t-1 text-axis-ink-300">02 — Shipping address</legend>
+          <div className="mt-[20px] grid gap-[20px] sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label className={LABEL} htmlFor="addressLine1">Address</label>
-              <input id="addressLine1" name="addressLine1" required maxLength={200} autoComplete="address-line1" className={`mt-2 ${FIELD}`} />
+              <label className={LABEL} htmlFor="addressLine1">
+                Address
+              </label>
+              <input
+                id="addressLine1"
+                name="addressLine1"
+                required
+                maxLength={200}
+                autoComplete="address-line1"
+                className={FIELD}
+              />
             </div>
             <div className="sm:col-span-2">
               <label className={LABEL} htmlFor="addressLine2">
-                Apartment, suite, lab <span className="font-medium normal-case tracking-normal text-axis-faint">(optional)</span>
+                Apartment, suite, lab {OPTIONAL}
               </label>
-              <input id="addressLine2" name="addressLine2" maxLength={200} autoComplete="address-line2" className={`mt-2 ${FIELD}`} />
+              <input
+                id="addressLine2"
+                name="addressLine2"
+                maxLength={200}
+                autoComplete="address-line2"
+                className={FIELD}
+              />
             </div>
             <div>
-              <label className={LABEL} htmlFor="city">City</label>
-              <input id="city" name="city" required maxLength={120} autoComplete="address-level2" className={`mt-2 ${FIELD}`} />
+              <label className={LABEL} htmlFor="city">
+                City
+              </label>
+              <input
+                id="city"
+                name="city"
+                required
+                maxLength={120}
+                autoComplete="address-level2"
+                className={FIELD}
+              />
             </div>
             <div>
               <label className={LABEL} htmlFor="region">
-                State / region <span className="font-medium normal-case tracking-normal text-axis-faint">(optional)</span>
+                State or region {OPTIONAL}
               </label>
-              <input id="region" name="region" maxLength={120} autoComplete="address-level1" className={`mt-2 ${FIELD}`} />
+              <input
+                id="region"
+                name="region"
+                maxLength={120}
+                autoComplete="address-level1"
+                className={FIELD}
+              />
             </div>
             <div>
-              <label className={LABEL} htmlFor="postalCode">Postal code</label>
-              <input id="postalCode" name="postalCode" required maxLength={32} autoComplete="postal-code" className={`mt-2 ${FIELD}`} />
+              <label className={LABEL} htmlFor="postalCode">
+                Postal code
+              </label>
+              <input
+                id="postalCode"
+                name="postalCode"
+                required
+                maxLength={32}
+                autoComplete="postal-code"
+                className={FIELD}
+              />
             </div>
             <div>
-              <label className={LABEL} htmlFor="country">Country</label>
-              <input id="country" name="country" required maxLength={80} autoComplete="country-name" className={`mt-2 ${FIELD}`} />
+              <label className={LABEL} htmlFor="country">
+                Country
+              </label>
+              <input
+                id="country"
+                name="country"
+                required
+                maxLength={80}
+                autoComplete="country-name"
+                className={FIELD}
+              />
             </div>
           </div>
         </fieldset>
 
-        <fieldset className="mt-10">
-          <legend className="text-sm font-bold uppercase tracking-[0.12em] text-axis-blue">
+        <fieldset className="mt-[52px] border-0 p-0">
+          <legend className="t-1 text-axis-ink-300">03 — Order notes</legend>
+          <label className="sr-only" htmlFor="notes">
             Order notes
-          </legend>
-          <label className="sr-only" htmlFor="notes">Order notes</label>
+          </label>
           <textarea
             id="notes"
             name="notes"
             rows={4}
             maxLength={2000}
             placeholder="Purchase order number, certificate requirements, delivery instructions."
-            className={`mt-5 resize-y ${FIELD}`}
+            className={`${FIELD} resize-y`}
           />
         </fieldset>
       </div>
 
-      <aside className="lg:sticky lg:top-28 lg:self-start">
-        <div className="rounded-xl border border-axis-border bg-axis-surface p-7">
-          <h2 className="text-sm font-bold uppercase tracking-[0.12em] text-axis-navy">
-            Order summary
-          </h2>
+      <aside className="lg:sticky lg:top-[calc(var(--header-h)+26px)] lg:self-start">
+        <div className="border border-axis-rule-3 bg-axis-sunk p-[26px]">
+          <h2 className="t-1 text-axis-ink-300">Your order</h2>
 
-          <ul className="mt-5 space-y-4">
+          <ul className="mt-[20px] border-t border-axis-rule-2">
             {resolved.map((line) => (
-              <li key={line.variantId} className="flex justify-between gap-4 text-sm">
-                <span className="min-w-0 text-axis-muted">
-                  <span className="font-semibold text-axis-navy">{line.productName}</span>
-                  <br />
-                  {line.variantLabel} &times; {line.quantity}
+              <li
+                key={line.variantId}
+                className="flex justify-between gap-[20px] border-b border-axis-rule-1 py-[13px]"
+              >
+                <span className="min-w-0">
+                  <span className="t-3 block text-axis-ink">{line.productName}</span>
+                  <span className="data t-2 block text-axis-ink-500">
+                    {line.variantLabel} × {line.quantity}
+                  </span>
                 </span>
-                <span className="shrink-0 font-semibold text-axis-navy">
+                <span className="data t-3 shrink-0 text-axis-ink">
                   {formatPrice(line.lineTotalCents)}
                 </span>
               </li>
             ))}
           </ul>
 
-          <div className="mt-6 flex items-center justify-between border-t border-axis-border pt-5">
-            <span className="text-sm font-semibold text-axis-navy">Subtotal</span>
-            <span className="text-xl font-bold text-axis-navy">{formatPrice(subtotalCents)}</span>
+          <div className="mt-[16px] flex items-baseline justify-between">
+            <span className="t-3 text-axis-ink-500">Subtotal</span>
+            <span className="data t-5 text-axis-ink">{formatPrice(subtotalCents)}</span>
           </div>
-          <p className="mt-1.5 text-xs text-axis-faint">
+          <p className="t-2 mt-[6px] text-axis-ink-500">
             Shipping and any applicable duties are confirmed on your invoice.
           </p>
 
-          <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-lg border border-axis-border-strong bg-white p-4">
+          <Rule className="mt-[20px]" />
+
+          <label className="mt-[20px] flex cursor-pointer items-start gap-[13px] border border-axis-rule-3 bg-axis-plate p-[16px]">
             <input
               type="checkbox"
               name="researchUseAck"
               required
-              className="mt-0.5 h-4 w-4 shrink-0 accent-[#2E4C9E]"
+              className="mt-[3px] h-[18px] w-[18px] shrink-0 accent-[#101215]"
             />
-            <span className="text-xs leading-relaxed text-axis-navy">
+            <span className="t-2 text-axis-ink">
               I confirm I am ordering these materials for laboratory research use only, and that
               they will not be used for human or veterinary consumption or any clinical purpose.
             </span>
           </label>
 
           {error && (
-            <p role="alert" className="mt-5 text-sm text-red-600">
+            <p role="alert" className="t-3 mt-[16px] text-axis-rejected">
               {error}
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="focus-ring mt-6 flex w-full items-center justify-center rounded-lg bg-axis-blue px-5 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-axis-blue-hover disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {submitting && <Loader2 size={16} className="mr-2 animate-spin" />}
-            {submitting ? 'Placing order…' : 'Place order'}
-          </button>
+          <div className="mt-[20px]">
+            <OrderButton disabled={submitting}>
+              {submitting ? 'Placing order…' : 'Place order'}
+            </OrderButton>
+          </div>
 
-          <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-axis-faint">
-            <Lock size={13} className="mt-0.5 shrink-0" />
-            No card details are collected here. We confirm stock and send a secure payment link
-            with your invoice.
+          <p className="t-2 mt-[16px] text-axis-ink-500">
+            No card details are collected here. Nothing is charged until you have the invoice and
+            the lot certificate.
           </p>
         </div>
       </aside>

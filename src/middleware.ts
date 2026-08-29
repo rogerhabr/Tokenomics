@@ -11,12 +11,21 @@ const PUBLIC_PREFIXES = [
   '/login',
   '/auth/callback',
   '/products',
+  '/lots',
   '/quality',
   '/about',
+  '/ordering',
   '/faq',
   '/contact',
   '/cart',
   '/checkout',
+  // Policy pages. Linked from the footer only, never from the nav, but they
+  // must be reachable without a session — several are legal disclosures.
+  '/prohibited-use',
+  '/terms',
+  '/privacy',
+  '/shipping-returns',
+  '/accessibility',
 ];
 const PUBLIC_EXACT = ['/'];
 

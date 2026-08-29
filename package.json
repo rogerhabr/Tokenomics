@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint && npm run check:data",
+    "check:data": "node scripts/check-no-fabricated-data.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.63.0",

@@ -1,24 +1,27 @@
 import type { Metadata } from 'next';
-import { Container, PageHero, ResearchNotice } from '@/components/marketing/ui';
+import { Container, PageHead, Section, ResearchNotice } from '@/components/marketing/ui';
 import CartView from '@/components/marketing/CartView';
 
 export const metadata: Metadata = {
-  title: 'Cart — Axis Labs',
-  description: 'Review the research compounds in your Axis Labs cart before checkout.',
+  title: 'Your order — Axis Labs',
+  description: 'Review the research compounds in your Axis Labs order before checkout.',
 };
 
 export default function CartPage() {
   return (
     <>
-      <PageHero
-        eyebrow="Cart"
+      <PageHead
+        index="01"
+        rail="Order"
         title="Your order."
-        lede="Review quantities before checkout. All materials are supplied for laboratory research use only."
+        standfirst="Review quantities before you continue. Nothing is charged on this site — we confirm stock, allocate a lot, and invoice you with the certificate."
       />
-      <Container className="py-12">
-        <CartView />
-        <ResearchNotice className="mt-12" />
-      </Container>
+      <Section className="py-[52px] lg:py-[78px]">
+        <Container>
+          <CartView />
+        </Container>
+      </Section>
+      <ResearchNotice />
     </>
   );
 }

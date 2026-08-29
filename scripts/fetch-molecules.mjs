@@ -25,6 +25,16 @@ import path from 'node:path';
 const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
 const OUT_JSON = path.join(ROOT, 'src/lib/molecules.generated.json');
 const OUT_SVG_DIR = path.join(ROOT, 'public/molecules');
+const OUT_INLINE = path.join(ROOT, 'src/lib/molecules.svg.json');
+
+/**
+ * Above this many atoms a 2D peptide depiction stops reading as a structure and
+ * becomes grey line-noise at any size a page can give it. Those compounds are
+ * carried by the formula specimen instead, and their drawings are not inlined —
+ * which also keeps the bundled markup small. Mirrors STRUCTURE_ATOM_LIMIT in
+ * src/lib/molecules.ts.
+ */
+const STRUCTURE_ATOM_LIMIT = 250;
 
 const PUG = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound';
 
@@ -90,7 +100,7 @@ async function lookup(names) {
     try {
       const enc = encodeURIComponent(name);
       const props = await getJson(
-        `${PUG}/name/${enc}/property/MolecularFormula,MolecularWeight/JSON`
+        `${PUG}/name/${enc}/property/MolecularFormula,MolecularWeight,InChIKey,IUPACName/JSON`
       );
       const p = props?.PropertyTable?.Properties?.[0];
       if (!p?.CID) continue;
@@ -113,6 +123,7 @@ async function lookup(names) {
         cid: p.CID,
         formula: p.MolecularFormula ?? null,
         weight: p.MolecularWeight ?? null,
+        inchiKey: p.InChIKey ?? null,
         cas,
         sdf,
       };
@@ -257,6 +268,7 @@ async function main() {
   }
 
   const misses = [];
+  const inline = {};
   const slugs = Object.keys(LOOKUP);
 
   for (const slug of slugs) {
@@ -281,6 +293,10 @@ async function main() {
         fs.writeFileSync(path.join(OUT_SVG_DIR, `${slug}.svg`), svg);
         viewBox = svg.match(/viewBox="([^"]+)"/)?.[1] ?? null;
         atomCount = mol.atoms.length;
+        // Inlined (rather than referenced as a file) so `currentColor` and
+        // --molecule-hetero resolve against the page, and so the markup is
+        // bundled by the compiler instead of read from disk at runtime.
+        if (atomCount <= STRUCTURE_ATOM_LIMIT) inline[slug] = svg;
       }
     }
 
@@ -289,6 +305,7 @@ async function main() {
       matchedName: hit.matchedName,
       formula: hit.formula,
       weight: hit.weight,
+      inchiKey: hit.inchiKey,
       cas: hit.cas,
       viewBox,
       atomCount,
@@ -302,7 +319,9 @@ async function main() {
   }
 
   fs.writeFileSync(OUT_JSON, JSON.stringify(out, null, 2) + '\n');
+  fs.writeFileSync(OUT_INLINE, JSON.stringify(inline, null, 0) + '\n');
   console.log(`\nWrote ${Object.keys(out).length} compounds to ${path.relative(ROOT, OUT_JSON)}`);
+  console.log(`Inlined ${Object.keys(inline).length} structures under ${STRUCTURE_ATOM_LIMIT} atoms`);
 
   const expected = slugs.filter((s) => LOOKUP[s] !== null);
   const unresolved = expected.filter((s) => !out[s]);

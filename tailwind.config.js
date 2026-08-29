@@ -4,7 +4,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Dashboard theme (existing)
+        // Dashboard theme (unchanged — the tokenomics dashboard at /dashboard
+        // is a separate surface and none of the AXIS LABS work touches it).
         sa: {
           bg: '#080c16',
           surface: '#0f1623',
@@ -19,41 +20,54 @@ module.exports = {
           purple: '#8b5cf6',
           yellow: '#f59e0b',
         },
-        // AXIS LABS brand palette, sampled from the logo: royal-blue wordmark
-        // over a deeper navy tagline, with the pale blues of the helix mark.
+
+        // AXIS LABS.
+        //
+        // There is no decorative accent in this palette. Colour on the
+        // marketing surface means exactly one thing — that a lot passed, was
+        // retained, or was rejected — so the primary call to action is filled
+        // with ink rather than with a brand colour. Every value below resolves
+        // through a CSS custom property so `prefers-color-scheme: dark` can
+        // re-point the whole system by redefining tokens in one place.
         axis: {
-          navy: '#1B2A63',
-          'navy-deep': '#121D47',
-          blue: '#2E4C9E',
-          'blue-hover': '#25407F',
-          'blue-light': '#5C7FD0',
-          helix: '#8FBEEA',
-          tint: '#F2F5FC',
-          'tint-strong': '#E4EBF8',
-          surface: '#F7F9FD',
-          card: '#FFFFFF',
-          border: '#DFE6F3',
-          'border-strong': '#C3CFE6',
-          text: '#14203F',
-          muted: '#5A6785',
-          faint: '#8792AB',
-          signal: '#0E9F6E',
+          paper: 'var(--paper)',
+          sunk: 'var(--paper-sunk)',
+          plate: 'var(--plate)',
+
+          ink: 'var(--ink-900)',
+          'ink-700': 'var(--ink-700)',
+          'ink-500': 'var(--ink-500)',
+          'ink-300': 'var(--ink-300)',
+
+          // rule-1 and rule-2 are decorative and deliberately below 3:1 — they
+          // may never carry meaning on their own. rule-3 clears 3:1 against
+          // paper, sunk and plate, so every border that signals state uses it.
+          'rule-1': 'var(--rule-1)',
+          'rule-2': 'var(--rule-2)',
+          'rule-3': 'var(--rule-3)',
+
+          released: 'var(--released)',
+          retained: 'var(--retained)',
+          rejected: 'var(--rejected)',
         },
       },
       fontFamily: {
+        // Dashboard.
         mono: ['JetBrains Mono', 'Menlo', 'monospace'],
+        // AXIS LABS: a grotesk for language, a mono for data. The mono is a
+        // semantic role, not a texture — see globals.css.
+        grot: ['var(--font-grot)', 'system-ui', 'sans-serif'],
+        data: ['var(--font-data)', 'ui-monospace', 'monospace'],
       },
       maxWidth: {
         site: '1200px',
+        content: 'var(--content)',
+        measure: 'var(--measure)',
       },
-      keyframes: {
-        'fade-up': {
-          '0%': { opacity: '0', transform: 'translateY(12px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-      },
-      animation: {
-        'fade-up': 'fade-up 0.6s ease-out both',
+      borderRadius: {
+        // The only radius on the marketing surface. 0 reads as unstyled and
+        // rounded-xl reads as a UI kit; 2px reads as machined.
+        plate: '2px',
       },
     },
   },
