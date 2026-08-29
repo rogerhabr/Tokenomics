@@ -2,19 +2,24 @@
 
 import { useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
-import { formatPrice, type Variant } from '@/lib/products';
-import { centsPerMg, formatPerMg } from '@/lib/pricing';
+import { formatPrice } from '@/lib/products';
+import { formatPerMg, type PricedVariant } from '@/lib/pricing';
 import { OrderButton } from './ui';
 
+function perMg(v: PricedVariant): number | null {
+  return v.sizeMg && v.sizeMg > 0 ? v.priceCents / v.sizeMg : null;
+}
+
 /**
- * Vial-size selection and the one filled control on the site.
+ * Vial size selection and the one filled control on the site.
  *
- * Each size shows its own $/mg beneath the label, so the choice between a 5 mg
- * and a 30 mg vial is made on the rate rather than on the headline price —
- * which is how this buyer actually decides, and which makes the larger vial's
- * value legible without a "best value" badge.
+ * A dropdown rather than chips: compounds carry up to nine sizes, and nine
+ * wrapped chips is a wall. Each option prints its own price so the choice is
+ * made in the list rather than after it, and the selected size's $/mg sits
+ * under the price — which is how this buyer actually compares a 5 mg vial
+ * against a 50 mg one.
  */
-export default function AddToCart({ variants }: { variants: Variant[] }) {
+export default function AddToCart({ variants }: { variants: PricedVariant[] }) {
   const { add, setDrawerOpen } = useCart();
   const [selected, setSelected] = useState(variants[0]?.id ?? '');
   const [quantity, setQuantity] = useState(1);
@@ -28,7 +33,7 @@ export default function AddToCart({ variants }: { variants: Variant[] }) {
   }
 
   const variant = variants.find((v) => v.id === selected) ?? variants[0];
-  const rate = centsPerMg(variant);
+  const rate = perMg(variant);
 
   function onAdd() {
     add(variant.id, quantity);
@@ -39,33 +44,21 @@ export default function AddToCart({ variants }: { variants: Variant[] }) {
 
   return (
     <div>
-      <fieldset className="border-0 p-0">
-        <legend className="t-1 text-axis-ink-300">Vial size</legend>
-        <div className="mt-[13px] flex flex-wrap gap-[8px]">
-          {variants.map((v) => {
-            const active = v.id === variant.id;
-            const vRate = centsPerMg(v);
-            return (
-              <button
-                key={v.id}
-                type="button"
-                onClick={() => setSelected(v.id)}
-                aria-pressed={active}
-                className={`min-h-[48px] rounded-plate border px-[13px] py-[6px] text-left transition-colors duration-[--dur-1] ${
-                  active
-                    ? 'border-axis-ink bg-axis-plate'
-                    : 'border-axis-rule-3 hover:bg-axis-plate'
-                }`}
-              >
-                <span className="t-2 block text-axis-ink">{v.label}</span>
-                {vRate !== null && (
-                  <span className="data t-1 block normal-case text-axis-ink-300">{formatPerMg(vRate)}</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </fieldset>
+      <label htmlFor="vial-size" className="t-1 block text-axis-ink-300">
+        Vial size
+      </label>
+      <select
+        id="vial-size"
+        value={variant.id}
+        onChange={(e) => setSelected(e.target.value)}
+        className="data mt-[8px] h-[48px] w-full rounded-plate border border-axis-rule-3 bg-axis-plate px-[13px] text-[16px] text-axis-ink"
+      >
+        {variants.map((v) => (
+          <option key={v.id} value={v.id}>
+            {v.label} — {formatPrice(v.priceCents)}
+          </option>
+        ))}
+      </select>
 
       <div className="mt-[26px] flex items-baseline gap-[10px]">
         <span className="data t-6 text-axis-ink">{formatPrice(variant.priceCents)}</span>

@@ -17,7 +17,8 @@ import Structure from '@/components/marketing/Structure';
 import JsonLd from '@/components/marketing/JsonLd';
 import PurityPlot from '@/components/marketing/PurityPlot';
 import AddToCart from '@/components/marketing/AddToCart';
-import { CATEGORIES, PRODUCTS, getProduct, variantsFor } from '@/lib/products';
+import { CATEGORIES, PRODUCTS, getProduct } from '@/lib/products';
+import { getVariantsFor } from '@/lib/variants';
 import { getMolecule, hasStructure, pubchemUrl } from '@/lib/molecules';
 import { getLotsForProduct, RELEASE_SPEC_PCT } from '@/lib/lots';
 import { absolute, SITE_NAME } from '@/lib/site';
@@ -45,7 +46,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
   if (!product) notFound();
 
   const category = CATEGORIES.find((c) => c.id === product.category);
-  const variants = variantsFor(product.slug);
+  const variants = await getVariantsFor(product.slug);
   const molecule = getMolecule(product.slug);
   const { lots } = await getLotsForProduct(product.slug);
   const related = PRODUCTS.filter(

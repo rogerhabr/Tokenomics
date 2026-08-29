@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { createClient } from '@/lib/supabase/server';
-import { getVariant } from '@/lib/products';
+import { resolveVariant } from '@/lib/variants';
 
 const LIMITS = {
   name: 120,
@@ -103,9 +103,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Too many line items.' }, { status: 400 });
   }
 
-  // Prices come from the catalogue on the server, never from the request body —
-  // the client sends only a variant id and a quantity, so a tampered payload
-  // cannot set its own price.
+  // Prices are resolved on the server from the price list, never from the
+  // request body — the client sends only a variant id and a quantity, so a
+  // tampered payload cannot set its own price. This now reads the same
+  // `product_variants` table the administrator edits, so an order is always
+  // charged at the current price even if the buyer's tab is hours old.
   const items: {
     variant_id: string;
     product_slug: string;
@@ -124,7 +126,7 @@ export async function POST(request: Request) {
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QTY) {
       return NextResponse.json({ error: 'Invalid quantity in cart.' }, { status: 400 });
     }
-    const found = getVariant(variantId);
+    const found = await resolveVariant(variantId);
     if (!found) {
       return NextResponse.json(
         { error: 'Your cart contains an item that is no longer available.' },
@@ -133,8 +135,8 @@ export async function POST(request: Request) {
     }
     items.push({
       variant_id: found.variant.id,
-      product_slug: found.product.slug,
-      product_name: found.product.name,
+      product_slug: found.productSlug,
+      product_name: found.productName,
       variant_label: found.variant.label,
       unit_price_cents: found.variant.priceCents,
       quantity,

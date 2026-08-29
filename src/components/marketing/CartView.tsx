@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useCart } from '@/contexts/CartContext';
-import { formatPrice, getVariant } from '@/lib/products';
-import { centsPerMg, formatPerMg } from '@/lib/pricing';
+import { formatPrice } from '@/lib/products';
+import { formatPerMg } from '@/lib/pricing';
 import { OrderLink, ArrowLink, Rule } from './ui';
 
 export default function CartView() {
@@ -51,8 +51,8 @@ export default function CartView() {
           </thead>
           <tbody>
             {resolved.map((line) => {
-              const found = getVariant(line.variantId);
-              const rate = found ? centsPerMg(found.variant) : null;
+              const rate =
+                line.sizeMg && line.sizeMg > 0 ? line.unitPriceCents / line.sizeMg : null;
               return (
                 <tr
                   key={line.variantId}
@@ -65,7 +65,7 @@ export default function CartView() {
                     >
                       {line.productName}
                     </Link>
-                    <span className="t-2 mt-[2px] block text-axis-ink-500">
+                    <span className="data t-2 mt-[2px] block text-axis-ink-500">
                       {line.variantLabel} · {formatPrice(line.unitPriceCents)} each
                       {rate !== null && ` · ${formatPerMg(rate)}`}
                     </span>

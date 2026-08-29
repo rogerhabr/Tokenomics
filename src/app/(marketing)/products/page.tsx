@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Container, PageHead, Section, ResearchNotice } from '@/components/marketing/ui';
 import Register from '@/components/marketing/Register';
+import { getAllVariants } from '@/lib/variants';
 import { CATEGORIES, PRODUCTS, type CategoryId, type Product } from '@/lib/products';
 
 export const metadata: Metadata = {
@@ -38,7 +39,7 @@ function matches(product: Product, query: string): boolean {
   return haystack.some((h) => h.includes(q));
 }
 
-export default function ProductsPage({
+export default async function ProductsPage({
   searchParams,
 }: {
   searchParams: { class?: string; q?: string };
@@ -51,6 +52,7 @@ export default function ProductsPage({
   if (query) products = products.filter((p) => matches(p, query));
 
   const activeCategory = selected ? CATEGORIES.find((c) => c.id === selected) : null;
+  const prices = await getAllVariants();
 
   return (
     <>
@@ -112,7 +114,7 @@ export default function ProductsPage({
           )}
 
           <div className="mt-[39px]">
-            <Register products={products} />
+            <Register products={products} prices={prices} />
           </div>
 
           <p className="t-2 mt-[26px] text-axis-ink-300">

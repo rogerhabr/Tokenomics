@@ -1,6 +1,17 @@
 import { variantsFor, type Variant } from '@/lib/products';
 
 /**
+ * A variant with its mass resolved. Prices live in the database (see
+ * `src/lib/variants.ts`), but this type and the parser below are kept here
+ * because this module imports nothing server-only — the order tray runs in the
+ * browser and needs both.
+ */
+export type PricedVariant = Variant & {
+  /** Total milligrams: a 10 x 5 mg kit is 50. Null where mass isn't a number. */
+  sizeMg: number | null;
+};
+
+/**
  * Comparison arithmetic for the catalogue.
  *
  * A vial price is not comparable across compounds — a 5 mg vial and a 50 mg

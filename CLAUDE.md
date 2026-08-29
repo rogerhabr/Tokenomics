@@ -106,7 +106,9 @@ The direction is **"against specification"**: every competitor asserts purity, A
 - `src/lib/products.ts` — The catalogue: `CATEGORIES` (7) and `PRODUCTS` (17). Product pages are statically generated via `generateStaticParams`. **`casNumber`, `molecularWeight` and `presentation` are deliberately `null` wherever unconfirmed** — populate them from real certificates of analysis, never from a guess, and never from `molecules.generated.json` (see below)
 - `src/lib/molecules.ts` + `molecules.generated.json` + `molecules.svg.json` — **Reference chemistry**, resolved from PubChem at build time. This is registry data about the molecule and is rendered in its own block, cited to a CID, **never merged into the product's CoA fields**. `hasStructure()` gates the structure drawing at 250 atoms; above that the depiction is line noise and the formula specimen carries the page
 - `src/lib/lots.ts` — The lot register, read through the **session-free** public client so product pages stay statically generated. Every function returns an empty result rather than throwing, and `available` distinguishes "read successfully and empty" from "could not read"
-- `src/lib/pricing.ts` — `$/mg` derived from the vial label, so a 5 mg and a 50 mg vial are comparable
+- `src/lib/variants.ts` — **vial sizes and prices, read from the `product_variants` table** so an administrator can change them without a deploy. Falls back to the `VARIANTS` block in `products.ts` when Supabase is unconfigured or the table is missing, so the shop never renders priceless. `resolveVariant()` is what `/api/orders` prices against
+- `src/lib/pricing.ts` — `$/mg` and the mg parser. Client-safe by design: it imports nothing server-only, because the order tray runs in the browser
+- `src/app/api/catalogue/route.ts` — the public price list, fetched once by `CartProvider` so a saved order shows current prices. Informs the display only; `/api/orders` still re-prices every line at checkout
 - `src/lib/site.ts` — Canonical origin for sitemap, robots, OG and JSON-LD
 - `src/components/marketing/ui.tsx` — The primitive set: `Container`, `Section`, `Rail`, `Rule`, `PageHead`, `SectionHead`, `OrderButton`, `OrderLink`, `HairlineLink`, `ArrowLink`, `DataList`, `StatusChip`, `Specimen`, `ResearchNotice`
 - `src/components/marketing/Register.tsx` — The catalogue as a ruled table, not a card grid
@@ -115,6 +117,13 @@ The direction is **"against specification"**: every competitor asserts purity, A
 - `src/components/marketing/Logo.tsx` — The wordmark. **The one place brand colour survives**, because it is identity rather than interface and matches the physical artwork
 - `src/components/marketing/HelixMark.tsx` — Currently unused by any page. Retained as brand artwork and as the favicon source (`public/axis-labs-mark.svg`). Note a double helix is the nucleic-acid duplex; these are peptides, so it reads as a domain error to the buyer being courted — replacing it is an open brand decision
 - `src/components/marketing/SiteNav.tsx` / `SiteFooter.tsx` — **Keep the nav flat.** Four links plus search, order tray and Contact; no dropdowns, no mega-menu. Seven classes over seventeen compounds averages under three each, far below where an intermediary layer earns its place. The classes live in the footer and as filter state on `/products`. Contact must stay in the identical position on every page — WCAG 2.2 SC 3.2.6 is normative at Level A
+
+### Administration (`/admin`)
+- `src/app/admin/pricing/page.tsx` + `src/components/admin/PricingEditor.tsx` — edit prices, add vial sizes from the standard ladder, and hide a size without deleting its row (historical `order_items` must still resolve to a label)
+- `src/lib/admin.ts` — `requireAdmin()`, plus `STANDARD_VIAL_SIZES_MG`. The ladder is a convenience, **not** a constraint: the catalogue already carries a 2 mg vial, a 60 mg vial and three multi-vial kits that are not on it
+- `src/app/api/admin/variants/route.ts` — the write path. Validates money as integer cents, re-checks admin, and `revalidatePath`s the affected product pages so a price change is visible immediately rather than after the hourly ISR window
+- **Three layers guard this, and all three are deliberate**: the page check (for the person), the API check (the security boundary), and RLS on `product_variants` (the last word — writes require `profiles.role = 'admin'` and every query carries the caller's own session). A page that renders is never a permission
+- `/admin` is **not** in `PUBLIC_PREFIXES` and must never be added
 
 **Two rules that bite:**
 1. `middleware.ts` lists public routes explicitly, and **route groups never appear in a URL** — `(marketing)` cannot be matched. Every new public route must be added to `PUBLIC_PREFIXES` in the same change that creates it, or it redirects to `/login` in production.

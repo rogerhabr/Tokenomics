@@ -198,11 +198,17 @@ summary:focus-visible,
   font-family: var(--font-data), ui-monospace, monospace;
   font-variation-settings: 'wght' 500, 'wdth' 87.5;
 }
+/* Step 2 carries NO family of its own. Mono is a semantic role, not a size:
+   a figure gets the mono because it is data (via `.data`), never because it
+   happens to be small. Without this split, every caption and footnote set at
+   this step silently became a sentence in the data voice. */
 .t-2 {
   font-size: var(--fs-2);
   line-height: 1.45;
+  letter-spacing: 0.005em;
+}
+.t-2.data {
   letter-spacing: 0.01em;
-  font-family: var(--font-data), ui-monospace, monospace;
   font-variation-settings: 'wght' 400, 'wdth' 87.5;
 }
 .t-3 {

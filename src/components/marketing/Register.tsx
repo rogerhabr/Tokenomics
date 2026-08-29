@@ -1,7 +1,12 @@
 import Link from 'next/link';
-import { CATEGORIES, formatPrice, fromPriceCents, type Product } from '@/lib/products';
-import { bestCentsPerMg, formatPerMg } from '@/lib/pricing';
+import { CATEGORIES, formatPrice, type Product } from '@/lib/products';
+import { formatPerMg, type PricedVariant } from '@/lib/pricing';
+import { fromPrice, bestPerMg } from '@/lib/variants';
 import { getMolecule } from '@/lib/molecules';
+
+/** Active sizes and prices, keyed by product slug — passed in by the page so
+ *  the register makes no query of its own. */
+export type PriceMap = Record<string, PricedVariant[]>;
 
 /**
  * The catalogue as a register rather than a grid of cards.
@@ -15,7 +20,13 @@ import { getMolecule } from '@/lib/molecules';
  * On mobile each row becomes a stacked record. Nothing here scrolls
  * horizontally.
  */
-export default function Register({ products }: { products: Product[] }) {
+export default function Register({
+  products,
+  prices,
+}: {
+  products: Product[];
+  prices: PriceMap;
+}) {
   if (products.length === 0) {
     return (
       <div className="border-y border-axis-rule-2 py-[52px]">
@@ -58,8 +69,9 @@ export default function Register({ products }: { products: Product[] }) {
         {products.map((p) => {
           const category = CATEGORIES.find((c) => c.id === p.category);
           const molecule = getMolecule(p.slug);
-          const from = fromPriceCents(p.slug);
-          const perMg = bestCentsPerMg(p.slug);
+          const variants = prices[p.slug] ?? [];
+          const from = fromPrice(variants);
+          const perMg = bestPerMg(variants);
 
           return (
             <tr

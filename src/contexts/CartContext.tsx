@@ -10,8 +10,22 @@ import {
   type ReactNode,
 } from 'react';
 import { getVariant } from '@/lib/products';
+import { mgFromLabel, type PricedVariant } from '@/lib/pricing';
 
 const STORAGE_KEY = 'axis-labs-cart-v1';
+
+/**
+ * Prices live in the database so an administrator can change them without a
+ * deploy, but the order tray runs in the browser and needs them to show a
+ * subtotal. So the provider fetches the public price list once and resolves
+ * against it, falling back to the compiled-in catalogue until it arrives (and
+ * permanently, if the request fails).
+ *
+ * This only affects what is DISPLAYED. /api/orders re-prices every line from
+ * the database when the order is placed, so a stale tab cannot buy at an old
+ * price.
+ */
+type PriceBook = Record<string, PricedVariant[]>;
 
 /** Only the variant id and quantity are persisted — names and prices are
  *  always re-read from the catalogue, so a price change never leaves a stale
@@ -25,6 +39,8 @@ export type ResolvedLine = {
   productName: string;
   variantLabel: string;
   unitPriceCents: number;
+  /** Total milligrams, for the $/mg figure. Null where mass isn't a number. */
+  sizeMg: number | null;
   lineTotalCents: number;
 };
 
@@ -74,10 +90,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [priceBook, setPriceBook] = useState<PriceBook | null>(null);
 
   useEffect(() => {
     setLines(readStored());
     setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/catalogue')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        if (!cancelled && json?.variants) setPriceBook(json.variants as PriceBook);
+      })
+      .catch(() => {
+        // Keep the compiled-in prices. A failed price-list fetch must not empty
+        // someone's order.
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -127,7 +160,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       lines.flatMap((line) => {
         const found = getVariant(line.variantId);
         if (!found) return [];
-        const { product, variant } = found;
+        const { product } = found;
+
+        // The live list wins where it has the variant; the compiled catalogue
+        // covers the window before it loads and the case where it never does.
+        const live = priceBook?.[product.slug]?.find((v) => v.id === line.variantId);
+        const variant: PricedVariant = live ?? {
+          ...found.variant,
+          sizeMg: mgFromLabel(found.variant.label),
+        };
+
         return [
           {
             variantId: line.variantId,
@@ -136,11 +178,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
             productName: product.name,
             variantLabel: variant.label,
             unitPriceCents: variant.priceCents,
+            sizeMg: variant.sizeMg,
             lineTotalCents: variant.priceCents * line.quantity,
           },
         ];
       }),
-    [lines]
+    [lines, priceBook]
   );
 
   const itemCount = useMemo(() => resolved.reduce((n, l) => n + l.quantity, 0), [resolved]);

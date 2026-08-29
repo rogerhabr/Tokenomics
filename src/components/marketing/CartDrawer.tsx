@@ -117,7 +117,7 @@ export default function CartDrawer() {
                   >
                     {line.productName}
                   </Link>
-                  <p className="t-2 mt-[2px] text-axis-ink-500">{line.variantLabel}</p>
+                  <p className="data t-2 mt-[2px] text-axis-ink-500">{line.variantLabel}</p>
 
                   <div className="mt-[13px] flex items-center justify-between gap-[13px]">
                     <div className="flex items-stretch rounded-plate border border-axis-rule-3">
