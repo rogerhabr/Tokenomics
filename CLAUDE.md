@@ -88,7 +88,7 @@ npm run lint     # ESLint via next lint
 ### UI Structure — AXIS LABS site
 - `src/app/(marketing)/layout.tsx` — Route-group layout: `SiteNav` + `SiteFooter`, light `axis-*` theme
 - `src/app/(marketing)/page.tsx` — Home; `products/`, `products/[slug]/`, `quality/`, `about/`, `faq/`, `contact/` are the rest
-- `src/lib/products.ts` — The catalogue: `CATEGORIES` and `PRODUCTS`, plus lookup helpers. Product pages are statically generated from it via `generateStaticParams`. **`casNumber` and `molecularWeight` are deliberately `null`** — populate them from real certificates of analysis, never from a guess
+- `src/lib/products.ts` — The catalogue: `CATEGORIES` (7) and `PRODUCTS` (17), plus lookup helpers. Product pages are statically generated from it via `generateStaticParams`. **`casNumber`, `molecularWeight`, and `presentation` are deliberately `null` wherever unconfirmed** — populate them from real certificates of analysis, never from a guess
 - `src/components/marketing/Logo.tsx` — The wordmark lockup, reconstructed in SVG from the supplied artwork. Every logo on the site renders through it, so swapping in the original file only touches this component
 - `src/components/marketing/HelixMark.tsx` — The double-helix mark (two sine strands about x=32, crossing every 13 units). Used large on the home hero; `public/axis-labs-mark.svg` is the standalone copy used as the favicon
 - `src/components/marketing/ui.tsx` — Shared primitives (`Container`, `Section`, `SectionTitle`, `Card`, `Button`, `PageHero`, `StatBlock`, `ResearchNotice`)

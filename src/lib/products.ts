@@ -1,13 +1,18 @@
 /**
  * AXIS LABS research catalogue.
  *
+ * Product names and research framing mirror the SaiyanMed catalogue, which was
+ * given as the reference. Descriptions are written from each compound's
+ * published mechanism.
+ *
  * Everything here is research-use-only material. Copy is deliberately written
  * in terms of laboratory research models — no dosing, administration, or
  * human-use guidance anywhere in this file or the pages that render it.
  *
  * NOTE FOR MAINTAINERS: `casNumber` and `molecularWeight` are intentionally
- * `null` rather than filled with plausible-looking values. Populate them from
- * your own certificates of analysis before launch — do not guess them.
+ * `null` rather than filled with plausible-looking values, and `presentation`
+ * is null wherever the vial format is not yet confirmed. Populate all three
+ * from your own certificates of analysis before launch — do not guess them.
  */
 
 export type CategoryId =
@@ -16,7 +21,8 @@ export type CategoryId =
   | 'tissue-repair'
   | 'growth-factor'
   | 'endocrine'
-  | 'cosmetic';
+  | 'cosmetic'
+  | 'cellular';
 
 export type Category = {
   id: CategoryId;
@@ -32,17 +38,25 @@ export type Product = {
   summary: string;
   researchAreas: string[];
   purity: string;
+  identity: string;
   form: string;
+  /** Vial format, where confirmed. */
+  presentation: string | null;
   storage: string;
   casNumber: string | null;
   molecularWeight: string | null;
 };
 
+const PURITY = '≥99% HPLC';
+const IDENTITY = 'Mass spectrometry confirmed';
+const FORM = 'Lyophilised powder';
+const STORAGE = 'Store sealed at -20 °C, protected from light and moisture';
+
 export const CATEGORIES: Category[] = [
   {
     id: 'metabolic',
     name: 'Metabolic & GLP Research',
-    blurb: 'Incretin receptor agonists and related compounds for metabolic signalling studies.',
+    blurb: 'Incretin and amylin receptor agonists for metabolic signalling studies.',
   },
   {
     id: 'neuroscience',
@@ -57,7 +71,7 @@ export const CATEGORIES: Category[] = [
   {
     id: 'growth-factor',
     name: 'Growth Factor',
-    blurb: 'Secretagogues and releasing peptides for endocrine axis research.',
+    blurb: 'GHRH analogues and secretagogues for somatotropic axis research.',
   },
   {
     id: 'endocrine',
@@ -67,22 +81,29 @@ export const CATEGORIES: Category[] = [
   {
     id: 'cosmetic',
     name: 'Cosmetic Research',
-    blurb: 'Peptides investigated in dermal matrix, pigmentation, and topical formulation studies.',
+    blurb: 'Peptides investigated in dermal matrix, pigmentation, and melanocyte biology.',
+  },
+  {
+    id: 'cellular',
+    name: 'Cellular & Mitochondrial',
+    blurb: 'Compounds used in mitochondrial function and methylation pathway research.',
   },
 ];
 
 export const PRODUCTS: Product[] = [
+  // ---- Metabolic & GLP Research -------------------------------------------
   {
     slug: 'tirzepatide',
     name: 'Tirzepatide',
-    alias: 'LY3298176',
     category: 'metabolic',
     summary:
-      'A dual GIP and GLP-1 receptor agonist widely used in laboratory models of incretin signalling and metabolic regulation.',
+      'A dual GIP and GLP-1 receptor agonist used in laboratory models of incretin signalling and metabolic regulation.',
     researchAreas: ['Incretin receptor signalling', 'Glucose homeostasis models', 'Energy balance research'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
     casNumber: null,
     molecularWeight: null,
   },
@@ -92,50 +113,46 @@ export const PRODUCTS: Product[] = [
     alias: 'LY3437943',
     category: 'metabolic',
     summary:
-      'A triple incretin receptor agonist (GIP, GLP-1, glucagon) studied in multi-receptor metabolic signalling models.',
-    researchAreas: ['Triple agonist pharmacology', 'Metabolic pathway research', 'Receptor selectivity studies'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
+      'A 39-amino-acid triple incretin receptor agonist (GIP, GLP-1, glucagon) supporting mechanistic studies of energy expenditure, hepatic lipid metabolism, and receptor crosstalk.',
+    researchAreas: ['Triple agonist pharmacology', 'Hepatic lipid metabolism', 'Receptor crosstalk studies'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
     casNumber: null,
     molecularWeight: null,
   },
   {
-    slug: 'semaglutide',
-    name: 'Semaglutide',
+    slug: 'cagrilintide',
+    name: 'Cagrilintide',
+    alias: 'AM833',
     category: 'metabolic',
     summary:
-      'A long-acting GLP-1 receptor agonist used as a reference compound in incretin and metabolic signalling research.',
-    researchAreas: ['GLP-1 receptor studies', 'Comparative agonist research', 'Metabolic modelling'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
+      'A long-acting acylated amylin analogue and non-selective amylin agonist, activating AMY1R, AMY2R, AMY3R and the calcitonin receptor, for amylin signalling and satiety research.',
+    researchAreas: ['Amylin receptor signalling', 'Satiety research models', 'Calcitonin receptor studies'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
     casNumber: null,
     molecularWeight: null,
   },
+
+  // ---- Neuroscience --------------------------------------------------------
   {
     slug: 'semax',
     name: 'Semax',
     category: 'neuroscience',
     summary:
-      'A synthetic ACTH(4-10) analogue investigated in BDNF expression, neuroprotection, and cognitive research models.',
-    researchAreas: ['BDNF expression', 'Neuroprotection models', 'Cognitive research'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
-    casNumber: null,
-    molecularWeight: null,
-  },
-  {
-    slug: 'n-acetyl-semax-amidate',
-    name: 'N-Acetyl Semax Amidate',
-    category: 'neuroscience',
-    summary:
-      'An acetylated, amidated Semax derivative with extended stability, used in comparative neuropeptide research.',
-    researchAreas: ['Peptide stability studies', 'BDNF expression', 'Comparative analogue research'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
+      'A synthetic heptapeptide comprising the ACTH(4-7) fragment with a C-terminal Pro-Gly-Pro extension, studied for BDNF and NGF expression in hippocampal and cortical tissue, monoaminergic modulation, and neuroprotection in cerebral ischemia models.',
+    researchAreas: ['BDNF and NGF expression', 'Monoaminergic modulation', 'Cerebral ischemia models'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
     casNumber: null,
     molecularWeight: null,
   },
@@ -147,12 +164,16 @@ export const PRODUCTS: Product[] = [
     summary:
       'A synthetic heptapeptide studied in GABAergic, anxiolytic, and immunomodulatory laboratory models.',
     researchAreas: ['GABAergic signalling', 'Anxiolytic research models', 'Immunomodulation'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
     casNumber: null,
     molecularWeight: null,
   },
+
+  // ---- Tissue Repair -------------------------------------------------------
   {
     slug: 'bpc-157',
     name: 'BPC-157',
@@ -161,37 +182,45 @@ export const PRODUCTS: Product[] = [
     summary:
       'A synthetic pentadecapeptide extensively studied in angiogenesis, gastrointestinal, and connective tissue repair models.',
     researchAreas: ['Angiogenesis', 'Connective tissue models', 'Gastrointestinal research'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
     casNumber: null,
     molecularWeight: null,
   },
   {
     slug: 'tb-500',
     name: 'TB-500',
-    alias: 'Thymosin Beta-4, full length',
+    alias: 'Thymosin Beta-4, full length (43 aa)',
     category: 'tissue-repair',
     summary:
-      'Full-length Thymosin Beta-4, used in actin dynamics, cell migration, angiogenesis, and tissue repair research.',
+      'Full-length Thymosin Beta-4, used in actin dynamics, cell migration, angiogenesis, and tissue repair research models.',
     researchAreas: ['Actin sequestration', 'Cell migration', 'Angiogenesis'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
     casNumber: null,
     molecularWeight: null,
   },
+
+  // ---- Growth Factor -------------------------------------------------------
   {
-    slug: 'ghk-cu',
-    name: 'GHK-Cu',
-    alias: 'Copper Peptide',
-    category: 'tissue-repair',
+    slug: 'tesamorelin',
+    name: 'Tesamorelin',
+    alias: 'TH9507',
+    category: 'growth-factor',
     summary:
-      'A copper-binding tripeptide complex investigated in extracellular matrix remodelling and dermal research models.',
-    researchAreas: ['Matrix remodelling', 'Collagen synthesis models', 'Dermal research'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
+      'A full-length GHRH(1-44) analogue used as a reference compound in growth hormone releasing hormone receptor and somatotropic axis research.',
+    researchAreas: ['GHRH receptor studies', 'Somatotropic axis models', 'Comparative analogue research'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: '5 mg per vial',
+    storage: STORAGE,
     casNumber: null,
     molecularWeight: null,
   },
@@ -200,53 +229,47 @@ export const PRODUCTS: Product[] = [
     name: 'Ipamorelin',
     category: 'growth-factor',
     summary:
-      'A selective growth hormone secretagogue receptor agonist used in pituitary signalling research.',
-    researchAreas: ['GHS-R selectivity', 'Pituitary axis models', 'Secretagogue research'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
+      'A selective GHS-R1a agonist used in pituitary signalling and secretagogue research models.',
+    researchAreas: ['GHS-R1a selectivity', 'Pituitary axis models', 'Secretagogue research'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
     casNumber: null,
     molecularWeight: null,
   },
   {
-    slug: 'cjc-1295',
-    name: 'CJC-1295',
-    alias: 'Modified GRF (1-29)',
+    slug: 'dual-pathway-research-blend',
+    name: 'Dual-Pathway Research Blend',
+    alias: 'Tesamorelin 10 mg + Ipamorelin 5 mg',
     category: 'growth-factor',
     summary:
-      'A growth hormone releasing hormone analogue studied for extended half-life in endocrine axis models.',
-    researchAreas: ['GHRH analogue research', 'Half-life extension studies', 'Endocrine axis models'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
+      'A co-lyophilised formulation pairing a GHRH analogue with a selective GHS-R1a agonist, for research models examining both secretagogue pathways together.',
+    researchAreas: ['Dual-pathway secretagogue models', 'GHRH and GHS-R1a interaction', 'Somatotropic axis research'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: 'Co-lyophilised powder',
+    presentation: '15 mg per vial (10 mg tesamorelin + 5 mg ipamorelin)',
+    storage: STORAGE,
     casNumber: null,
     molecularWeight: null,
   },
-  {
-    slug: 'sermorelin',
-    name: 'Sermorelin',
-    alias: 'GRF (1-29)',
-    category: 'growth-factor',
-    summary:
-      'The 29-amino-acid active fragment of GHRH, used as a reference compound in somatotropic axis research.',
-    researchAreas: ['GHRH receptor studies', 'Somatotropic axis', 'Comparative analogue research'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
-    casNumber: null,
-    molecularWeight: null,
-  },
+
+  // ---- Endocrine Research --------------------------------------------------
   {
     slug: 'pt-141',
     name: 'PT-141',
     alias: 'Bremelanotide',
     category: 'endocrine',
     summary:
-      'A melanocortin receptor agonist investigated in central nervous system arousal and MC receptor research.',
+      'A melanocortin receptor agonist investigated in central nervous system arousal and melanocortin receptor research.',
     researchAreas: ['Melanocortin receptor studies', 'CNS signalling models', 'Receptor binding research'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
     casNumber: null,
     molecularWeight: null,
   },
@@ -257,49 +280,94 @@ export const PRODUCTS: Product[] = [
     summary:
       'A nonapeptide hormone widely used in social behaviour, bonding, and neuroendocrine research models.',
     researchAreas: ['Neuroendocrine signalling', 'Social behaviour models', 'Receptor pharmacology'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
     casNumber: null,
     molecularWeight: null,
   },
   {
     slug: 'kisspeptin-10',
     name: 'Kisspeptin-10',
+    alias: 'KP-10',
     category: 'endocrine',
     summary:
-      'A KISS1 gene product fragment studied in reproductive axis and GnRH regulation research.',
-    researchAreas: ['Reproductive axis research', 'GnRH regulation', 'KISS1R signalling'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
+      'A C-terminally amidated decapeptide and potent KISS1R / GPR54 receptor agonist used in GnRH, HPG-axis, and reproductive endocrinology research models.',
+    researchAreas: ['KISS1R / GPR54 signalling', 'HPG axis research', 'Reproductive endocrinology'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
+    casNumber: null,
+    molecularWeight: null,
+  },
+
+  // ---- Cosmetic Research ---------------------------------------------------
+  {
+    slug: 'ghk-cu',
+    name: 'GHK-Cu',
+    alias: 'Copper Tripeptide-1',
+    category: 'cosmetic',
+    summary:
+      'A naturally occurring copper-binding tripeptide (glycine-histidine-lysine with Cu2+), used as a reference tool in extracellular matrix remodelling, fibroblast activity, collagen and elastin gene expression, angiogenesis, and hair follicle biology research.',
+    researchAreas: ['Extracellular matrix remodelling', 'Collagen and elastin expression', 'Hair follicle biology'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
     casNumber: null,
     molecularWeight: null,
   },
   {
-    slug: 'snap-8',
-    name: 'SNAP-8',
-    alias: 'Acetyl Octapeptide-3',
+    slug: 'melanotan-i',
+    name: 'Melanotan I',
+    alias: 'Afamelanotide',
     category: 'cosmetic',
     summary:
-      'An octapeptide investigated in SNARE complex modulation and topical cosmetic formulation research.',
-    researchAreas: ['SNARE complex studies', 'Topical formulation research', 'Dermal models'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
+      'A linear 13-amino-acid alpha-MSH analogue and MC1R agonist supplied for melanogenesis and melanocyte biology research.',
+    researchAreas: ['Melanogenesis pathways', 'MC1R receptor studies', 'Melanocyte biology'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
+    casNumber: null,
+    molecularWeight: null,
+  },
+
+  // ---- Cellular & Mitochondrial -------------------------------------------
+  {
+    slug: 'ss-31',
+    name: 'SS-31',
+    alias: 'Bendavia, MTP-131',
+    category: 'cellular',
+    summary:
+      'A four-amino-acid tetrapeptide that targets the inner mitochondrial membrane via cardiolipin binding, used in mitochondrial function research models.',
+    researchAreas: ['Cardiolipin binding', 'Mitochondrial bioenergetics', 'Oxidative stress models'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: '10-vial kit',
+    storage: STORAGE,
     casNumber: null,
     molecularWeight: null,
   },
   {
-    slug: 'melanotan-ii',
-    name: 'Melanotan II',
-    category: 'cosmetic',
+    slug: 'methylcobalamin',
+    name: 'Methylcobalamin',
+    category: 'cellular',
     summary:
-      'A synthetic melanocortin analogue used in pigmentation pathway and MC1R receptor research.',
-    researchAreas: ['Melanogenesis pathways', 'MC1R receptor studies', 'Pigmentation research'],
-    purity: '≥99% HPLC',
-    form: 'Lyophilised powder',
-    storage: 'Store at -20 °C, protected from light',
+      'The active, methylated coenzyme form of vitamin B12, supplied for laboratory study of one-carbon metabolism, methylation pathways, homocysteine research, and neuronal research models.',
+    researchAreas: ['One-carbon metabolism', 'Methylation pathways', 'Homocysteine research'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
     casNumber: null,
     molecularWeight: null,
   },

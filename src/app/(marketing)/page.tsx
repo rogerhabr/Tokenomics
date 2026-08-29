@@ -94,7 +94,7 @@ export default function HomePage() {
       <Section className="bg-axis-surface">
         <SectionTitle
           eyebrow="Research areas"
-          title="Six catalogues, one standard."
+          title="Every catalogue, one standard."
           lede="Every compound we list is held to the same purity specification and the same testing regime, whichever area it belongs to."
         />
         <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">

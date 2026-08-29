@@ -29,7 +29,9 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
 
   const specs: [string, string][] = [
     ['Purity', product.purity],
+    ['Identity', product.identity],
     ['Form', product.form],
+    ['Presentation', product.presentation ?? 'Available on request'],
     ['Storage', product.storage],
     ['CAS number', product.casNumber ?? 'See certificate of analysis'],
     ['Molecular weight', product.molecularWeight ?? 'See certificate of analysis'],
