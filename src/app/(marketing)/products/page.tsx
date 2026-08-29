@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { Container, PageHead, Section, ResearchNotice } from '@/components/marketing/ui';
 import Register from '@/components/marketing/Register';
 import { getAllVariants } from '@/lib/variants';
+import { getContent, text, lines } from '@/lib/content';
+import type { ContentMap } from '@/lib/content';
 import { CATEGORIES, PRODUCTS, type CategoryId, type Product } from '@/lib/products';
 
 export const metadata: Metadata = {
@@ -22,18 +24,20 @@ function isCategoryId(value: string | undefined): value is CategoryId {
  * TH9507 — so aliases are matched as well as names, and punctuation is
  * normalised so "bpc157" and "BPC-157" both resolve.
  */
-function matches(product: Product, query: string): boolean {
+function matches(product: Product, query: string, copy: ContentMap): boolean {
   const normalise = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
   const q = normalise(query);
   if (!q) return true;
 
   const category = CATEGORIES.find((c) => c.id === product.category);
+  // Search the copy as edited, not as compiled — otherwise a term an
+  // administrator added to a summary would not be findable.
   const haystack = [
     product.name,
     product.alias ?? '',
-    product.summary,
+    text(copy, `product.${product.slug}.summary`),
     category?.name ?? '',
-    ...product.researchAreas,
+    ...lines(copy, `product.${product.slug}.researchAreas`),
   ].map(normalise);
 
   return haystack.some((h) => h.includes(q));
@@ -49,10 +53,12 @@ export default async function ProductsPage({
 
   let products = PRODUCTS;
   if (selected) products = products.filter((p) => p.category === selected);
-  if (query) products = products.filter((p) => matches(p, query));
+  
 
   const activeCategory = selected ? CATEGORIES.find((c) => c.id === selected) : null;
   const prices = await getAllVariants();
+  const copy = await getContent();
+  if (query) products = products.filter((p) => matches(p, query, copy));
 
   return (
     <>

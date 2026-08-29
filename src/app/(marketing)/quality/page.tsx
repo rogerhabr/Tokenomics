@@ -9,6 +9,7 @@ import {
   ResearchNotice,
 } from '@/components/marketing/ui';
 import { RELEASE_SPEC_PCT } from '@/lib/lots';
+import { getContent, text } from '@/lib/content';
 
 export const metadata: Metadata = {
   title: 'Release Specification & Method | Axis Labs',
@@ -62,14 +63,15 @@ const CHECKS = [
   },
 ];
 
-export default function QualityPage() {
+export default async function QualityPage() {
+  const copy = await getContent();
   return (
     <>
       <PageHead
         index="01"
         rail="Specification"
-        title="One number, and what stands behind it."
-        standfirst="The research compound market runs on purity claims that cannot be checked. Our answer is procedural rather than rhetorical: an independent assay on every lot, measured against a specification we publish, and a batch code you can match to the vial in your hand."
+        title={text(copy, 'quality.title')}
+        standfirst={text(copy, 'quality.standfirst')}
       />
 
       {/* The counter-form: the specification at scale, on its own line. */}

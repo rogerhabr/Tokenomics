@@ -22,6 +22,7 @@ import { getVariantsFor } from '@/lib/variants';
 import { getMolecule, hasStructure, pubchemUrl } from '@/lib/molecules';
 import { getLotsForProduct, RELEASE_SPEC_PCT } from '@/lib/lots';
 import { absolute, SITE_NAME } from '@/lib/site';
+import { getContent, text, lines } from '@/lib/content';
 
 export const revalidate = 3600;
 
@@ -49,6 +50,9 @@ export default async function ProductPage({ params }: { params: { slug: string }
   const variants = await getVariantsFor(product.slug);
   const molecule = getMolecule(product.slug);
   const { lots } = await getLotsForProduct(product.slug);
+  const copy = await getContent();
+  const summary = text(copy, `product.${product.slug}.summary`);
+  const researchAreas = lines(copy, `product.${product.slug}.researchAreas`);
   const related = PRODUCTS.filter(
     (p) => p.category === product.category && p.slug !== product.slug
   ).slice(0, 4);
@@ -149,7 +153,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         '@id': absolute(`/products/${product.slug}#molecule`),
         name: product.name,
         ...(product.alias ? { alternateName: product.alias } : {}),
-        description: product.summary,
+        description: summary,
         url: absolute(`/products/${product.slug}`),
         ...(molecule?.formula ? { molecularFormula: molecule.formula } : {}),
         ...(molecule?.weight ? { molecularWeight: molecule.weight } : {}),
@@ -228,7 +232,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
                 </div>
               )}
 
-              <p className="t-5 mt-[39px] max-w-[54ch] text-axis-ink-500">{product.summary}</p>
+              <p className="t-5 mt-[39px] max-w-[54ch] text-axis-ink-500">{summary}</p>
             </Rail>
           </div>
 
@@ -327,7 +331,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
             <div>
               <h2 className="t-1 text-axis-ink-300">04 — Research applications</h2>
               <ul className="mt-[20px] border-t border-axis-rule-2">
-                {product.researchAreas.map((area) => (
+                {researchAreas.map((area) => (
                   <li
                     key={area}
                     className="t-3 border-b border-axis-rule-1 py-[13px] text-axis-ink-500"

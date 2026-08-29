@@ -14,6 +14,7 @@ import { RegisterExtract } from '@/components/marketing/Register';
 import PurityPlot from '@/components/marketing/PurityPlot';
 import { PRODUCTS } from '@/lib/products';
 import { getAllLots, summarise, RELEASE_SPEC_PCT } from '@/lib/lots';
+import { getContent, text } from '@/lib/content';
 
 export const metadata: Metadata = {
   title: 'Axis Labs — Research Compounds, Assayed Against a Published Specification',
@@ -52,14 +53,15 @@ const METHOD = [
 export default async function HomePage() {
   const { lots, available } = await getAllLots();
   const counts = summarise(lots);
+  const copy = await getContent();
 
   return (
     <>
       <PageHead
         index="01"
         rail="Axis Labs"
-        title="Purity you can check, not purity we assert."
-        standfirst="Axis Labs supplies research compounds for laboratory and in vitro study. Every lot is assayed by an independent laboratory against a release specification you can see, and the result is recorded whether it passes or fails."
+        title={text(copy, 'home.title')}
+        standfirst={text(copy, 'home.standfirst')}
       >
         <div className="mt-[26px] flex flex-wrap gap-[13px]">
           <HairlineLink href="/products">Browse the register</HairlineLink>
@@ -78,9 +80,7 @@ export default async function HomePage() {
               <p className="t-8 text-axis-ink">≥{RELEASE_SPEC_PCT.toFixed(1)}%</p>
               <div className="spec-rule draw mt-[13px]" />
               <p className="t-3 mt-[20px] max-w-measure text-axis-ink-500">
-                Purity by high-performance liquid chromatography, established on the specific lot
-                by an external laboratory. This is the number every assay on this site is drawn
-                against — above the line a lot is released, below it a lot is not sold.
+                {text(copy, 'home.specNote')}
               </p>
             </div>
           </Rail>
@@ -174,14 +174,8 @@ export default async function HomePage() {
         <Container className="py-[78px] lg:py-[104px]">
           <div className="max-w-[46ch]">
             <p className="t-1 text-[#9ca0a7]">06 — Custom sourcing</p>
-            <h2 className="t-6 mt-[20px] text-[#eae7e0]">
-              Need a compound that is not in the register?
-            </h2>
-            <p className="t-3 mt-[20px] text-[#9ca0a7]">
-              Tell us the molecule, the purity specification and the quantity. We will tell you
-              whether we can source and assay it, and what the lead time is — including when the
-              answer is no.
-            </p>
+            <h2 className="t-6 mt-[20px] text-[#eae7e0]">{text(copy, 'home.sourcingTitle')}</h2>
+            <p className="t-3 mt-[20px] text-[#9ca0a7]">{text(copy, 'home.sourcingBody')}</p>
             <div className="mt-[39px]">
               <Rule />
               <a

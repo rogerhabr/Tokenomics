@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Container, PageHead, Section, ResearchNotice } from '@/components/marketing/ui';
 import ContactForm from '@/components/marketing/ContactForm';
+import { CONTACT_REASONS, getContent, text } from '@/lib/content';
 
 export const metadata: Metadata = {
   title: 'Contact — Certificates, Pricing and Custom Sourcing | Axis Labs',
@@ -8,30 +9,15 @@ export const metadata: Metadata = {
     'Contact Axis Labs for batch certificates of analysis, bulk pricing, institutional purchase orders, or custom sourcing enquiries.',
 };
 
-const REASONS = [
-  {
-    n: '01',
-    title: 'Certificates of analysis',
-    body: 'Ask for the current batch certificate on any compound and we will send it before you order.',
-  },
-  {
-    n: '02',
-    title: 'Pricing and quantities',
-    body: 'Per-vial and bulk pricing, current stock, and lead times for anything in the register.',
-  },
-  {
-    n: '03',
-    title: 'Custom sourcing',
-    body: 'Compounds outside the register. Tell us the molecule, the purity specification and the quantity.',
-  },
-  {
-    n: '04',
-    title: 'Institutional accounts',
-    body: 'Purchase orders, recurring supply, and documentation for university and laboratory procurement.',
-  },
-];
 
-export default function ContactPage() {
+
+export default async function ContactPage() {
+  const copy = await getContent();
+  const reasons = CONTACT_REASONS.map((_, i) => ({
+    n: String(i + 1).padStart(2, '0'),
+    title: text(copy, `contact.reason.${i}.title`),
+    body: text(copy, `contact.reason.${i}.body`),
+  }));
   return (
     <>
       <PageHead
@@ -47,7 +33,7 @@ export default function ContactPage() {
             <div>
               <h2 className="t-1 text-axis-ink-300">What we can help with</h2>
               <div className="mt-[20px] border-t border-axis-rule-2">
-                {REASONS.map((r) => (
+                {reasons.map((r) => (
                   <div
                     key={r.n}
                     className="grid grid-cols-[36px_minmax(0,1fr)] gap-[13px] border-b border-axis-rule-1 py-[20px]"
