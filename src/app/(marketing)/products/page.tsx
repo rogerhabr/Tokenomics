@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Card, Container, PageHero, ResearchNotice } from '@/components/marketing/ui';
-import { CATEGORIES, PRODUCTS, type CategoryId } from '@/lib/products';
+import { CATEGORIES, PRODUCTS, formatPrice, fromPriceCents, type CategoryId } from '@/lib/products';
 
 export const metadata: Metadata = {
   title: 'Research Peptides — All Categories | Axis Labs',
@@ -71,6 +71,7 @@ export default function ProductsPage({
         <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {products.map((p) => {
             const category = CATEGORIES.find((c) => c.id === p.category);
+            const from = fromPriceCents(p.slug);
             return (
               <Link key={p.slug} href={`/products/${p.slug}`} className="focus-ring rounded-xl">
                 <Card className="flex h-full flex-col">
@@ -81,7 +82,9 @@ export default function ProductsPage({
                   {p.alias && <p className="mt-1 text-sm text-axis-faint">{p.alias}</p>}
                   <p className="mt-3 flex-1 text-sm leading-relaxed text-axis-muted">{p.summary}</p>
                   <div className="mt-5 flex items-center justify-between border-t border-axis-border pt-4">
-                    <span className="text-xs font-semibold text-axis-navy">{p.purity}</span>
+                    <span className="text-sm font-bold text-axis-navy">
+                      {from === null ? p.purity : `From ${formatPrice(from)}`}
+                    </span>
                     <span className="inline-flex items-center text-sm font-semibold text-axis-blue">
                       Details
                       <ArrowRight size={15} className="ml-1.5" />

@@ -9,6 +9,10 @@
  * in terms of laboratory research models — no dosing, administration, or
  * human-use guidance anywhere in this file or the pages that render it.
  *
+ * PRICING IS PLACEHOLDER. Every figure in `VARIANTS` below is invented — the
+ * reference catalogue's real prices are not knowable from here. Replace the
+ * whole block with your own pricing before taking payment.
+ *
  * NOTE FOR MAINTAINERS: `casNumber` and `molecularWeight` are intentionally
  * `null` rather than filled with plausible-looking values, and `presentation`
  * is null wherever the vial format is not yet confirmed. Populate all three
@@ -383,4 +387,114 @@ export function getCategory(id: CategoryId): Category | undefined {
 
 export function productsByCategory(id: CategoryId): Product[] {
   return PRODUCTS.filter((p) => p.category === id);
+}
+
+/**
+ * Purchasable variants per compound: vial size and price.
+ *
+ * PLACEHOLDER PRICING — every `priceCents` here is invented. Replace with real
+ * pricing before launch. Prices are integer cents to avoid float rounding in
+ * cart totals.
+ */
+export type Variant = {
+  id: string;
+  label: string;
+  priceCents: number;
+};
+
+const VARIANTS: Record<string, Variant[]> = {
+  tirzepatide: [
+    { id: 'tirzepatide-10mg', label: '10 mg vial', priceCents: 8900 },
+    { id: 'tirzepatide-30mg', label: '30 mg vial', priceCents: 21900 },
+    { id: 'tirzepatide-60mg', label: '60 mg vial', priceCents: 38900 },
+  ],
+  retatrutide: [
+    { id: 'retatrutide-5mg', label: '5 mg vial', priceCents: 9900 },
+    { id: 'retatrutide-10mg', label: '10 mg vial', priceCents: 17900 },
+    { id: 'retatrutide-20mg', label: '20 mg vial', priceCents: 32900 },
+  ],
+  cagrilintide: [
+    { id: 'cagrilintide-5mg', label: '5 mg vial', priceCents: 10900 },
+    { id: 'cagrilintide-10mg', label: '10 mg vial', priceCents: 19900 },
+  ],
+  semax: [
+    { id: 'semax-10mg', label: '10 mg vial', priceCents: 4900 },
+    { id: 'semax-30mg', label: '30 mg vial', priceCents: 11900 },
+  ],
+  selank: [
+    { id: 'selank-10mg', label: '10 mg vial', priceCents: 4900 },
+    { id: 'selank-30mg', label: '30 mg vial', priceCents: 11900 },
+  ],
+  'bpc-157': [
+    { id: 'bpc-157-5mg', label: '5 mg vial', priceCents: 3900 },
+    { id: 'bpc-157-10mg', label: '10 mg vial', priceCents: 6900 },
+    { id: 'bpc-157-10x5mg', label: '10 x 5 mg kit', priceCents: 32900 },
+  ],
+  'tb-500': [
+    { id: 'tb-500-5mg', label: '5 mg vial', priceCents: 5900 },
+    { id: 'tb-500-10mg', label: '10 mg vial', priceCents: 9900 },
+  ],
+  tesamorelin: [
+    { id: 'tesamorelin-5mg', label: '5 mg vial', priceCents: 7900 },
+    { id: 'tesamorelin-10mg', label: '10 mg vial', priceCents: 13900 },
+  ],
+  ipamorelin: [
+    { id: 'ipamorelin-5mg', label: '5 mg vial', priceCents: 3900 },
+    { id: 'ipamorelin-10mg', label: '10 mg vial', priceCents: 6900 },
+  ],
+  'dual-pathway-research-blend': [
+    { id: 'dual-pathway-15mg', label: '15 mg vial', priceCents: 15900 },
+    { id: 'dual-pathway-10x15mg', label: '10 x 15 mg kit', priceCents: 139900 },
+  ],
+  'pt-141': [
+    { id: 'pt-141-10mg', label: '10 mg vial', priceCents: 5900 },
+    { id: 'pt-141-30mg', label: '30 mg vial', priceCents: 14900 },
+  ],
+  oxytocin: [
+    { id: 'oxytocin-2mg', label: '2 mg vial', priceCents: 3900 },
+    { id: 'oxytocin-10mg', label: '10 mg vial', priceCents: 9900 },
+  ],
+  'kisspeptin-10': [
+    { id: 'kisspeptin-10-5mg', label: '5 mg vial', priceCents: 5900 },
+    { id: 'kisspeptin-10-10mg', label: '10 mg vial', priceCents: 9900 },
+  ],
+  'ghk-cu': [
+    { id: 'ghk-cu-50mg', label: '50 mg vial', priceCents: 4900 },
+    { id: 'ghk-cu-100mg', label: '100 mg vial', priceCents: 8900 },
+  ],
+  'melanotan-i': [
+    { id: 'melanotan-i-10mg', label: '10 mg vial', priceCents: 5900 },
+    { id: 'melanotan-i-30mg', label: '30 mg vial', priceCents: 14900 },
+  ],
+  'ss-31': [
+    { id: 'ss-31-10mg', label: '10 mg vial', priceCents: 8900 },
+    { id: 'ss-31-10x10mg', label: '10-vial kit', priceCents: 79900 },
+  ],
+  methylcobalamin: [
+    { id: 'methylcobalamin-5mg', label: '5 mg vial', priceCents: 2900 },
+    { id: 'methylcobalamin-30mg', label: '30 mg vial', priceCents: 7900 },
+  ],
+};
+
+export function variantsFor(slug: string): Variant[] {
+  return VARIANTS[slug] ?? [];
+}
+
+export function getVariant(variantId: string): { product: Product; variant: Variant } | undefined {
+  for (const product of PRODUCTS) {
+    const variant = variantsFor(product.slug).find((v) => v.id === variantId);
+    if (variant) return { product, variant };
+  }
+  return undefined;
+}
+
+/** Lowest price across a product's variants, for "from $X" on catalogue cards. */
+export function fromPriceCents(slug: string): number | null {
+  const variants = variantsFor(slug);
+  if (variants.length === 0) return null;
+  return Math.min(...variants.map((v) => v.priceCents));
+}
+
+export function formatPrice(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
 }

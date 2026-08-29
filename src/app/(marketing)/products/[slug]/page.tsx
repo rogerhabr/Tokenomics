@@ -2,8 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Check } from 'lucide-react';
-import { Button, Container, ResearchNotice } from '@/components/marketing/ui';
-import { CATEGORIES, PRODUCTS, getProduct } from '@/lib/products';
+import { Container, ResearchNotice } from '@/components/marketing/ui';
+import { CATEGORIES, PRODUCTS, getProduct, variantsFor } from '@/lib/products';
+import AddToCart from '@/components/marketing/AddToCart';
 
 export function generateStaticParams() {
   return PRODUCTS.map((p) => ({ slug: p.slug }));
@@ -23,6 +24,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   if (!product) notFound();
 
   const category = CATEGORIES.find((c) => c.id === product.category);
+  const variants = variantsFor(product.slug);
   const related = PRODUCTS.filter(
     (p) => p.category === product.category && p.slug !== product.slug
   ).slice(0, 3);
@@ -100,12 +102,12 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                 ))}
               </dl>
 
-              <Button href="/contact" className="mt-7 w-full">
-                Request pricing
-              </Button>
-              <p className="mt-4 text-center text-xs leading-relaxed text-axis-faint">
-                Quantities, bulk pricing, and the current batch certificate of analysis are
-                supplied on request.
+              <div className="mt-7 border-t border-axis-border pt-7">
+                <AddToCart variants={variants} />
+              </div>
+              <p className="mt-5 text-xs leading-relaxed text-axis-faint">
+                The certificate of analysis for the batch you will receive is sent with your
+                invoice, before payment. Bulk quantities are available on request.
               </p>
             </div>
           </aside>

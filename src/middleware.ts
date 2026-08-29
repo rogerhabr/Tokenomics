@@ -7,7 +7,17 @@ import { isRateLimited } from '@/lib/rateLimit';
 // dashboard included) still requires a session. Listing public routes
 // explicitly — rather than listing protected ones — keeps new routes private
 // by default.
-const PUBLIC_PREFIXES = ['/login', '/auth/callback', '/products', '/quality', '/about', '/faq', '/contact'];
+const PUBLIC_PREFIXES = [
+  '/login',
+  '/auth/callback',
+  '/products',
+  '/quality',
+  '/about',
+  '/faq',
+  '/contact',
+  '/cart',
+  '/checkout',
+];
 const PUBLIC_EXACT = ['/'];
 
 function isPublicPath(pathname: string): boolean {

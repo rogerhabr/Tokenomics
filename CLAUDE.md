@@ -3,7 +3,7 @@
 The AXIS LABS website plus an interactive financial dashboard for AI tokenomics research. Built as a dynamic Next.js app with Supabase (Postgres + Auth) and deployed to Vercel.
 
 Two unrelated surfaces share one deployment:
-- **AXIS LABS site** (`/`, `/products`, `/products/[slug]`, `/quality`, `/about`, `/faq`, `/contact`) — public, no auth. A research-peptide supplier site: catalogue, quality/testing, and enquiry form.
+- **AXIS LABS site** (`/`, `/products`, `/products/[slug]`, `/cart`, `/checkout`, `/quality`, `/about`, `/faq`, `/contact`) — public, no auth. A research-peptide storefront: catalogue, cart, checkout, quality/testing, and enquiry form.
 - **Dashboard** (`/dashboard`) — the AI tokenomics model, behind Supabase auth via `middleware.ts`.
 
 ### Research-use-only constraint
@@ -94,6 +94,14 @@ npm run lint     # ESLint via next lint
 - `src/components/marketing/ui.tsx` — Shared primitives (`Container`, `Section`, `SectionTitle`, `Card`, `Button`, `PageHero`, `StatBlock`, `ResearchNotice`)
 - `src/components/marketing/SiteNav.tsx` / `SiteFooter.tsx` — Nav and footer. **Keep the nav flat** — four links plus one Contact action, no dropdowns or nested menus
 - `src/components/marketing/ContactForm.tsx` — Client form posting to `/api/contact`
+
+### Shop
+- `src/contexts/CartContext.tsx` — Cart state, persisted to `localStorage` under `axis-labs-cart-v1`. **Only variant ids and quantities are stored** — names and prices are always re-read from the catalogue, so a price change never leaves a stale amount in a saved cart. Guard against rendering cart contents before `hydrated` is true
+- `src/components/marketing/AddToCart.tsx` / `CartButton.tsx` / `CartDrawer.tsx` / `CartView.tsx` / `CheckoutForm.tsx` — Storefront UI
+- `src/app/api/orders/route.ts` — **Prices are recomputed server-side from the catalogue.** The client sends only `{ variantId, quantity }`; a tampered payload cannot set its own price. Also enforces the research-use acknowledgement, caps line count and quantities, and drops honeypot submissions
+- `supabase/migrations/0003_orders.sql` — `orders` + `order_items`; RLS grants anon/authenticated **insert only** (no select for them, so orders cannot be enumerated), reads restricted to `profiles.role = 'admin'`. `research_use_ack` is enforced by a CHECK constraint as well as in the API
+- Money is integer cents everywhere — never floats
+- **No payment provider is integrated.** Checkout captures the order and promises an invoice with a payment link; no card details are collected. Wiring a provider is a deliberate open decision
 - Brand colours are the `axis-*` Tailwind tokens, sampled from the logo (`navy` `#1B2A63`, `blue` `#2E4C9E`, `helix` `#8FBEEA`)
 
 ### UI Structure — Dashboard

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import Logo from './Logo';
+import CartButton from './CartButton';
 
 // Deliberately flat: four destinations and one action, no dropdowns or nested
 // menus. Every page on the site is reachable in a single click from here.
@@ -49,23 +50,27 @@ export default function SiteNav() {
                 </Link>
               );
             })}
+            <CartButton className="ml-2" />
             <Link
               href="/contact"
-              className="focus-ring ml-3 rounded-lg bg-axis-blue px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-axis-blue-hover"
+              className="focus-ring ml-2 rounded-lg bg-axis-blue px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-axis-blue-hover"
             >
               Contact
             </Link>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-label={open ? 'Close menu' : 'Open menu'}
-            aria-expanded={open}
-            className="focus-ring rounded-md p-2 text-axis-navy md:hidden"
-          >
-            {open ? <X size={22} /> : <Menu size={22} />}
-          </button>
+          <div className="flex items-center md:hidden">
+            <CartButton />
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-label={open ? 'Close menu' : 'Open menu'}
+              aria-expanded={open}
+              className="focus-ring rounded-md p-2 text-axis-navy"
+            >
+              {open ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
         </nav>
 
         {open && (
