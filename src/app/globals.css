@@ -74,3 +74,27 @@ select {
 select:focus {
   border-color: #f97316;
 }
+
+/* ---------------------------------------------------------------------------
+   AXIS LABS marketing site
+   --------------------------------------------------------------------------- */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Keyboard-visible focus ring used across the marketing site. Applied via a
+   utility class so every interactive element gets the same treatment. */
+.focus-ring:focus-visible {
+  outline: 2px solid #4f7dff;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-fade-up {
+    animation: none;
+  }
+}

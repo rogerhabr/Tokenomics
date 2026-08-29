@@ -1,6 +1,10 @@
 # AI Tokenomics Model
 
-An interactive financial dashboard for AI tokenomics research. Built as a dynamic Next.js app with Supabase (Postgres + Auth) and deployed to Vercel.
+The AXIS LABS website plus an interactive financial dashboard for AI tokenomics research. Built as a dynamic Next.js app with Supabase (Postgres + Auth) and deployed to Vercel.
+
+Two surfaces share one deployment:
+- **Marketing site** (`/`, `/platform`, `/research`, `/about`, `/contact`) — public, no auth.
+- **Dashboard** (`/dashboard`) — the tokenomics model, behind Supabase auth via `middleware.ts`.
 
 ## Full-Stack Development Policy
 
@@ -39,7 +43,7 @@ npm run lint     # ESLint via next lint
 
 ## Setup (new environment)
 
-1. Create a [Supabase](https://supabase.com) project. In the SQL Editor, run `supabase/migrations/0001_init.sql`.
+1. Create a [Supabase](https://supabase.com) project. In the SQL Editor, run `supabase/migrations/0001_init.sql`, then `supabase/migrations/0002_contact_messages.sql`.
 2. Copy `.env.example` to `.env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` from Project Settings → API.
 3. (Optional) Create an [Upstash](https://upstash.com) Redis database and add its REST URL/token to `.env.local` to enable API rate limiting.
 4. (Optional) Create a [Sentry](https://sentry.io) project and add its DSN to `.env.local` as `NEXT_PUBLIC_SENTRY_DSN` to enable error tracking.
@@ -60,14 +64,16 @@ npm run lint     # ESLint via next lint
 - `scripts/monitor-throughput.mjs` — Autonomous throughput monitoring agent
 
 ### Auth & Backend
-- `src/middleware.ts` — Runs on every request: refreshes the Supabase session, redirects unauthenticated requests to `/login`, and applies rate limiting to `/api/*`
+- `src/middleware.ts` — Runs on every request: refreshes the Supabase session, redirects unauthenticated requests to `/login`, and applies rate limiting to `/api/*`. Public routes are listed explicitly in `PUBLIC_PREFIXES`/`PUBLIC_EXACT` (the marketing pages), so **new routes are private by default** — add a route there to make it public
 - `src/lib/supabase/client.ts` — Browser Supabase client (Client Components)
 - `src/lib/supabase/server.ts` — Server Supabase client bound to request cookies (Server Components, Route Handlers) — queries made with it are scoped by Postgres RLS
 - `src/lib/rateLimit.ts` — Upstash-backed sliding-window rate limiter; no-ops (never blocks) if `UPSTASH_REDIS_REST_URL`/`_TOKEN` aren't set
 - `src/app/login/page.tsx` — Email/password sign-in and sign-up
 - `src/app/auth/callback/route.ts` — Exchanges a Supabase email-confirmation code for a session
 - `src/app/api/health/route.ts`, `src/app/api/profile/route.ts` — Example Route Handlers; `profile` demonstrates a Postgres-RLS-scoped query against the signed-in user
+- `src/app/api/contact/route.ts` — Public contact-form endpoint: validates and length-caps input, drops honeypot submissions silently, inserts via the RLS-scoped server client, and returns 503 (rather than crashing) if Supabase is unconfigured
 - `supabase/migrations/0001_init.sql` — `profiles` table, RLS policies, and an `auth.users` insert trigger that provisions a profile row on signup
+- `supabase/migrations/0002_contact_messages.sql` — `contact_messages` table; RLS grants anon/authenticated **insert only** (no select policy for them) and restricts reads to `profiles.role = 'admin'`
 
 ### Observability
 - `sentry.client.config.ts` / `sentry.server.config.ts` / `sentry.edge.config.ts` — Sentry init for each runtime; all no-op with a console warning if `NEXT_PUBLIC_SENTRY_DSN` isn't set
@@ -75,14 +81,23 @@ npm run lint     # ESLint via next lint
 - `src/app/global-error.tsx` — Root error boundary; reports uncaught React render errors to Sentry
 - `next.config.js` — Wrapped with `withSentryConfig` for source map upload; skipped automatically (not a build failure) unless `SENTRY_ORG`/`SENTRY_PROJECT`/`SENTRY_AUTH_TOKEN` are set
 
-### UI Structure
-- `src/app/page.tsx` — Root page; renders sidebar + header + section content; sections are lazy-loaded with `next/dynamic`. Protected by `middleware.ts`, not a client-side gate.
+### UI Structure — Marketing site (AXIS LABS)
+- `src/app/(marketing)/layout.tsx` — Route-group layout: `SiteNav` + `SiteFooter`, `axis-*` dark theme
+- `src/app/(marketing)/page.tsx` — Home; `platform/`, `research/`, `about/`, `contact/` are the other pages
+- `src/components/marketing/Logo.tsx` — **Placeholder** mark and wordmark. The real AXIS LABS artwork has not been supplied; swap this file (and `public/axis-labs-logo.svg`, used for the favicon) to rebrand — nothing else references the artwork
+- `src/components/marketing/ui.tsx` — Shared primitives (`Container`, `Section`, `SectionTitle`, `Card`, `Button`, `PageHero`, `StatBlock`)
+- `src/components/marketing/SiteNav.tsx` / `SiteFooter.tsx` — Nav (with mobile drawer) and footer
+- `src/components/marketing/ContactForm.tsx` — Client form posting to `/api/contact`
+- Brand colors are the `axis-*` Tailwind tokens; `accent`/`accent2` are the two values to change once the real logo lands
+
+### UI Structure — Dashboard
+- `src/app/dashboard/page.tsx` — Dashboard root; renders sidebar + header + section content; sections are lazy-loaded with `next/dynamic`. Protected by `middleware.ts`, not a client-side gate.
 - `src/components/Sidebar.tsx` — Navigation sidebar (16 sections grouped into Dashboard / Supply / Demand / Economics / Tokenomics / Methodology)
 - `src/components/sections/` — One component per dashboard section
 - `src/components/AssumptionsPanel.tsx` — Slide-in panel for tweaking global parameters
 - `src/components/ScenarioBar.tsx` — Bear/Base/Bull scenario switcher
 
-### Sections (in order)
+### Dashboard sections (in order)
 | ID | Label |
 |----|-------|
 | overview | Overview |
@@ -104,7 +119,7 @@ npm run lint     # ESLint via next lint
 
 ## Styling Conventions
 
-Use the `sa-*` Tailwind tokens for all colors — do not use arbitrary hex values:
+Two palettes, one per surface. The **marketing site** uses the `axis-*` tokens (`bg-axis-ink`, `bg-axis-surface`, `bg-axis-card`, `border-axis-border`, `text-axis-text`, `text-axis-muted`, `text-axis-accent`); the **dashboard** uses the `sa-*` tokens below. Do not mix the two, and do not use arbitrary hex values in either:
 - `bg-sa-bg` / `bg-sa-surface` / `bg-sa-card` — dark backgrounds
 - `text-sa-muted` — secondary text
 - `border-sa-border` — dividers
