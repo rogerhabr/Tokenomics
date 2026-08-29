@@ -6,8 +6,8 @@ import { Loader2, Check } from 'lucide-react';
 type Status = 'idle' | 'sending' | 'sent' | 'error';
 
 const FIELD =
-  'w-full rounded-lg border border-axis-border bg-axis-ink px-3.5 py-2.5 text-sm text-axis-text placeholder:text-axis-faint outline-none transition-colors focus:border-axis-accent';
-const LABEL = 'block text-xs font-medium uppercase tracking-[0.12em] text-axis-faint';
+  'w-full rounded-lg border border-axis-border bg-white px-3.5 py-2.5 text-sm text-axis-text placeholder:text-axis-faint outline-none transition-colors focus:border-axis-blue';
+const LABEL = 'block text-xs font-bold uppercase tracking-[0.12em] text-axis-navy';
 
 export default function ContactForm() {
   const [status, setStatus] = useState<Status>('idle');
@@ -46,15 +46,15 @@ export default function ContactForm() {
     return (
       <div className="rounded-xl border border-axis-border bg-axis-card p-8">
         <Check size={22} className="text-axis-signal" />
-        <h3 className="mt-4 text-lg font-semibold text-axis-text">Message received.</h3>
+        <h3 className="mt-4 text-lg font-bold text-axis-navy">Enquiry received.</h3>
         <p className="mt-2 text-sm leading-relaxed text-axis-muted">
-          Thank you — we read everything that comes in and will reply if a response is
-          warranted.
+          Thank you. We answer specification, certificate, and pricing enquiries directly, and
+          will be in touch shortly.
         </p>
         <button
           type="button"
           onClick={() => setStatus('idle')}
-          className="focus-ring mt-6 rounded-md text-sm text-axis-accent hover:text-axis-accent-hover"
+          className="focus-ring mt-6 rounded-md text-sm font-semibold text-axis-blue hover:text-axis-blue-hover"
         >
           Send another message
         </button>
@@ -63,7 +63,7 @@ export default function ContactForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="rounded-xl border border-axis-border bg-axis-card p-8">
+    <form onSubmit={onSubmit} className="rounded-xl border border-axis-border bg-axis-surface p-8">
       {/* Honeypot — hidden from people, tempting to bots. */}
       <div aria-hidden="true" className="absolute h-0 w-0 overflow-hidden">
         <label htmlFor="website">Website</label>
@@ -94,7 +94,7 @@ export default function ContactForm() {
 
       <div className="mt-5">
         <label className={LABEL} htmlFor="organization">
-          Organisation <span className="normal-case tracking-normal">(optional)</span>
+          Institution / Organisation <span className="font-medium normal-case tracking-normal text-axis-faint">(optional)</span>
         </label>
         <input
           id="organization"
@@ -114,6 +114,7 @@ export default function ContactForm() {
           required
           rows={6}
           maxLength={4000}
+          placeholder="Which compound, what purity specification, and what quantity?"
           className={`mt-2 resize-y ${FIELD}`}
         />
       </div>
@@ -127,10 +128,10 @@ export default function ContactForm() {
       <button
         type="submit"
         disabled={status === 'sending'}
-        className="focus-ring mt-7 inline-flex items-center justify-center rounded-lg bg-axis-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-axis-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+        className="focus-ring mt-7 inline-flex items-center justify-center rounded-lg bg-axis-blue px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-axis-blue-hover disabled:cursor-not-allowed disabled:opacity-60"
       >
         {status === 'sending' && <Loader2 size={16} className="mr-2 animate-spin" />}
-        {status === 'sending' ? 'Sending…' : 'Send message'}
+        {status === 'sending' ? 'Sending…' : 'Send enquiry'}
       </button>
     </form>
   );

@@ -1,39 +1,39 @@
 import type { Metadata } from 'next';
-import { Section, SectionTitle, PageHero, StatBlock, Container } from '@/components/marketing/ui';
+import { Button, Container, Section, SectionTitle, PageHero, StatBlock, ResearchNotice } from '@/components/marketing/ui';
 
 export const metadata: Metadata = {
-  title: 'About — Axis Labs',
+  title: 'About Axis Labs — Verified Research Peptide Supplier',
   description:
-    'Axis Labs is an independent research group modelling the economics of the AI build-out, from installed silicon to sold tokens.',
+    'Axis Labs was founded to fix the verification problem in research peptides: independent testing on every batch, published certificates, and honest specifications.',
 };
 
-const PRINCIPLES = [
+const VALUES = [
   {
     n: '01',
-    title: 'Show the working',
-    body: 'A conclusion without a visible derivation is an opinion. Every figure we publish can be traced to its inputs, and every input to its source.',
+    title: 'Evidence over adjectives',
+    body: 'Words like premium and pharmaceutical-grade mean nothing without an assay behind them. We publish the certificate and let it speak.',
   },
   {
     n: '02',
-    title: 'Physical units first',
-    body: 'Accelerators, watts, and tokens per second are facts. Dollars are a downstream consequence. We model in that order and never the reverse.',
+    title: 'One specification, no tiers',
+    body: 'We do not run a budget line alongside a premium line. There is a single purity standard, and material that misses it is rejected rather than repriced.',
   },
   {
     n: '03',
-    title: 'Publish the uncertainty',
-    body: 'Where the data is thin, we say so and widen the range rather than picking a confident-sounding midpoint.',
+    title: 'Say what we do not know',
+    body: 'Where a specification comes from the certificate rather than our own claim, the product page says so. Blank is more useful than invented.',
   },
   {
     n: '04',
-    title: 'Independent by construction',
-    body: 'We take no position in the assets we model and accept no vendor funding for research output.',
+    title: 'Research context, always',
+    body: 'Every listing is written for laboratory use. We do not publish dosing guidance, human-use suggestions, or anything that reads as clinical advice.',
   },
 ];
 
 const FACTS = [
-  { value: '2025', label: 'Founded' },
-  { value: 'Independent', label: 'Funding model' },
-  { value: 'Open', label: 'Assumption set' },
+  { value: '99%+', label: 'Single purity standard' },
+  { value: 'US', label: 'Fulfilment facility' },
+  { value: '100%', label: 'Batches independently assayed' },
 ];
 
 export default function AboutPage() {
@@ -41,39 +41,42 @@ export default function AboutPage() {
     <>
       <PageHero
         eyebrow="About"
-        title="An independent lab for the economics of compute."
-        lede="Axis Labs exists because the most consequential capital allocation of this decade is being justified with numbers almost nobody can check. We build the model that makes those numbers checkable."
+        title="Built around one unglamorous problem: verification."
+        lede="Axis Labs exists because researchers routinely cannot confirm what is in the vial they just bought. Purity claims are printed without evidence, batch codes lead nowhere, and certificates — when they exist at all — cannot be matched to the material."
       />
 
       <Section>
-        <div className="grid gap-14 lg:grid-cols-[1.4fr_1fr]">
+        <div className="grid gap-14 lg:grid-cols-[1.5fr_1fr]">
           <div>
-            <SectionTitle eyebrow="Why we exist" title="The gap we are closing." />
+            <SectionTitle eyebrow="Our story" title="Why we started." />
             <div className="mt-8 space-y-5 text-base leading-relaxed text-axis-muted">
               <p>
-                Hundreds of billions of dollars are being committed to AI infrastructure on the
-                strength of forecasts whose assumptions are rarely stated and almost never
-                adjustable. Supply-side projections and demand-side projections circulate
-                independently, and when they are placed side by side they frequently describe
-                incompatible worlds.
+                The research peptide market has a structural honesty problem. Purity is the entire
+                basis on which a compound is selected, and it is also the one property a buyer
+                cannot assess by looking. That gap invites exactly the behaviour you would expect:
+                confident numbers printed on labels, with nothing standing behind them.
               </p>
               <p>
-                We think that is a solvable problem. The physical constraints are knowable:
-                accelerators ship in countable quantities, they draw measurable power, and they
-                emit a bounded number of tokens per second. Starting from those constraints and
-                working forward produces a much narrower and much more defensible range than
-                starting from a market-size estimate and working backward.
+                For a researcher this is not an inconvenience, it is a contaminated result. An
+                experiment run on material that is 87% pure when the label said 99% does not fail
+                loudly. It produces a number that looks plausible and is quietly wrong, and the
+                error is usually discovered — if at all — long after the work has been built on.
               </p>
               <p>
-                So we built one model that spans the whole chain — silicon, throughput, demand,
-                price, and return on capital — with every assumption exposed as a control. It is
-                designed to be disagreed with productively. If you think our utilisation figure
-                is wrong, change it, and see precisely what your view implies.
+                Axis Labs was founded to close that gap procedurally rather than by asking for
+                trust. Every lot we sell is assayed by an independent laboratory that has no stake
+                in the result. The certificate carries a batch code that matches the vial. If our
+                material does not meet specification, the certificate says so and the lot does not
+                ship.
+              </p>
+              <p>
+                That is the whole proposition. We are not asking anyone to believe our purity
+                claims. We are handing over the evidence and inviting the check.
               </p>
             </div>
           </div>
 
-          <div className="space-y-8 lg:pt-24">
+          <div className="space-y-10 lg:pt-24">
             {FACTS.map((f) => (
               <StatBlock key={f.label} value={f.value} label={f.label} />
             ))}
@@ -85,16 +88,16 @@ export default function AboutPage() {
         <Section id="principles">
           <SectionTitle
             eyebrow="Principles"
-            title="Four commitments we hold ourselves to."
-            lede="These constrain what we are willing to publish, and occasionally cost us a cleaner headline."
+            title="Four rules we hold to."
+            lede="These occasionally cost us a sale. That is the point of having them."
           />
-          <div className="mt-14 grid gap-x-12 gap-y-12 md:grid-cols-2">
-            {PRINCIPLES.map((p) => (
-              <div key={p.n} className="flex gap-5">
-                <span className="font-mono text-sm text-axis-accent">{p.n}</span>
+          <div className="mt-12 grid gap-x-12 gap-y-10 md:grid-cols-2">
+            {VALUES.map((v) => (
+              <div key={v.n} className="flex gap-5">
+                <span className="text-sm font-bold text-axis-blue">{v.n}</span>
                 <div>
-                  <h3 className="text-base font-semibold text-axis-text">{p.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-axis-muted">{p.body}</p>
+                  <h3 className="text-base font-bold text-axis-navy">{v.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-axis-muted">{v.body}</p>
                 </div>
               </div>
             ))}
@@ -103,14 +106,19 @@ export default function AboutPage() {
       </div>
 
       <Section>
-        <Container className="px-0">
-          <blockquote className="max-w-3xl border-l-2 border-axis-accent pl-7">
-            <p className="text-xl leading-relaxed text-axis-text sm:text-2xl">
-              A forecast you cannot take apart is not research. It is marketing with error bars
-              removed.
+        <div className="flex flex-col items-start justify-between gap-6 rounded-2xl border border-axis-border bg-axis-tint p-10 sm:flex-row sm:items-center">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight text-axis-navy">
+              Questions about our process?
+            </h2>
+            <p className="mt-2 text-sm text-axis-muted">
+              We answer specification and testing questions directly.
             </p>
-          </blockquote>
-        </Container>
+          </div>
+          <Button href="/contact">Get in touch</Button>
+        </div>
+
+        <ResearchNotice className="mt-12" />
       </Section>
     </>
   );

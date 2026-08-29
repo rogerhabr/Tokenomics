@@ -1,28 +1,29 @@
 import type { Metadata } from 'next';
-import { Section, PageHero } from '@/components/marketing/ui';
+import { Section, PageHero, ResearchNotice } from '@/components/marketing/ui';
 import ContactForm from '@/components/marketing/ContactForm';
 
 export const metadata: Metadata = {
-  title: 'Contact — Axis Labs',
-  description: 'Get in touch with Axis Labs about the model, the research, or the data behind it.',
+  title: 'Contact — Pricing, Certificates & Custom Synthesis | Axis Labs',
+  description:
+    'Contact Axis Labs for research peptide pricing, batch certificates of analysis, bulk quantities, or custom sourcing enquiries.',
 };
 
 const REASONS = [
   {
-    title: 'Challenge an assumption',
-    body: 'If you think one of our parameters is wrong, tell us which one and why. Well-argued corrections change the model.',
+    title: 'Pricing and quantities',
+    body: 'Per-vial and bulk pricing, current stock, and lead times for any compound in the catalogue.',
   },
   {
-    title: 'Research access',
-    body: 'For institutional access to the full model, historical parameter sets, and the underlying data.',
+    title: 'Certificates of analysis',
+    body: 'Ask for the current batch certificate on any compound and we will send it before you order.',
   },
   {
-    title: 'Data partnerships',
-    body: 'If you hold data that would sharpen the supply or demand side, we would like to hear about it.',
+    title: 'Custom sourcing',
+    body: 'Compounds outside the catalogue. Tell us the molecule, the purity specification, and the quantity.',
   },
   {
-    title: 'Press',
-    body: 'For citation, commentary, or clarification of a published figure.',
+    title: 'Institutional accounts',
+    body: 'Purchase orders, recurring supply, and documentation for university and laboratory procurement.',
   },
 ];
 
@@ -31,20 +32,20 @@ export default function ContactPage() {
     <>
       <PageHero
         eyebrow="Contact"
-        title="Tell us where we are wrong."
-        lede="We would rather be corrected than quoted. If you have a better number, a contradicting dataset, or a structural objection to the method, that is the most useful thing you can send us."
+        title="Ask us for the paperwork."
+        lede="Specification questions, batch certificates, bulk pricing, and custom sourcing all reach the same team. We answer technical questions technically."
       />
 
       <Section>
         <div className="grid gap-14 lg:grid-cols-[1fr_1.15fr]">
           <div>
-            <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-axis-faint">
-              What people write in about
+            <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-axis-blue">
+              What we can help with
             </h2>
             <div className="mt-8 space-y-8">
               {REASONS.map((r) => (
                 <div key={r.title}>
-                  <h3 className="text-base font-semibold text-axis-text">{r.title}</h3>
+                  <h3 className="text-base font-bold text-axis-navy">{r.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-axis-muted">{r.body}</p>
                 </div>
               ))}
@@ -53,6 +54,8 @@ export default function ContactPage() {
 
           <ContactForm />
         </div>
+
+        <ResearchNotice className="mt-14" />
       </Section>
     </>
   );

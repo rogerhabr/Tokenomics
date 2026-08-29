@@ -1,45 +1,52 @@
+import HelixMark from './HelixMark';
+
 type LogoProps = {
-  /** Pixel size of the square mark. */
-  size?: number;
-  /** Render the "AXIS LABS" wordmark next to the mark. */
-  withWordmark?: boolean;
+  /** Show the "ADVANCING PEPTIDE RESEARCH" tagline beneath the wordmark. */
+  withTagline?: boolean;
+  /**
+   * Show the helix mark beside the wordmark. Off by default: the supplied
+   * artwork is a wordmark lockup, with the helix as a separate mark, so the
+   * nav and footer reproduce the lockup on its own.
+   */
+  withMark?: boolean;
+  /** Render light-on-dark (for the navy footer). */
+  inverted?: boolean;
   className?: string;
 };
 
 /**
- * Placeholder AXIS LABS identity.
+ * AXIS LABS identity — an SVG reconstruction of the supplied logo: the
+ * royal-blue "AXIS LABS" wordmark over a deeper navy tagline.
  *
- * This is a stand-in mark, not the real artwork. To swap in the supplied logo,
- * replace the <svg> below (and `public/axis-labs-logo.svg`, used for the
- * favicon and OpenGraph) — every other component consumes this one file.
+ * To drop in the original artwork instead, swap the spans below for an <img> of
+ * the supplied lockup. Every surface of the site renders its logo through this
+ * one component, so nothing else needs touching.
  */
-export default function Logo({ size = 32, withWordmark = true, className = '' }: LogoProps) {
+export default function Logo({
+  withTagline = true,
+  withMark = false,
+  inverted = false,
+  className = '',
+}: LogoProps) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 32 32"
-        fill="none"
-        aria-hidden="true"
-        className="shrink-0"
-      >
-        <defs>
-          <linearGradient id="axis-mark-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#4F7DFF" />
-            <stop offset="1" stopColor="#7C5CFF" />
-          </linearGradient>
-        </defs>
-        <rect x="1.25" y="1.25" width="29.5" height="29.5" rx="8.5" stroke="#333A49" strokeWidth="1.5" />
-        <path d="M9 9 L23 23 M23 9 L9 23" stroke="url(#axis-mark-grad)" strokeWidth="2.75" strokeLinecap="round" />
-        <circle cx="16" cy="16" r="4" fill="#08090C" />
-        <circle cx="16" cy="16" r="2.5" fill="url(#axis-mark-grad)" />
-      </svg>
-      {withWordmark && (
-        <span className="font-semibold tracking-[0.18em] text-[13px] uppercase text-axis-text">
+      {withMark && <HelixMark size={40} inverted={inverted} idPrefix="axis-logo-helix" />}
+      <span className="flex flex-col leading-none">
+        <span
+          className="text-[22px] font-extrabold uppercase leading-none tracking-[0.01em]"
+          style={{ color: inverted ? '#FFFFFF' : '#2E4C9E' }}
+        >
           Axis Labs
         </span>
-      )}
+        {withTagline && (
+          <span
+            className="mt-[5px] text-[8.5px] font-bold uppercase leading-none tracking-[0.115em]"
+            style={{ color: inverted ? '#8FBEEA' : '#1B2A63' }}
+          >
+            Advancing Peptide Research
+          </span>
+        )}
+      </span>
     </span>
   );
 }

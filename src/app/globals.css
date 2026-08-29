@@ -7,7 +7,12 @@
 }
 
 body {
-  background-color: #080c16;
+  /* White base for the AXIS LABS site. The dashboard and login screens paint
+     their own full-height `bg-sa-bg`, so their dark theme is unaffected — this
+     only changes what shows behind/around the page (e.g. overscroll). The
+     inherited text colour is left as-is so dashboard components that rely on it
+     keep rendering unchanged; marketing components set their own. */
+  background-color: #ffffff;
   color: #e2e8f0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   margin: 0;
@@ -86,7 +91,7 @@ html {
 /* Keyboard-visible focus ring used across the marketing site. Applied via a
    utility class so every interactive element gets the same treatment. */
 .focus-ring:focus-visible {
-  outline: 2px solid #4f7dff;
+  outline: 2px solid #2E4C9E;
   outline-offset: 2px;
 }
 

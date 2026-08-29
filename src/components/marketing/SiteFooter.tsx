@@ -1,73 +1,69 @@
 import Link from 'next/link';
 import Logo from './Logo';
-
-const COLUMNS = [
-  {
-    title: 'Product',
-    links: [
-      { href: '/platform', label: 'Platform' },
-      { href: '/platform#modules', label: 'Modules' },
-      { href: '/dashboard', label: 'Live dashboard' },
-    ],
-  },
-  {
-    title: 'Research',
-    links: [
-      { href: '/research', label: 'Publications' },
-      { href: '/research#method', label: 'Methodology' },
-      { href: '/research#data', label: 'Data sources' },
-    ],
-  },
-  {
-    title: 'Company',
-    links: [
-      { href: '/about', label: 'About' },
-      { href: '/about#principles', label: 'Principles' },
-      { href: '/contact', label: 'Contact' },
-    ],
-  },
-];
+import { CATEGORIES } from '@/lib/products';
 
 export default function SiteFooter() {
   return (
-    <footer className="border-t border-axis-border bg-axis-surface">
+    <footer className="bg-axis-navy text-white/70">
       <div className="mx-auto max-w-site px-5 py-16 sm:px-8">
-        <div className="grid gap-12 md:grid-cols-[1.5fr_repeat(3,1fr)]">
+        <div className="grid gap-12 md:grid-cols-[1.6fr_1fr_1fr]">
           <div>
-            <Logo />
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-axis-muted">
-              Quantitative research on the economics of artificial intelligence — from
-              silicon to sold tokens.
+            <Logo inverted />
+            <p className="mt-5 max-w-xs text-sm leading-relaxed">
+              Third-party tested research peptides for laboratory and in vitro study, shipped
+              worldwide from our US facility.
             </p>
           </div>
 
-          {COLUMNS.map((col) => (
-            <div key={col.title}>
-              <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-axis-faint">
-                {col.title}
-              </h3>
-              <ul className="mt-4 space-y-2.5">
-                {col.links.map((link) => (
-                  <li key={link.href + link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-axis-muted transition-colors hover:text-axis-text"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-white">
+              Research areas
+            </h3>
+            <ul className="mt-4 space-y-2.5">
+              {CATEGORIES.map((c) => (
+                <li key={c.id}>
+                  <Link
+                    href={`/products?category=${c.id}`}
+                    className="text-sm transition-colors hover:text-white"
+                  >
+                    {c.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-white">Company</h3>
+            <ul className="mt-4 space-y-2.5">
+              {[
+                { href: '/products', label: 'All products' },
+                { href: '/quality', label: 'Quality & testing' },
+                { href: '/about', label: 'About us' },
+                { href: '/faq', label: 'FAQ' },
+                { href: '/contact', label: 'Contact' },
+              ].map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className="text-sm transition-colors hover:text-white">
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
-        <div className="mt-14 flex flex-col gap-3 border-t border-axis-border pt-7 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-axis-faint">
-            &copy; {new Date().getFullYear()} Axis Labs. All rights reserved.
+        <div className="mt-14 border-t border-white/15 pt-8">
+          <p className="text-xs leading-relaxed text-white/60">
+            <strong className="font-semibold text-white/85">Research use only.</strong> All
+            products supplied by Axis Labs are intended strictly for laboratory research and in
+            vitro study. They are not drugs, foods, cosmetics, or medical devices, and are not
+            approved for human or veterinary consumption, clinical use, or diagnostic
+            application. Purchasers are responsible for ensuring compliance with all applicable
+            laws and institutional requirements in their jurisdiction.
           </p>
-          <p className="font-mono text-xs text-axis-faint">
-            Built for research use. Not investment advice.
+          <p className="mt-6 text-xs text-white/50">
+            &copy; {new Date().getFullYear()} Axis Labs. All rights reserved.
           </p>
         </div>
       </div>

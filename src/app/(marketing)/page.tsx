@@ -1,127 +1,87 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import {
-  ArrowRight,
-  Cpu,
-  LineChart,
-  Layers,
-  Database,
-  GitBranch,
-  ShieldCheck,
-} from 'lucide-react';
-import { Button, Card, Container, Eyebrow, Section, SectionTitle, StatBlock } from '@/components/marketing/ui';
+import { ArrowRight, FlaskConical, FileCheck2, Truck, ShieldCheck } from 'lucide-react';
+import { Button, Card, Container, Section, SectionTitle, StatBlock, ResearchNotice } from '@/components/marketing/ui';
+import { CATEGORIES, PRODUCTS } from '@/lib/products';
+import HelixMark from '@/components/marketing/HelixMark';
 
 export const metadata: Metadata = {
-  title: 'Axis Labs — The economics of artificial intelligence',
+  title: 'Axis Labs — Research Peptides at 99%+ Purity',
   description:
-    'Axis Labs builds quantitative models of the AI value chain: hardware installed base, token throughput, unit costs, and returns on invested capital.',
+    'Axis Labs supplies third-party tested research peptides at 99%+ purity for neuroscience, metabolic, tissue repair, endocrine, and cosmetic research. Research use only.',
 };
 
-const CAPABILITIES = [
+const PILLARS = [
   {
-    icon: Cpu,
-    title: 'Supply-side modelling',
-    body: 'Accelerator shipments, installed base decay, and effective FLOPs by generation — reconciled against reported vendor revenue rather than assumed.',
+    icon: FileCheck2,
+    title: 'Third-party tested, every batch',
+    body: 'Each lot is independently assayed by an external analytical laboratory. Certificates of analysis are published against a batch code you can match to your vial.',
   },
   {
-    icon: LineChart,
-    title: 'Demand reconstruction',
-    body: 'Token consumption rebuilt bottom-up from workload mix, context lengths, and reasoning overhead, then cross-checked against disclosed inference volumes.',
+    icon: FlaskConical,
+    title: '99%+ HPLC purity',
+    body: 'We specify purity by HPLC and publish the chromatogram. Where a compound assays below our threshold, the lot does not ship.',
   },
   {
-    icon: Layers,
-    title: 'Unit economics',
-    body: 'Cost per million tokens decomposed into silicon, power, networking, memory, and amortisation, so margin claims can be tested line by line.',
-  },
-  {
-    icon: Database,
-    title: 'Live data pipeline',
-    body: 'Hardware pricing, GPU rental rates, model list prices, and vendor financials refreshed continuously with explicit staleness thresholds.',
-  },
-  {
-    icon: GitBranch,
-    title: 'Scenario analysis',
-    body: 'Bear, base, and bull parameter sets over every assumption, with sensitivity surfaced instead of buried in a spreadsheet cell.',
+    icon: Truck,
+    title: 'Shipped from the US',
+    body: 'Orders leave our US facility with cold-chain packaging where the compound requires it. Domestic delivery typically lands in 2–5 business days.',
   },
   {
     icon: ShieldCheck,
-    title: 'Auditable by design',
-    body: 'Every figure carries a source tag. Where a number is an estimate, the model says so and shows the derivation.',
+    title: 'Research-first, always',
+    body: 'We supply laboratories, universities, and independent researchers. Every listing is written for research context and nothing else.',
   },
 ];
 
 const STATS = [
-  { value: '16', label: 'Interlocking model sections' },
-  { value: '2029', label: 'Forecast horizon' },
-  { value: '24h', label: 'Live data refresh cadence' },
-  { value: '100%', label: 'Figures with source attribution' },
-];
-
-const STEPS = [
-  {
-    n: '01',
-    title: 'Anchor on hardware',
-    body: 'Start from what has physically shipped. Installed base, utilisation, and realistic throughput per accelerator set a hard ceiling on how many tokens can exist.',
-  },
-  {
-    n: '02',
-    title: 'Reconstruct demand',
-    body: 'Build consumption from workloads upward — agents, coding, search, and long-context reasoning each carry very different token intensity.',
-  },
-  {
-    n: '03',
-    title: 'Close the loop on price',
-    body: 'Where supply meets demand, price falls out. Compare the implied clearing price against published rate cards to locate the gap.',
-  },
-  {
-    n: '04',
-    title: 'Test the returns',
-    body: 'Run the resulting revenue against capital deployed. ROIC is the question the whole build-out ultimately answers.',
-  },
+  { value: '99%+', label: 'HPLC purity specification' },
+  { value: '100%', label: 'Batches third-party assayed' },
+  { value: '2–5', label: 'Business days, US delivery' },
+  { value: `${PRODUCTS.length}`, label: 'Compounds in catalogue' },
 ];
 
 export default function HomePage() {
   return (
     <>
       {/* Hero */}
-      <div className="relative overflow-hidden border-b border-axis-border">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[0.35]"
-          style={{
-            backgroundImage:
-              'linear-gradient(to right, #232833 1px, transparent 1px), linear-gradient(to bottom, #232833 1px, transparent 1px)',
-            backgroundSize: '64px 64px',
-            maskImage: 'radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%)',
-          }}
-        />
-        <Container className="relative py-24 sm:py-36">
-          <div className="max-w-3xl animate-fade-up">
-            <Eyebrow>Quantitative AI research</Eyebrow>
-            <h1 className="mt-5 text-4xl font-semibold leading-[1.08] tracking-tight text-axis-text sm:text-6xl">
-              The economics of artificial intelligence, modelled end to end.
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-axis-muted">
-              Axis Labs traces the AI value chain from installed silicon to sold tokens —
-              and prices every step. One model, fully sourced, built to be argued with.
-            </p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <Button href="/dashboard">
-                Explore the model
-                <ArrowRight size={16} className="ml-2" />
-              </Button>
-              <Button href="/research" variant="secondary">
-                Read the research
-              </Button>
+      <div className="border-b border-axis-border bg-gradient-to-b from-axis-tint to-white">
+        <Container className="py-16 sm:py-24">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_1fr]">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-axis-blue">
+                Advancing peptide research
+              </p>
+              <h1 className="mt-4 text-4xl font-bold leading-[1.08] tracking-tight text-axis-navy sm:text-[56px]">
+                Research peptides you can actually verify.
+              </h1>
+              <p className="mt-6 max-w-xl text-lg leading-relaxed text-axis-muted">
+                Axis Labs supplies third-party tested research peptides at 99%+ HPLC purity, with
+                a certificate of analysis published for every batch. No unverifiable claims — just
+                the assay, the chromatogram, and the batch code.
+              </p>
+              <div className="mt-9 flex flex-wrap gap-3">
+                <Button href="/products">
+                  Browse the catalogue
+                  <ArrowRight size={16} className="ml-2" />
+                </Button>
+                <Button href="/quality" variant="secondary">
+                  See our testing
+                </Button>
+              </div>
+            </div>
+
+            {/* Decorative helix panel */}
+            <div className="relative hidden aspect-square items-center justify-center rounded-2xl border border-axis-border bg-white lg:flex">
+              <HelixMark size={330} strokeWidth={2.9} idPrefix="axis-hero-helix" />
             </div>
           </div>
         </Container>
       </div>
 
       {/* Stats */}
-      <div className="border-b border-axis-border bg-axis-surface">
-        <Container className="py-14">
+      <div className="border-b border-axis-border bg-white">
+        <Container className="py-12">
           <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
             {STATS.map((s) => (
               <StatBlock key={s.label} value={s.value} label={s.label} />
@@ -130,73 +90,75 @@ export default function HomePage() {
         </Container>
       </div>
 
-      {/* Capabilities */}
-      <Section>
+      {/* Research areas */}
+      <Section className="bg-axis-surface">
         <SectionTitle
-          eyebrow="What we build"
-          title="A single model, not a folder of disconnected spreadsheets."
-          lede="Most AI market analysis picks one layer and extrapolates. We model the layers together, so a change in hardware assumptions propagates through throughput, price, and returns."
+          eyebrow="Research areas"
+          title="Six catalogues, one standard."
+          lede="Every compound we list is held to the same purity specification and the same testing regime, whichever area it belongs to."
         />
-        <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {CAPABILITIES.map(({ icon: Icon, title, body }) => (
-            <Card key={title}>
-              <Icon size={20} className="text-axis-accent" />
-              <h3 className="mt-4 text-base font-semibold text-axis-text">{title}</h3>
-              <p className="mt-2.5 text-sm leading-relaxed text-axis-muted">{body}</p>
-            </Card>
+        <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {CATEGORIES.map((c) => (
+            <Link key={c.id} href={`/products?category=${c.id}`} className="focus-ring rounded-xl">
+              <Card className="h-full">
+                <h3 className="text-lg font-bold text-axis-navy">{c.name}</h3>
+                <p className="mt-2.5 text-sm leading-relaxed text-axis-muted">{c.blurb}</p>
+                <span className="mt-5 inline-flex items-center text-sm font-semibold text-axis-blue">
+                  View compounds
+                  <ArrowRight size={15} className="ml-1.5" />
+                </span>
+              </Card>
+            </Link>
           ))}
         </div>
       </Section>
 
-      {/* Method */}
-      <div className="border-y border-axis-border bg-axis-surface">
-        <Section>
-          <SectionTitle
-            eyebrow="Method"
-            title="Four steps, in strict order."
-            lede="The sequence matters. Demand estimates that ignore the physical supply ceiling produce numbers that cannot happen."
-          />
-          <div className="mt-14 grid gap-x-10 gap-y-12 md:grid-cols-2">
-            {STEPS.map((step) => (
-              <div key={step.n} className="flex gap-5">
-                <span className="font-mono text-sm text-axis-accent">{step.n}</span>
-                <div>
-                  <h3 className="text-base font-semibold text-axis-text">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-axis-muted">{step.body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Section>
-      </div>
-
-      {/* CTA */}
+      {/* Why Axis */}
       <Section>
-        <div className="rounded-2xl border border-axis-border bg-gradient-to-br from-axis-card to-axis-surface p-10 sm:p-14">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl font-semibold tracking-tight text-axis-text sm:text-4xl">
-              See the assumptions. Change them.
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-axis-muted">
-              Every parameter in the model is exposed and adjustable. Disagree with our
-              utilisation figure or refresh cycle? Move the slider and watch the
-              conclusions move with it.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button href="/dashboard">
-                Open the dashboard
-                <ArrowRight size={16} className="ml-2" />
-              </Button>
-              <Link
-                href="/contact"
-                className="focus-ring inline-flex items-center px-2 py-2.5 text-sm text-axis-muted transition-colors hover:text-axis-text"
-              >
-                Talk to the team
-              </Link>
+        <SectionTitle
+          eyebrow="Why Axis Labs"
+          title="Verification, not assurances."
+          lede="Purity claims are easy to make and hard to check. We built the process so you never have to take our word for it."
+        />
+        <div className="mt-12 grid gap-8 md:grid-cols-2">
+          {PILLARS.map(({ icon: Icon, title, body }) => (
+            <div key={title} className="flex gap-5">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-axis-tint-strong">
+                <Icon size={20} className="text-axis-blue" />
+              </span>
+              <div>
+                <h3 className="text-base font-bold text-axis-navy">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-axis-muted">{body}</p>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       </Section>
+
+      {/* CTA */}
+      <div className="bg-axis-navy">
+        <Container className="py-16 sm:py-20">
+          <div className="max-w-2xl">
+            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              Need a compound that is not listed?
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-white/75">
+              We source and assay custom research peptides for laboratory and institutional
+              programmes. Tell us the compound, the purity you need, and the quantity.
+            </p>
+            <div className="mt-8">
+              <Button href="/contact" variant="onDark">
+                Talk to our team
+                <ArrowRight size={16} className="ml-2" />
+              </Button>
+            </div>
+          </div>
+        </Container>
+      </div>
+
+      <Container className="py-12">
+        <ResearchNotice />
+      </Container>
     </>
   );
 }

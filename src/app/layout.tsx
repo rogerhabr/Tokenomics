@@ -3,12 +3,12 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Axis Labs — The economics of artificial intelligence',
+    default: 'Axis Labs — Advancing Peptide Research',
     template: '%s',
   },
   description:
-    'Axis Labs builds quantitative models of the AI value chain: hardware installed base, token throughput, unit costs, and returns on invested capital.',
-  icons: { icon: '/axis-labs-logo.svg' },
+    'Axis Labs supplies third-party tested research peptides at 99%+ purity for laboratory and in vitro study. Research use only.',
+  icons: { icon: '/axis-labs-mark.svg' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

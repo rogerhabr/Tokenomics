@@ -2,9 +2,13 @@
 
 The AXIS LABS website plus an interactive financial dashboard for AI tokenomics research. Built as a dynamic Next.js app with Supabase (Postgres + Auth) and deployed to Vercel.
 
-Two surfaces share one deployment:
-- **Marketing site** (`/`, `/platform`, `/research`, `/about`, `/contact`) — public, no auth.
-- **Dashboard** (`/dashboard`) — the tokenomics model, behind Supabase auth via `middleware.ts`.
+Two unrelated surfaces share one deployment:
+- **AXIS LABS site** (`/`, `/products`, `/products/[slug]`, `/quality`, `/about`, `/faq`, `/contact`) — public, no auth. A research-peptide supplier site: catalogue, quality/testing, and enquiry form.
+- **Dashboard** (`/dashboard`) — the AI tokenomics model, behind Supabase auth via `middleware.ts`.
+
+### Research-use-only constraint
+
+AXIS LABS supplies research chemicals. All catalogue copy must stay in laboratory-research terms. Never add dosing, administration, reconstitution protocols, human- or veterinary-use guidance, or health claims to any product page or data file. The `ResearchNotice` component belongs on every public page, and the full disclaimer stays in the footer.
 
 ## Full-Stack Development Policy
 
@@ -81,14 +85,16 @@ npm run lint     # ESLint via next lint
 - `src/app/global-error.tsx` — Root error boundary; reports uncaught React render errors to Sentry
 - `next.config.js` — Wrapped with `withSentryConfig` for source map upload; skipped automatically (not a build failure) unless `SENTRY_ORG`/`SENTRY_PROJECT`/`SENTRY_AUTH_TOKEN` are set
 
-### UI Structure — Marketing site (AXIS LABS)
-- `src/app/(marketing)/layout.tsx` — Route-group layout: `SiteNav` + `SiteFooter`, `axis-*` dark theme
-- `src/app/(marketing)/page.tsx` — Home; `platform/`, `research/`, `about/`, `contact/` are the other pages
-- `src/components/marketing/Logo.tsx` — **Placeholder** mark and wordmark. The real AXIS LABS artwork has not been supplied; swap this file (and `public/axis-labs-logo.svg`, used for the favicon) to rebrand — nothing else references the artwork
-- `src/components/marketing/ui.tsx` — Shared primitives (`Container`, `Section`, `SectionTitle`, `Card`, `Button`, `PageHero`, `StatBlock`)
-- `src/components/marketing/SiteNav.tsx` / `SiteFooter.tsx` — Nav (with mobile drawer) and footer
+### UI Structure — AXIS LABS site
+- `src/app/(marketing)/layout.tsx` — Route-group layout: `SiteNav` + `SiteFooter`, light `axis-*` theme
+- `src/app/(marketing)/page.tsx` — Home; `products/`, `products/[slug]/`, `quality/`, `about/`, `faq/`, `contact/` are the rest
+- `src/lib/products.ts` — The catalogue: `CATEGORIES` and `PRODUCTS`, plus lookup helpers. Product pages are statically generated from it via `generateStaticParams`. **`casNumber` and `molecularWeight` are deliberately `null`** — populate them from real certificates of analysis, never from a guess
+- `src/components/marketing/Logo.tsx` — The wordmark lockup, reconstructed in SVG from the supplied artwork. Every logo on the site renders through it, so swapping in the original file only touches this component
+- `src/components/marketing/HelixMark.tsx` — The double-helix mark (two sine strands about x=32, crossing every 13 units). Used large on the home hero; `public/axis-labs-mark.svg` is the standalone copy used as the favicon
+- `src/components/marketing/ui.tsx` — Shared primitives (`Container`, `Section`, `SectionTitle`, `Card`, `Button`, `PageHero`, `StatBlock`, `ResearchNotice`)
+- `src/components/marketing/SiteNav.tsx` / `SiteFooter.tsx` — Nav and footer. **Keep the nav flat** — four links plus one Contact action, no dropdowns or nested menus
 - `src/components/marketing/ContactForm.tsx` — Client form posting to `/api/contact`
-- Brand colors are the `axis-*` Tailwind tokens; `accent`/`accent2` are the two values to change once the real logo lands
+- Brand colours are the `axis-*` Tailwind tokens, sampled from the logo (`navy` `#1B2A63`, `blue` `#2E4C9E`, `helix` `#8FBEEA`)
 
 ### UI Structure — Dashboard
 - `src/app/dashboard/page.tsx` — Dashboard root; renders sidebar + header + section content; sections are lazy-loaded with `next/dynamic`. Protected by `middleware.ts`, not a client-side gate.
@@ -119,7 +125,7 @@ npm run lint     # ESLint via next lint
 
 ## Styling Conventions
 
-Two palettes, one per surface. The **marketing site** uses the `axis-*` tokens (`bg-axis-ink`, `bg-axis-surface`, `bg-axis-card`, `border-axis-border`, `text-axis-text`, `text-axis-muted`, `text-axis-accent`); the **dashboard** uses the `sa-*` tokens below. Do not mix the two, and do not use arbitrary hex values in either:
+Two palettes, one per surface. The **AXIS LABS site** is light and uses the `axis-*` tokens (`bg-white`, `bg-axis-surface`, `bg-axis-tint`, `border-axis-border`, `text-axis-navy`, `text-axis-muted`, `text-axis-blue`); the **dashboard** is dark and uses the `sa-*` tokens below. Do not mix the two, and do not use arbitrary hex values in either:
 - `bg-sa-bg` / `bg-sa-surface` / `bg-sa-card` — dark backgrounds
 - `text-sa-muted` — secondary text
 - `border-sa-border` — dividers
