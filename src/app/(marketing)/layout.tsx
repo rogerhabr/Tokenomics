@@ -4,6 +4,7 @@ import SiteNav from '@/components/marketing/SiteNav';
 import SiteFooter from '@/components/marketing/SiteFooter';
 import CartDrawer from '@/components/marketing/CartDrawer';
 import { CartProvider } from '@/contexts/CartContext';
+import MotionProvider from '@/components/motion/MotionProvider';
 
 /**
  * Two families, both variable, both with a width axis. Declared here in the
@@ -46,6 +47,7 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
         <SiteFooter />
       </div>
       <CartDrawer />
+      <MotionProvider />
     </CartProvider>
   );
 }

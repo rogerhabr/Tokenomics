@@ -320,6 +320,42 @@ summary:focus-visible,
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Pinned stages
+
+   `StickyStage` renders the same DOM at every preference; only the scroll
+   distance is conditional. That is deliberate: collapsing the animation but
+   leaving the spacer behind is what strands a reader in an empty column, so
+   the spacer itself lives inside `no-preference` and reduced motion gets a
+   stage that is simply its own content height.
+
+   Nothing here hides content. The pin changes where a block sits, never
+   whether it is legible — so the page stays complete in print, in a
+   screenshot, with JS disabled, and before any timeline advances.
+   --------------------------------------------------------------------------- */
+
+.motion-stage-pin {
+  /* svh, not vh: `vh` counts the mobile address bar, so a stage measured in it
+     overflows the moment that bar collapses. */
+  min-height: 100svh;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .motion-stage {
+    /* --stage-vh is set per-instance by StickyStage. */
+    height: calc(var(--stage-vh, 2.5) * 100svh);
+  }
+
+  .motion-stage-pin {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    /* Confine layout and paint to the stage: a pinned section is the one place
+       where an ancestor-wide invalidation is both likely and expensive. */
+    contain: layout paint;
+  }
+}
+
 /* ===========================================================================
    Forced colours
 
