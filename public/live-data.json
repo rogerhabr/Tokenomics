@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-29T12:17:06.930Z",
+  "lastUpdated": "2026-08-30T11:15:35.079Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -1282,6 +1282,13 @@
       "displayName": "Moonshot/Kimi K2 0905 Preview",
       "contextK": 262
     },
+    "moonshot/kimi-k2.7-code": {
+      "inputPerM": 0.95,
+      "outputPerM": 4,
+      "provider": "Moonshot",
+      "displayName": "Moonshot/Kimi K2.7 Code",
+      "contextK": 262
+    },
     "moonshot/kimi-k2-turbo-preview": {
       "inputPerM": 1.15,
       "outputPerM": 8,
@@ -1514,148 +1521,148 @@
       "contextK": 2000
     },
     "xai/grok-3": {
-      "inputPerM": 3,
-      "outputPerM": 15,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 3",
       "contextK": 131
     },
     "xai/grok-3-beta": {
-      "inputPerM": 3,
-      "outputPerM": 15,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 3 Beta",
       "contextK": 131
     },
     "xai/grok-3-fast-beta": {
-      "inputPerM": 5,
-      "outputPerM": 25,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 3 Fast Beta",
       "contextK": 131
     },
     "xai/grok-3-fast-latest": {
-      "inputPerM": 5,
-      "outputPerM": 25,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 3 Fast Latest",
       "contextK": 131
     },
     "xai/grok-3-latest": {
-      "inputPerM": 3,
-      "outputPerM": 15,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 3 Latest",
       "contextK": 131
     },
     "xai/grok-3-mini": {
-      "inputPerM": 0.3,
-      "outputPerM": 0.5,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 3 Mini",
       "contextK": 131
     },
     "xai/grok-3-mini-beta": {
-      "inputPerM": 0.3,
-      "outputPerM": 0.5,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 3 Mini Beta",
       "contextK": 131
     },
     "xai/grok-3-mini-fast": {
-      "inputPerM": 0.6,
-      "outputPerM": 4,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 3 Mini Fast",
       "contextK": 131
     },
     "xai/grok-3-mini-fast-beta": {
-      "inputPerM": 0.6,
-      "outputPerM": 4,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 3 Mini Fast Beta",
       "contextK": 131
     },
     "xai/grok-3-mini-fast-latest": {
-      "inputPerM": 0.6,
-      "outputPerM": 4,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 3 Mini Fast Latest",
       "contextK": 131
     },
     "xai/grok-3-mini-latest": {
-      "inputPerM": 0.3,
-      "outputPerM": 0.5,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 3 Mini Latest",
       "contextK": 131
     },
     "xai/grok-4": {
-      "inputPerM": 3,
-      "outputPerM": 15,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 4",
       "contextK": 256
     },
     "xai/grok-4-fast-reasoning": {
-      "inputPerM": 0.19999999999999998,
-      "outputPerM": 0.5,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 4 Fast Reasoning",
       "contextK": 2000
     },
     "xai/grok-4-fast-non-reasoning": {
-      "inputPerM": 0.19999999999999998,
-      "outputPerM": 0.5,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 4 Fast Non Reasoning",
       "contextK": 2000
     },
     "xai/grok-4-0709": {
-      "inputPerM": 3,
-      "outputPerM": 15,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 4 0709",
       "contextK": 256
     },
     "xai/grok-4-latest": {
-      "inputPerM": 3,
-      "outputPerM": 15,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 4 Latest",
       "contextK": 256
     },
     "xai/grok-4-1-fast": {
-      "inputPerM": 0.19999999999999998,
-      "outputPerM": 0.5,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 4 1 Fast",
       "contextK": 2000
     },
     "xai/grok-4-1-fast-reasoning": {
-      "inputPerM": 0.19999999999999998,
-      "outputPerM": 0.5,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 4 1 Fast Reasoning",
       "contextK": 2000
     },
     "xai/grok-4-1-fast-reasoning-latest": {
-      "inputPerM": 0.19999999999999998,
-      "outputPerM": 0.5,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 4 1 Fast Reasoning Latest",
       "contextK": 2000
     },
     "xai/grok-4-1-fast-non-reasoning": {
-      "inputPerM": 0.19999999999999998,
-      "outputPerM": 0.5,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 4 1 Fast Non Reasoning",
       "contextK": 2000
     },
     "xai/grok-4-1-fast-non-reasoning-latest": {
-      "inputPerM": 0.19999999999999998,
-      "outputPerM": 0.5,
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
       "provider": "xAI",
       "displayName": "Xai/Grok 4 1 Fast Non Reasoning Latest",
       "contextK": 2000
@@ -1827,6 +1834,90 @@
       "provider": "Mistral AI",
       "displayName": "Mistral/Mistral Small 2603",
       "contextK": 262
+    },
+    "xai/grok-4.20": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-reasoning": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Reasoning",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-reasoning-latest": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Reasoning Latest",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-non-reasoning": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Non Reasoning",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-non-reasoning-latest": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Non Reasoning Latest",
+      "contextK": 1000
+    },
+    "mistral/mistral-medium-3.5": {
+      "inputPerM": 1.5,
+      "outputPerM": 7.5,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Mistral Medium 3.5",
+      "contextK": 262
+    },
+    "mistral/mistral-vibe-cli-latest": {
+      "inputPerM": 1.5,
+      "outputPerM": 7.5,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Mistral Vibe Cli Latest",
+      "contextK": 262
+    },
+    "mistral/mistral-vibe-cli-with-tools": {
+      "inputPerM": 1.5,
+      "outputPerM": 7.5,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Mistral Vibe Cli With Tools",
+      "contextK": 262
+    },
+    "mistral/mistral-vibe-cli-fast": {
+      "inputPerM": 0.15,
+      "outputPerM": 0.6,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Mistral Vibe Cli Fast",
+      "contextK": 262
+    },
+    "mistral/mistral-code-latest": {
+      "inputPerM": 0.3,
+      "outputPerM": 0.8999999999999999,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Mistral Code Latest",
+      "contextK": 128
+    },
+    "mistral/mistral-code-fim-latest": {
+      "inputPerM": 0.3,
+      "outputPerM": 0.8999999999999999,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Mistral Code Fim Latest",
+      "contextK": 128
+    },
+    "mistral/mistral-code-agent-latest": {
+      "inputPerM": 0.39999999999999997,
+      "outputPerM": 2,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Mistral Code Agent Latest",
+      "contextK": 256
     }
   },
   "nvdaFinancials": null,
