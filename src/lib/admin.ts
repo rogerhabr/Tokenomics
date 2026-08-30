@@ -3,12 +3,14 @@ import { createClient } from '@/lib/supabase/server';
 /**
  * The standard vial ladder offered when adding a size.
  *
- * It is a convenience, not a constraint: the catalogue already carries a 2 mg
- * oxytocin vial, a 60 mg tirzepatide vial and three multi-vial kits, none of
- * which are on this ladder, and all of which must keep working. Sizes outside
- * it can still be entered by hand.
+ * It spans the range the research market actually sells, from 2 mg peptide vials
+ * to 1000 mg NAD+. It is a convenience, not a constraint: the four blends are
+ * sold by total fill with the split named in the label, and any size outside
+ * this ladder can still be entered by hand.
  */
-export const STANDARD_VIAL_SIZES_MG = [5, 10, 15, 20, 30, 40, 50, 80, 100] as const;
+export const STANDARD_VIAL_SIZES_MG = [
+  2, 5, 10, 15, 20, 30, 40, 50, 60, 80, 100, 200, 500, 1000,
+] as const;
 
 export type AdminCheck =
   | { ok: true; userId: string }

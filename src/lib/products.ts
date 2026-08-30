@@ -516,103 +516,120 @@ export type Variant = {
 
 const VARIANTS: Record<string, Variant[]> = {
   tirzepatide: [
-    { id: 'tirzepatide-10mg', label: '10 mg vial', priceCents: 8900 },
-    { id: 'tirzepatide-30mg', label: '30 mg vial', priceCents: 21900 },
-    { id: 'tirzepatide-60mg', label: '60 mg vial', priceCents: 38900 },
+    { id: 'tirzepatide-5mg', label: '5 mg vial', priceCents: 3900 },
+    { id: 'tirzepatide-10mg', label: '10 mg vial', priceCents: 6900 },
+    { id: 'tirzepatide-15mg', label: '15 mg vial', priceCents: 9900 },
+    { id: 'tirzepatide-20mg', label: '20 mg vial', priceCents: 12900 },
+    { id: 'tirzepatide-30mg', label: '30 mg vial', priceCents: 18900 },
+    { id: 'tirzepatide-60mg', label: '60 mg vial', priceCents: 33900 },
   ],
   retatrutide: [
-    { id: 'retatrutide-5mg', label: '5 mg vial', priceCents: 9900 },
-    { id: 'retatrutide-10mg', label: '10 mg vial', priceCents: 17900 },
-    { id: 'retatrutide-20mg', label: '20 mg vial', priceCents: 32900 },
+    { id: 'retatrutide-5mg', label: '5 mg vial', priceCents: 7900 },
+    { id: 'retatrutide-10mg', label: '10 mg vial', priceCents: 15900 },
+    { id: 'retatrutide-15mg', label: '15 mg vial', priceCents: 21900 },
+    { id: 'retatrutide-20mg', label: '20 mg vial', priceCents: 28900 },
+    { id: 'retatrutide-30mg', label: '30 mg vial', priceCents: 40900 },
   ],
   cagrilintide: [
-    { id: 'cagrilintide-5mg', label: '5 mg vial', priceCents: 10900 },
-    { id: 'cagrilintide-10mg', label: '10 mg vial', priceCents: 19900 },
+    { id: 'cagrilintide-5mg', label: '5 mg vial', priceCents: 8900 },
+    { id: 'cagrilintide-10mg', label: '10 mg vial', priceCents: 16900 },
+    { id: 'cagrilintide-20mg', label: '20 mg vial', priceCents: 31900 },
   ],
   semax: [
-    { id: 'semax-10mg', label: '10 mg vial', priceCents: 4900 },
-    { id: 'semax-30mg', label: '30 mg vial', priceCents: 11900 },
+    { id: 'semax-5mg', label: '5 mg vial', priceCents: 1900 },
+    { id: 'semax-10mg', label: '10 mg vial', priceCents: 3900 },
+    { id: 'semax-30mg', label: '30 mg vial', priceCents: 9900 },
   ],
   selank: [
-    { id: 'selank-10mg', label: '10 mg vial', priceCents: 4900 },
-    { id: 'selank-30mg', label: '30 mg vial', priceCents: 11900 },
+    { id: 'selank-5mg', label: '5 mg vial', priceCents: 1900 },
+    { id: 'selank-10mg', label: '10 mg vial', priceCents: 3900 },
+    { id: 'selank-30mg', label: '30 mg vial', priceCents: 9900 },
   ],
   'bpc-157': [
-    { id: 'bpc-157-5mg', label: '5 mg vial', priceCents: 3900 },
-    { id: 'bpc-157-10mg', label: '10 mg vial', priceCents: 6900 },
-    { id: 'bpc-157-10x5mg', label: '10 x 5 mg kit', priceCents: 32900 },
+    { id: 'bpc-157-5mg', label: '5 mg vial', priceCents: 2900 },
+    { id: 'bpc-157-10mg', label: '10 mg vial', priceCents: 5900 },
+    { id: 'bpc-157-20mg', label: '20 mg vial', priceCents: 11900 },
   ],
   'tb-500': [
-    { id: 'tb-500-5mg', label: '5 mg vial', priceCents: 5900 },
-    { id: 'tb-500-10mg', label: '10 mg vial', priceCents: 9900 },
-  ],
-  tesamorelin: [
-    { id: 'tesamorelin-5mg', label: '5 mg vial', priceCents: 7900 },
-    { id: 'tesamorelin-10mg', label: '10 mg vial', priceCents: 13900 },
-  ],
-  ipamorelin: [
-    { id: 'ipamorelin-5mg', label: '5 mg vial', priceCents: 3900 },
-    { id: 'ipamorelin-10mg', label: '10 mg vial', priceCents: 6900 },
-  ],
-  'dual-pathway-research-blend': [
-    { id: 'dual-pathway-15mg', label: '15 mg vial', priceCents: 15900 },
-    { id: 'dual-pathway-10x15mg', label: '10 x 15 mg kit', priceCents: 139900 },
-  ],
-  'pt-141': [
-    { id: 'pt-141-10mg', label: '10 mg vial', priceCents: 5900 },
-    { id: 'pt-141-30mg', label: '30 mg vial', priceCents: 14900 },
-  ],
-  oxytocin: [
-    { id: 'oxytocin-2mg', label: '2 mg vial', priceCents: 3900 },
-    { id: 'oxytocin-10mg', label: '10 mg vial', priceCents: 9900 },
-  ],
-  'kisspeptin-10': [
-    { id: 'kisspeptin-10-5mg', label: '5 mg vial', priceCents: 5900 },
-    { id: 'kisspeptin-10-10mg', label: '10 mg vial', priceCents: 9900 },
-  ],
-  'ghk-cu': [
-    { id: 'ghk-cu-50mg', label: '50 mg vial', priceCents: 4900 },
-    { id: 'ghk-cu-100mg', label: '100 mg vial', priceCents: 8900 },
-  ],
-  'melanotan-i': [
-    { id: 'melanotan-i-10mg', label: '10 mg vial', priceCents: 5900 },
-    { id: 'melanotan-i-30mg', label: '30 mg vial', priceCents: 14900 },
-  ],
-  'ss-31': [
-    { id: 'ss-31-10mg', label: '10 mg vial', priceCents: 8900 },
-    { id: 'ss-31-10x10mg', label: '10-vial kit', priceCents: 79900 },
-  ],
-  'cjc-1295': [
-    { id: 'cjc-1295-2mg', label: '2 mg vial', priceCents: 4900 },
-    { id: 'cjc-1295-5mg', label: '5 mg vial', priceCents: 8900 },
-    { id: 'cjc-1295-10mg', label: '10 mg vial', priceCents: 15900 },
-  ],
-  'cjc-1295-ipamorelin': [
-    { id: 'cjc-1295-ipamorelin-10mg', label: '10 mg vial', priceCents: 11900 },
-    { id: 'cjc-1295-ipamorelin-10x10mg', label: '10 x 10 mg kit', priceCents: 104900 },
+    { id: 'tb-500-2mg', label: '2 mg vial', priceCents: 1900 },
+    { id: 'tb-500-5mg', label: '5 mg vial', priceCents: 4900 },
+    { id: 'tb-500-10mg', label: '10 mg vial', priceCents: 8900 },
   ],
   kpv: [
-    { id: 'kpv-10mg', label: '10 mg vial', priceCents: 4900 },
-    { id: 'kpv-50mg', label: '50 mg vial', priceCents: 17900 },
+    { id: 'kpv-5mg', label: '5 mg vial', priceCents: 1900 },
+    { id: 'kpv-10mg', label: '10 mg vial', priceCents: 3900 },
+    { id: 'kpv-50mg', label: '50 mg vial', priceCents: 15900 },
   ],
-  'bpc-157-tb-500': [
-    { id: 'bpc-157-tb-500-10mg', label: '10 mg vial', priceCents: 9900 },
-    { id: 'bpc-157-tb-500-20mg', label: '20 mg vial', priceCents: 17900 },
+  tesamorelin: [
+    { id: 'tesamorelin-2mg', label: '2 mg vial', priceCents: 2900 },
+    { id: 'tesamorelin-5mg', label: '5 mg vial', priceCents: 6900 },
+    { id: 'tesamorelin-10mg', label: '10 mg vial', priceCents: 11900 },
   ],
-  'klow-blend': [
-    { id: 'klow-blend-80mg', label: '80 mg vial', priceCents: 24900 },
+  ipamorelin: [
+    { id: 'ipamorelin-2mg', label: '2 mg vial', priceCents: 900 },
+    { id: 'ipamorelin-5mg', label: '5 mg vial', priceCents: 2900 },
+    { id: 'ipamorelin-10mg', label: '10 mg vial', priceCents: 5900 },
   ],
-  'mots-c': [
-    { id: 'mots-c-5mg', label: '5 mg vial', priceCents: 6900 },
-    { id: 'mots-c-10mg', label: '10 mg vial', priceCents: 11900 },
+  'cjc-1295': [
+    { id: 'cjc-1295-2mg', label: '2 mg vial', priceCents: 1900 },
+    { id: 'cjc-1295-5mg', label: '5 mg vial', priceCents: 3900 },
+    { id: 'cjc-1295-10mg', label: '10 mg vial', priceCents: 7900 },
   ],
-  nad: [
-    { id: 'nad-100mg', label: '100 mg vial', priceCents: 8900 },
-    { id: 'nad-500mg', label: '500 mg vial', priceCents: 29900 },
+  'pt-141': [
+    { id: 'pt-141-5mg', label: '5 mg vial', priceCents: 2900 },
+    { id: 'pt-141-10mg', label: '10 mg vial', priceCents: 4900 },
+    { id: 'pt-141-20mg', label: '20 mg vial', priceCents: 8900 },
+  ],
+  oxytocin: [
+    { id: 'oxytocin-2mg', label: '2 mg vial', priceCents: 900 },
+    { id: 'oxytocin-5mg', label: '5 mg vial', priceCents: 1900 },
+    { id: 'oxytocin-10mg', label: '10 mg vial', priceCents: 3900 },
+  ],
+  'kisspeptin-10': [
+    { id: 'kisspeptin-10-5mg', label: '5 mg vial', priceCents: 4900 },
+    { id: 'kisspeptin-10-10mg', label: '10 mg vial', priceCents: 8900 },
+  ],
+  'ghk-cu': [
+    { id: 'ghk-cu-10mg', label: '10 mg vial', priceCents: 900 },
+    { id: 'ghk-cu-50mg', label: '50 mg vial', priceCents: 2900 },
+    { id: 'ghk-cu-100mg', label: '100 mg vial', priceCents: 5900 },
+    { id: 'ghk-cu-200mg', label: '200 mg vial', priceCents: 10900 },
+  ],
+  'melanotan-i': [
+    { id: 'melanotan-i-10mg', label: '10 mg vial', priceCents: 4900 },
+    { id: 'melanotan-i-20mg', label: '20 mg vial', priceCents: 8900 },
+  ],
+  'ss-31': [
+    { id: 'ss-31-10mg', label: '10 mg vial', priceCents: 6900 },
+    { id: 'ss-31-50mg', label: '50 mg vial', priceCents: 28900 },
   ],
   methylcobalamin: [
-    { id: 'methylcobalamin-5mg', label: '5 mg vial', priceCents: 2900 },
-    { id: 'methylcobalamin-30mg', label: '30 mg vial', priceCents: 7900 },
+    { id: 'methylcobalamin-5mg', label: '5 mg vial', priceCents: 900 },
+    { id: 'methylcobalamin-30mg', label: '30 mg vial', priceCents: 2900 },
+  ],
+  'mots-c': [
+    { id: 'mots-c-5mg', label: '5 mg vial', priceCents: 5900 },
+    { id: 'mots-c-10mg', label: '10 mg vial', priceCents: 10900 },
+    { id: 'mots-c-20mg', label: '20 mg vial', priceCents: 19900 },
+  ],
+  nad: [
+    { id: 'nad-100mg', label: '100 mg vial', priceCents: 1900 },
+    { id: 'nad-500mg', label: '500 mg vial', priceCents: 8900 },
+    { id: 'nad-1000mg', label: '1000 mg vial', priceCents: 15900 },
+  ],
+  'dual-pathway-research-blend': [
+    { id: 'dual-pathway-research-blend-15mg', label: '15 mg vial — 10 mg tesamorelin + 5 mg ipamorelin', priceCents: 11900 },
+  ],
+  'cjc-1295-ipamorelin': [
+    { id: 'cjc-1295-ipamorelin-10mg', label: '10 mg vial — 5 mg + 5 mg', priceCents: 8900 },
+    { id: 'cjc-1295-ipamorelin-20mg', label: '20 mg vial — 10 mg + 10 mg', priceCents: 16900 },
+  ],
+  'bpc-157-tb-500': [
+    { id: 'bpc-157-tb-500-10mg', label: '10 mg vial — 5 mg + 5 mg', priceCents: 7900 },
+    { id: 'bpc-157-tb-500-20mg', label: '20 mg vial — 10 mg + 10 mg', priceCents: 13900 },
+  ],
+  'klow-blend': [
+    { id: 'klow-blend-80mg', label: '80 mg vial — 50 mg GHK-Cu + 10 mg each of KPV, BPC-157, TB-500', priceCents: 15900 },
   ],
 };
 
