@@ -10,6 +10,11 @@ const SECTIONS = [
     body: 'Vial sizes and prices for every compound. Add a size, change a price, or hide one from the storefront.',
   },
   {
+    href: '/admin/lots',
+    title: 'Lot register',
+    body: 'Record an assayed batch, attach its certificate, and publish it. Releases, retentions and rejections all go in the same register.',
+  },
+  {
     href: '/admin/content',
     title: 'Page copy',
     body: 'Headlines, standfirsts, compound summaries and research applications. Policy pages stay in source.',
