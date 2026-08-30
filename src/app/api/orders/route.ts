@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { createClient } from '@/lib/supabase/server';
 import { resolveVariant } from '@/lib/variants';
+import { isKnownCountry } from '@/lib/countries';
 
 const LIMITS = {
   name: 120,
@@ -80,6 +81,16 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+  // The form offers a fixed list, so anything else was not chosen from it.
+  // Checked server-side because a select element constrains a browser, not a
+  // request.
+  if (!isKnownCountry(fields.country)) {
+    return NextResponse.json(
+      { error: 'Select a country from the list.' },
+      { status: 400 }
+    );
+  }
+
   if (!EMAIL_RE.test(fields.email)) {
     return NextResponse.json({ error: 'That email address does not look valid.' }, { status: 400 });
   }

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { formatPrice } from '@/lib/products';
+import { COUNTRIES } from '@/lib/countries';
 import { OrderButton, ArrowLink, Rule } from './ui';
 
 const FIELD =
@@ -248,14 +249,26 @@ export default function CheckoutForm() {
               <label className={LABEL} htmlFor="country">
                 Country
               </label>
-              <input
+              {/* A list rather than a text field: "USA", "U.S." and "Untied
+                  States" all arrive from a free-text country box, and none of
+                  them resolve to a carrier's country code. */}
+              <select
                 id="country"
                 name="country"
                 required
-                maxLength={80}
+                defaultValue=""
                 autoComplete="country-name"
                 className={FIELD}
-              />
+              >
+                <option value="" disabled>
+                  Select a country
+                </option>
+                {COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </fieldset>
