@@ -375,6 +375,80 @@ summary:focus-visible,
 }
 
 /* ---------------------------------------------------------------------------
+   Horizontal sequence
+
+   The readable layout is the DEFAULT and the cinematic one is the exception.
+   Everything below is gated on `[data-motion='on']`, an attribute the client
+   sets only once it has confirmed motion is permitted and the viewport is wide
+   enough — so no JavaScript, reduced motion, a narrow screen, print and any
+   crawler all get the plain grid, which is the layout the content was written
+   for anyway.
+
+   Doing it the other way round — a horizontal track in CSS that JS turns off —
+   leaves a broken row for everyone the JS never reaches.
+   --------------------------------------------------------------------------- */
+
+.motion-sequence-heading {
+  margin-bottom: 39px;
+}
+
+.motion-sequence-track {
+  display: grid;
+  gap: 39px 52px;
+}
+
+@media (min-width: 1024px) {
+  .motion-sequence-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .motion-sequence[data-motion='on'] {
+    /* One viewport of scroll per panel after the first. Every pixel of the pin
+       therefore maps to visible travel — no dead zone where the section is
+       stuck and nothing is changing. */
+    height: calc(var(--sequence-panels, 4) * 100svh);
+  }
+
+  .motion-sequence[data-motion='on'] .motion-sequence-pin {
+    position: sticky;
+    top: var(--header-h);
+    height: calc(100svh - var(--header-h));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 52px;
+    overflow: hidden;
+    contain: layout paint;
+  }
+
+  .motion-sequence[data-motion='on'] .motion-sequence-heading {
+    padding-inline: max(6vw, 26px);
+  }
+
+  .motion-sequence[data-motion='on'] .motion-sequence-track {
+    display: flex;
+    gap: 78px;
+    width: max-content;
+    /* The track is the only promoted layer in the section: one composited
+       element, not one per panel. */
+    will-change: transform;
+    padding-inline: max(6vw, 26px);
+  }
+
+  /* Panels are narrower than the viewport on purpose. A full-viewport panel
+     holding one short step reads as an empty screen with a caption; at this
+     width the step you are reading and the one arriving are both visible, so
+     the section reads as a sequence rather than as four separate slides. */
+  .motion-sequence[data-motion='on'] [data-panel] {
+    width: min(52vw, 560px);
+    flex: 0 0 min(52vw, 560px);
+    align-content: start;
+  }
+}
+
+/* ---------------------------------------------------------------------------
    Pinned stages
 
    `StickyStage` renders the same DOM at every preference; only the scroll

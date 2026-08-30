@@ -22,7 +22,14 @@ type Ctx = { motionOK: boolean; isDesktop: boolean };
  */
 export function useCinematic(
   scope: RefObject<HTMLElement>,
-  build: (ctx: Ctx & { gsap: typeof import('gsap').gsap }) => void
+  /**
+   * Return a cleanup to undo anything GSAP does not own — a class, a data
+   * attribute, a listener. gsap.matchMedia reverts its own tweens and
+   * ScrollTriggers, but it cannot know about the rest, and a layout attribute
+   * left behind after a revert is worse than one never set: the page keeps the
+   * cinematic geometry with nothing driving it.
+   */
+  build: (ctx: Ctx & { gsap: typeof import('gsap').gsap }) => void | (() => void)
 ) {
   // Keep the latest builder without making it a dependency: re-running the
   // effect on every render would tear down and rebuild the timeline each time.
@@ -48,7 +55,10 @@ export function useCinematic(
       mm.add({ motionOK: MOTION_OK, isDesktop: DESKTOP }, (context) => {
         const { motionOK, isDesktop } = context.conditions as Ctx;
         if (!motionOK) return;
-        buildRef.current({ motionOK, isDesktop, gsap });
+        // Returned straight through: gsap.matchMedia calls it when the query
+        // stops matching, which is how a live Reduce Motion toggle unwinds
+        // everything the builder set up.
+        return buildRef.current({ motionOK, isDesktop, gsap });
       });
 
       revert = () => mm.revert();

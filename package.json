@@ -10,7 +10,8 @@
     "check:data": "node scripts/check-no-fabricated-data.mjs",
     "check:motion": "node scripts/check-motion.mjs",
     "migrate": "node scripts/migrate.mjs",
-    "migrate:dry": "node scripts/migrate.mjs --dry-run"
+    "migrate:dry": "node scripts/migrate.mjs --dry-run",
+    "check:sequence": "node scripts/check-sequence.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
