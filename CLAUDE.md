@@ -51,13 +51,19 @@ npm run check:data  # the no-fabricated-data check on its own
 ```
 
 ```bash
+npm run migrate       # apply unapplied migrations (no-ops without SUPABASE_DB_URL)
+npm run migrate:dry   # show what would run
+node scripts/check-rls.mjs <local-db-url>   # prove certificate access follows lot publication
+```
+
+```bash
 node scripts/fetch-molecules.mjs   # refresh reference chemistry + structure SVGs from PubChem
 node scripts/screenshot.mjs <dir> / /products   # visual review against a running server
 ```
 
 ## Setup (new environment)
 
-1. Create a [Supabase](https://supabase.com) project. In the SQL Editor, run the migrations in `supabase/migrations/` in order (`0001_init` → `0002_contact_messages` → `0003_orders` → `0004_lots`).
+1. Create a [Supabase](https://supabase.com) project. **Do not paste SQL anywhere.** Set `SUPABASE_DB_URL` (Project Settings → Database → Connection string → URI, the *direct* one — migrations run DDL and the transaction pooler cannot) and every `npm run build` applies any unapplied migration for you. Set `ADMIN_EMAILS` at the same time and those accounts are promoted to `profiles.role = 'admin'` automatically once they sign up.
 2. Copy `.env.example` to `.env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` from Project Settings → API. Set `NEXT_PUBLIC_SITE_URL` to the production domain so sitemap, robots, canonical and Open Graph URLs are absolute.
 3. (Optional) Create an [Upstash](https://upstash.com) Redis database and add its REST URL/token to `.env.local` to enable API rate limiting.
 4. (Optional) Create a [Sentry](https://sentry.io) project and add its DSN to `.env.local` as `NEXT_PUBLIC_SENTRY_DSN` to enable error tracking.
@@ -91,6 +97,11 @@ node scripts/screenshot.mjs <dir> / /products   # visual review against a runnin
 - `supabase/migrations/0004_lots.sql` — `lots` table, the public assay register. RLS is the inverse of `orders`: anon may **select** rows where `published = true` and nothing else; writes are admin-only. **Nothing is seeded** — there are no fixture lots anywhere in this repo
 - `src/lib/supabase/public.ts` — Session-free client for public reads, so lot data does not force product pages out of static generation
 
+### Analytics
+- `src/lib/analytics.ts` — the storefront's **typed event vocabulary**, declared in one place so an event cannot be invented at a call site and quietly become a second name for something already measured (`add_to_cart` and `addToCart` in the same funnel measure nothing)
+- **No event property may carry personal data.** No email, name, address, phone, order reference or IP-adjacent value — who bought what is exactly what must not reach an analytics vendor. Properties are catalogue facts only: a slug, a variant id, a count, a total in cents. `scripts/check-analytics.mjs` types a full set of buyer details into checkout and fails if any of them appear in a payload
+- `@vercel/analytics` + `@vercel/speed-insights` are mounted in the **marketing layout only** — `/dashboard` is an internal tool behind auth and mixing it in would merge two unrelated audiences. Both no-op unless enabled on the Vercel project, so local and preview builds send nothing, and `event()` swallows its own errors: analytics must never be why an order cannot complete
+
 ### Observability
 - `sentry.client.config.ts` / `sentry.server.config.ts` / `sentry.edge.config.ts` — Sentry init for each runtime; all no-op with a console warning if `NEXT_PUBLIC_SENTRY_DSN` isn't set
 - `src/instrumentation.ts` — Next.js instrumentation hook that loads the right Sentry config per runtime and wires up `onRequestError` for Server Component/Route Handler errors
@@ -106,7 +117,7 @@ The direction is **"against specification"**: every competitor asserts purity, A
 - `src/lib/products.ts` — The catalogue: `CATEGORIES` (7) and `PRODUCTS` (17). Product pages are statically generated via `generateStaticParams`. **`casNumber`, `molecularWeight` and `presentation` are deliberately `null` wherever unconfirmed** — populate them from real certificates of analysis, never from a guess, and never from `molecules.generated.json` (see below)
 - `src/lib/molecules.ts` + `molecules.generated.json` + `molecules.svg.json` — **Reference chemistry**, resolved from PubChem at build time. This is registry data about the molecule and is rendered in its own block, cited to a CID, **never merged into the product's CoA fields**. `hasStructure()` gates the structure drawing at 250 atoms; above that the depiction is line noise and the formula specimen carries the page
 - `src/lib/lots.ts` — The lot register, read through the **session-free** public client so product pages stay statically generated. Every function returns an empty result rather than throwing, and `available` distinguishes "read successfully and empty" from "could not read"
-- `src/lib/variants.ts` — **vial sizes and prices, read from the `product_variants` table** so an administrator can change them without a deploy. Falls back to the `VARIANTS` block in `products.ts` when Supabase is unconfigured or the table is missing, so the shop never renders priceless. `resolveVariant()` is what `/api/orders` prices against
+- `src/lib/variants.ts` — **vial sizes, vial prices and 10-vial-kit prices, read from the `product_variants` table** so an administrator can change them without a deploy. Falls back to the `VARIANTS` block in `products.ts` when Supabase is unconfigured or the table is missing, so the shop never renders priceless. `resolveVariant()` is what `/api/orders` prices against
 - `src/lib/pricing.ts` — `$/mg` and the mg parser. Client-safe by design: it imports nothing server-only, because the order tray runs in the browser
 - `src/app/api/catalogue/route.ts` — the public price list, fetched once by `CartProvider` so a saved order shows current prices. Informs the display only; `/api/orders` still re-prices every line at checkout
 - `src/lib/site.ts` — Canonical origin for sitemap, robots, OG and JSON-LD
@@ -116,6 +127,7 @@ The direction is **"against specification"**: every competitor asserts purity, A
 - `src/components/marketing/Structure.tsx` — Inlines the generated SVG so `currentColor` and `--molecule-hetero` resolve against the page
 - `src/components/marketing/Logo.tsx` — The wordmark. **The one place brand colour survives**, because it is identity rather than interface and matches the physical artwork
 - `src/components/marketing/HelixMark.tsx` — Currently unused by any page. Retained as brand artwork and as the favicon source (`public/axis-labs-mark.svg`). Note a double helix is the nucleic-acid duplex; these are peptides, so it reads as a domain error to the buyer being courted — replacing it is an open brand decision
+- `src/components/marketing/EntryGate.tsx` — the entry acknowledgement: over 21, and research-use-only understood. Mounted in the marketing layout so it covers **every** storefront page, not just `/` — a gate on the landing page alone is bypassed by every search result that lands on a product page. It never unmounts or hides the page beneath it: the document stays complete for crawlers, print and no-JS readers, because this is an acknowledgement rather than an authentication. Escape does not dismiss it (every other dialog here closes on Escape; a gate that did would be decoration), and **only acceptance is stored**, so a decline never locks out a shared machine
 - `src/components/marketing/SiteNav.tsx` / `SiteFooter.tsx` — **Keep the nav flat.** Four links plus search, order tray and Contact; no dropdowns, no mega-menu. Seven classes over seventeen compounds averages under three each, far below where an intermediary layer earns its place. The classes live in the footer and as filter state on `/products`. Contact must stay in the identical position on every page — WCAG 2.2 SC 3.2.6 is normative at Level A
 
 ### Administration (`/admin`)
@@ -125,8 +137,14 @@ The direction is **"against specification"**: every competitor asserts purity, A
 - **The policy pages and the research-use notice are not editable.** They are disclosures and stay in source, where a change is reviewed in a diff
 - `src/app/admin/pricing/page.tsx` + `src/components/admin/PricingEditor.tsx` — edit prices, add vial sizes from the standard ladder, and hide a size without deleting its row (historical `order_items` must still resolve to a label)
 - `src/lib/admin.ts` — `requireAdmin()`, plus `STANDARD_VIAL_SIZES_MG`. The ladder is a convenience, **not** a constraint: the catalogue already carries a 2 mg vial, a 60 mg vial and three multi-vial kits that are not on it
+- **A kit is a column, not a row.** A 10 x 10 mg kit is the same size bought ten at a time, so `kit_size`/`kit_price_cents` live on the concentration's own row (0008). Modelling it as a second row duplicates the size, label and mass and lets them drift — a vial price change that never reaches the kit. The storefront derives the purchasable option `<variant id>-kit10` from any row carrying a kit price; a null kit price sells that size as single vials only, which is how a kit is withdrawn without deleting anything. `resolveVariant()` prices a kit from its row's own kit price, never by multiplying the vial price, so a client cannot define its own discount — and a kit id **fails closed** when the database is unreachable, because the source fallback has no kit prices
 - `src/app/api/admin/variants/route.ts` — the write path. Validates money as integer cents, re-checks admin, and `revalidatePath`s the affected product pages so a price change is visible immediately rather than after the hourly ISR window
 - **Three layers guard this, and all three are deliberate**: the page check (for the person), the API check (the security boundary), and RLS on `product_variants` (the last word — writes require `profiles.role = 'admin'` and every query carries the caller's own session). A page that renders is never a permission
+- `src/app/admin/lots/page.tsx` + `src/components/admin/LotEditor.tsx` — the lot register's write surface. **Publishing is a separate action from saving**, so a lot is transcribed, checked against the certificate in hand, and only then made public; nothing is prefilled with a plausible value, because an administrator transcribing from a certificate should never be editing around a number the software invented
+- `src/app/api/admin/lots/route.ts` — CRUD. Purity is range-checked here *and* constrained in the schema, so a transposed digit fails at the boundary rather than rendering as a plot mark off the canvas. A lot that has ever been published cannot be deleted, only unpublished — a buyer holding that vial must still be able to resolve its record
+- `src/app/api/admin/lots/certificate/route.ts` — upload. Stores under the lot's **id**, not its code, so renaming a code never orphans the file and a code containing a slash cannot escape its prefix. PDFs only, verified by magic number rather than by the client-supplied MIME type or extension
+- `supabase/migrations/0007_lot_certificates.sql` — the private `certificates` bucket. **The read policy joins back to `lots.published`**, so a certificate is exactly as public as its lot and unpublishing revokes it in the same action — there is no second switch to forget. Also adds the delete policy 0004 omitted
+- `src/app/(marketing)/lots/[lot]/certificate/route.ts` — serves the file from our own origin, proxied rather than redirected, so the URL a buyer copies stays first-party and permanent. It needs no service-role key: the storage policy does the gating
 - `/admin` is **not** in `PUBLIC_PREFIXES` and must never be added
 
 **Two rules that bite:**
@@ -135,6 +153,8 @@ The direction is **"against specification"**: every competitor asserts purity, A
 
 ### Data pipelines
 - `scripts/fetch-molecules.mjs` — Resolves each catalogue slug against PubChem, records formula/mass/CAS/InChIKey, and renders the 2D structure as SVG in our own line weight. Stroke is normalised to each molecule's **median bond length**, not to the viewBox, so a 46-atom tripeptide and a 689-atom peptide look drawn by one hand. Merges into its previous output and retries with backoff, so a transient PubChem failure cannot silently drop a compound
+- `scripts/migrate.mjs` — **the reason nobody hand-runs SQL.** Applies unapplied migrations in filename order, each in its own transaction, behind a session advisory lock so two concurrent deploys cannot race. Records a checksum per migration and **fails if an already-applied migration was edited** — that is drift, not a change. No-ops without a database URL so CI and local builds are unaffected; runs as part of `npm run build`. Also promotes `ADMIN_EMAILS` to the admin role, idempotently
+- `scripts/check-rls.mjs` — proves the security claim rather than asserting it: an unpublished lot and its certificate are both invisible to `anon`, publishing reveals both in one action, unpublishing revokes both immediately, and `anon` cannot write. Runs inside a transaction it rolls back, and refuses a non-local database without `--force`
 - `scripts/check-no-fabricated-data.mjs` — Runs in `npm run lint`. See the constraint at the top of this file
 - `scripts/screenshot.mjs` — Screenshots a running server for visual review
 

@@ -19,7 +19,13 @@ import { getProduct } from '@/lib/products';
 const MAX_PRICE_CENTS = 10_000_000;
 const MAX_ROWS = 200;
 
-type UpdatePayload = { id: string; priceCents: number; active?: boolean };
+type UpdatePayload = {
+  id: string;
+  priceCents: number;
+  active?: boolean;
+  /** null withdraws the size from kit sale without deleting anything. */
+  kitPriceCents?: number | null;
+};
 type CreatePayload = { productSlug: string; sizeMg: number; priceCents: number };
 
 function badRequest(error: string) {
@@ -61,6 +67,13 @@ export async function POST(request: Request) {
 
   for (const u of updates) {
     if (typeof u?.id !== 'string' || !u.id) return badRequest('A row is missing its id.');
+    if (
+      u.kitPriceCents !== undefined &&
+      u.kitPriceCents !== null &&
+      !validPrice(u.kitPriceCents)
+    ) {
+      return badRequest(`Kit price for ${u.id} must be a whole number of cents.`);
+    }
     if (!validPrice(u.priceCents)) {
       return badRequest(`Price for ${u.id} must be a whole number of cents.`);
     }
@@ -101,6 +114,7 @@ export async function POST(request: Request) {
         .update({
           price_cents: u.priceCents,
           ...(typeof u.active === 'boolean' ? { active: u.active } : {}),
+          ...(u.kitPriceCents !== undefined ? { kit_price_cents: u.kitPriceCents } : {}),
           updated_at: new Date().toISOString(),
           updated_by: admin.userId,
         })

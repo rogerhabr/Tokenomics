@@ -9,6 +9,9 @@ export type EditorRow = {
   label: string;
   sizeMg: number | null;
   priceCents: number;
+  /** null means this size is sold as single vials only. */
+  kitPriceCents: number | null;
+  kitSize: number;
   active: boolean;
 };
 
@@ -41,8 +44,20 @@ export default function PricingEditor({
 
   // Edits are held locally and sent in one save, so a slip on one row can be
   // corrected before anything reaches the storefront.
-  const [draft, setDraft] = useState<Record<string, { price: string; active: boolean }>>(() =>
-    Object.fromEntries(rows.map((r) => [r.id, { price: toDollars(r.priceCents), active: r.active }]))
+  const [draft, setDraft] = useState<
+    Record<string, { price: string; kitPrice: string; active: boolean }>
+  >(() =>
+    Object.fromEntries(
+      rows.map((r) => [
+        r.id,
+        {
+          price: toDollars(r.priceCents),
+          // Empty means no kit — distinct from zero, which would be a free kit.
+          kitPrice: r.kitPriceCents === null ? '' : toDollars(r.kitPriceCents),
+          active: r.active,
+        },
+      ])
+    )
   );
   const [newSlug, setNewSlug] = useState(products[0]?.slug ?? '');
   const [newSize, setNewSize] = useState(String(standardSizes[0] ?? 10));
@@ -64,7 +79,16 @@ export default function PricingEditor({
     () =>
       rows.filter((r) => {
         const d = draft[r.id];
-        return d && (toCents(d.price) !== r.priceCents || d.active !== r.active);
+        if (!d) return false;
+        // A cleared kit field is null, not 0 — otherwise withdrawing a kit
+        // would read as pricing it at nothing, and editing only the kit price
+        // would not register as a change at all.
+        const kit = d.kitPrice.trim() === '' ? null : toCents(d.kitPrice);
+        return (
+          toCents(d.price) !== r.priceCents ||
+          d.active !== r.active ||
+          kit !== r.kitPriceCents
+        );
       }),
     [rows, draft]
   );
@@ -77,11 +101,16 @@ export default function PricingEditor({
     setStatus('saving');
     setMessage('');
 
-    const updates = dirty.map((r) => ({
-      id: r.id,
-      priceCents: toCents(draft[r.id].price) ?? r.priceCents,
-      active: draft[r.id].active,
-    }));
+    const updates = dirty.map((r) => {
+      const kitRaw = draft[r.id].kitPrice.trim();
+      return {
+        id: r.id,
+        priceCents: toCents(draft[r.id].price) ?? r.priceCents,
+        active: draft[r.id].active,
+        // A cleared field withdraws the size from kit sale; it does not mean 0.
+        kitPriceCents: kitRaw === '' ? null : toCents(kitRaw) ?? r.kitPriceCents,
+      };
+    });
 
     const creates =
       newPrice.trim() && newSlug
@@ -195,6 +224,9 @@ export default function PricingEditor({
                   <tr className="border-b border-axis-rule-3">
                     <th className="t-1 py-[8px] pr-[16px] text-axis-ink-300">Size</th>
                     <th className="t-1 py-[8px] pr-[16px] text-axis-ink-300">Price (USD)</th>
+                    <th className="t-1 py-[8px] pr-[16px] text-axis-ink-300">
+                      10-vial kit (USD)
+                    </th>
                     <th className="t-1 py-[8px] pr-[16px] text-axis-ink-300">$/mg</th>
                     <th className="t-1 py-[8px] text-axis-ink-300">Listed</th>
                   </tr>
@@ -219,6 +251,21 @@ export default function PricingEditor({
                               setDraft((prev) => ({
                                 ...prev,
                                 [r.id]: { ...d, price: e.target.value },
+                              }))
+                            }
+                            className={`${field} w-[120px]`}
+                          />
+                        </td>
+                        <td className="py-[10px] pr-[16px]">
+                          <input
+                            value={d.kitPrice}
+                            inputMode="decimal"
+                            placeholder="none"
+                            aria-label={`Ten-vial kit price for ${p.name} ${r.label}`}
+                            onChange={(e) =>
+                              setDraft((prev) => ({
+                                ...prev,
+                                [r.id]: { ...d, kitPrice: e.target.value },
                               }))
                             }
                             className={`${field} w-[120px]`}

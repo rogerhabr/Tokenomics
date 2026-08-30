@@ -50,7 +50,7 @@
   --content: 1280px;
   --gutter: 20px;
   --baseline: 26px;
-  --header-h: 60px;
+  --header-h: 72px;
 
   /* Type scale — eight named steps. If a size is not a step, it does not
      exist. Sizes re-declare at 640px and 1100px; tracking and leading are
@@ -89,7 +89,7 @@
 @media (min-width: 1100px) {
   :root {
     --gutter: 40px;
-    --header-h: 68px;
+    --header-h: 84px;
     --fs-4: 1.0625rem;
     --fs-5: 1.375rem;
     --fs-6: 2.125rem;
@@ -159,6 +159,16 @@ summary:focus-visible,
   outline-offset: 2px;
   box-shadow: 0 0 0 4px var(--focus-halo);
   border-radius: 2px;
+}
+
+/* A dialog moves focus to its heading so a screen reader announces what just
+   opened. The heading is tabIndex=-1, so no keyboard user can ever land on it
+   by tabbing — which makes the visible ring pure noise. Suppress the paint,
+   keep the focus. */
+[data-dialog-heading]:focus,
+[data-dialog-heading]:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 .skip-link {
@@ -317,6 +327,160 @@ summary:focus-visible,
 @keyframes draw {
   from {
     transform: scaleX(0);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Register motion
+
+   The register's rules extend as they enter; the data in them never moves and
+   never fades. That asymmetry is the whole idea — this is a document being
+   ruled, not content being revealed, so a row is fully legible before, during
+   and after the animation, and identical in print.
+
+   Only `transform` is touched, so this stays on the compositor. Rows are not
+   given `will-change`: there can be hundreds, and promoting them all would cost
+   far more than the animation saves.
+   --------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    /* The rule is a pseudo-element rather than the row's own border, because a
+       <tr> switches between `display: block` and `table-row` at the lg
+       breakpoint and a border on it cannot be transformed reliably across both.
+       The real border stays exactly where it is; this draws over it. */
+    .register-row {
+      position: relative;
+    }
+
+    .register-row::after {
+      content: '';
+      position: absolute;
+      inset-inline: 0;
+      bottom: -1px;
+      height: 1px;
+      background: var(--rule-3);
+      transform-origin: left;
+      animation: rule-extend linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 30%;
+    }
+  }
+}
+
+@keyframes rule-extend {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Horizontal sequence
+
+   The readable layout is the DEFAULT and the cinematic one is the exception.
+   Everything below is gated on `[data-motion='on']`, an attribute the client
+   sets only once it has confirmed motion is permitted and the viewport is wide
+   enough — so no JavaScript, reduced motion, a narrow screen, print and any
+   crawler all get the plain grid, which is the layout the content was written
+   for anyway.
+
+   Doing it the other way round — a horizontal track in CSS that JS turns off —
+   leaves a broken row for everyone the JS never reaches.
+   --------------------------------------------------------------------------- */
+
+.motion-sequence-heading {
+  margin-bottom: 39px;
+}
+
+.motion-sequence-track {
+  display: grid;
+  gap: 39px 52px;
+}
+
+@media (min-width: 1024px) {
+  .motion-sequence-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .motion-sequence[data-motion='on'] {
+    /* One viewport of scroll per panel after the first. Every pixel of the pin
+       therefore maps to visible travel — no dead zone where the section is
+       stuck and nothing is changing. */
+    height: calc(var(--sequence-panels, 4) * 100svh);
+  }
+
+  .motion-sequence[data-motion='on'] .motion-sequence-pin {
+    position: sticky;
+    top: var(--header-h);
+    height: calc(100svh - var(--header-h));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 52px;
+    overflow: hidden;
+    contain: layout paint;
+  }
+
+  .motion-sequence[data-motion='on'] .motion-sequence-heading {
+    padding-inline: max(6vw, 26px);
+  }
+
+  .motion-sequence[data-motion='on'] .motion-sequence-track {
+    display: flex;
+    gap: 78px;
+    width: max-content;
+    /* The track is the only promoted layer in the section: one composited
+       element, not one per panel. */
+    will-change: transform;
+    padding-inline: max(6vw, 26px);
+  }
+
+  /* Panels are narrower than the viewport on purpose. A full-viewport panel
+     holding one short step reads as an empty screen with a caption; at this
+     width the step you are reading and the one arriving are both visible, so
+     the section reads as a sequence rather than as four separate slides. */
+  .motion-sequence[data-motion='on'] [data-panel] {
+    width: min(52vw, 560px);
+    flex: 0 0 min(52vw, 560px);
+    align-content: start;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Pinned stages
+
+   `StickyStage` renders the same DOM at every preference; only the scroll
+   distance is conditional. That is deliberate: collapsing the animation but
+   leaving the spacer behind is what strands a reader in an empty column, so
+   the spacer itself lives inside `no-preference` and reduced motion gets a
+   stage that is simply its own content height.
+
+   Nothing here hides content. The pin changes where a block sits, never
+   whether it is legible — so the page stays complete in print, in a
+   screenshot, with JS disabled, and before any timeline advances.
+   --------------------------------------------------------------------------- */
+
+.motion-stage-pin {
+  /* svh, not vh: `vh` counts the mobile address bar, so a stage measured in it
+     overflows the moment that bar collapses. */
+  min-height: 100svh;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .motion-stage {
+    /* --stage-vh is set per-instance by StickyStage. */
+    height: calc(var(--stage-vh, 2.5) * 100svh);
+  }
+
+  .motion-stage-pin {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    /* Confine layout and paint to the stage: a pinned section is the one place
+       where an ancestor-wide invalidation is both likely and expensive. */
+    contain: layout paint;
   }
 }
 

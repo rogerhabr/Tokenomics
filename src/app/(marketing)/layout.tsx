@@ -3,7 +3,11 @@ import { Archivo, Martian_Mono } from 'next/font/google';
 import SiteNav from '@/components/marketing/SiteNav';
 import SiteFooter from '@/components/marketing/SiteFooter';
 import CartDrawer from '@/components/marketing/CartDrawer';
+import EntryGate from '@/components/marketing/EntryGate';
 import { CartProvider } from '@/contexts/CartContext';
+import MotionProvider from '@/components/motion/MotionProvider';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 /**
  * Two families, both variable, both with a width axis. Declared here in the
@@ -46,6 +50,14 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
         <SiteFooter />
       </div>
       <CartDrawer />
+      <EntryGate />
+      <MotionProvider />
+      {/* Storefront only. The dashboard at /dashboard is an internal tool
+          behind auth; measuring it would mix two unrelated audiences into one
+          set of numbers. Both collectors no-op unless enabled on the Vercel
+          project, so local and preview builds send nothing. */}
+      <Analytics />
+      <SpeedInsights />
     </CartProvider>
   );
 }

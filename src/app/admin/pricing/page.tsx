@@ -52,7 +52,7 @@ export default async function AdminPricingPage() {
   // this is the only place a deactivated row can be brought back.
   const { data, error } = await supabase
     .from('product_variants')
-    .select('id, product_slug, label, size_mg, price_cents, active, sort_order')
+    .select('id, product_slug, label, size_mg, price_cents, kit_size, kit_price_cents, active, sort_order')
     .order('product_slug', { ascending: true })
     .order('sort_order', { ascending: true });
 
@@ -60,7 +60,7 @@ export default async function AdminPricingPage() {
     return (
       <Notice
         title="Could not read the price list."
-        body="The product_variants table may not exist yet. Run supabase/migrations/0005_product_variants.sql in the Supabase SQL Editor, then reload."
+        body="The product_variants table may not exist or may not carry the kit columns yet. Migrations apply on deploy once SUPABASE_DB_URL is set; you can also run npm run migrate directly."
       />
     );
   }
@@ -71,6 +71,8 @@ export default async function AdminPricingPage() {
     label: r.label as string,
     sizeMg: r.size_mg === null ? null : Number(r.size_mg),
     priceCents: r.price_cents as number,
+    kitPriceCents: r.kit_price_cents === null ? null : (r.kit_price_cents as number),
+    kitSize: (r.kit_size as number | null) ?? 10,
     active: r.active as boolean,
   }));
 
@@ -80,8 +82,10 @@ export default async function AdminPricingPage() {
     <>
       <h1 className="t-7 text-axis-ink">Pricing</h1>
       <p className="t-4 mt-[20px] max-w-measure text-axis-ink-500">
-        Vial sizes and prices for every compound. Changes take effect on the storefront
-        immediately — the product pages are purged from cache when you save.
+        Every compound, every concentration, the price of a single vial and the price of a
+        ten-vial kit. Clear a kit price to sell that size as single vials only. Changes take
+        effect on the storefront immediately — the product pages are purged from cache when
+        you save.
       </p>
       <div className="spec-rule mt-[26px]" />
 

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { OrderButton } from './ui';
+import { event as trackEvent } from '@/lib/analytics';
 
 type Status = 'idle' | 'sending' | 'sent' | 'error';
 
@@ -40,6 +41,7 @@ export default function ContactForm() {
         return;
       }
       form.reset();
+      trackEvent({ name: 'contact_submitted' });
       setStatus('sent');
     } catch {
       setError('Could not reach the server. Please try again.');

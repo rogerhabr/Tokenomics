@@ -16,7 +16,7 @@ const RUNG_Y = [12.5, 25.5, 38.5, 51.5];
 export default function HelixMark({
   size = 34,
   inverted = false,
-  strokeWidth = 3.6,
+  strokeWidth = 5.2,
   className = '',
   idPrefix = 'axis-helix',
 }: {
@@ -50,8 +50,8 @@ export default function HelixMark({
         </linearGradient>
       </defs>
 
-      <g transform="rotate(-30 32 32)">
-        <g stroke={rungColor} strokeWidth={strokeWidth * 0.5} strokeLinecap="round">
+      <g transform="rotate(-22 32 32)">
+        <g stroke={rungColor} strokeWidth={strokeWidth * 0.42} strokeLinecap="round">
           {RUNG_Y.map((y) => (
             <path key={y} d={`M23 ${y} L41 ${y}`} />
           ))}
@@ -61,11 +61,11 @@ export default function HelixMark({
         {/* Beads sit at the points of widest strand separation. They are drawn
             larger than the stroke and ringed in the page colour so they read as
             distinct spheres rather than thickening the strand. */}
-        <g fill={nodeColor} stroke={ringColor} strokeWidth={strokeWidth * 0.3}>
+        <g fill={nodeColor} stroke={ringColor} strokeWidth={strokeWidth * 0.26}>
           {RUNG_Y.map((y) => (
             <g key={y}>
-              <circle cx="23" cy={y} r={strokeWidth * 1.15} />
-              <circle cx="41" cy={y} r={strokeWidth * 1.15} />
+              <circle cx="23" cy={y} r={strokeWidth * 0.8} />
+              <circle cx="41" cy={y} r={strokeWidth * 0.8} />
             </g>
           ))}
         </g>

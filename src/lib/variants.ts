@@ -23,10 +23,31 @@ type VariantRow = {
   label: string;
   size_mg: string | number | null;
   price_cents: number;
+  kit_size: number | null;
+  kit_price_cents: number | null;
   sort_order: number;
 };
 
-const COLUMNS = 'id, product_slug, label, size_mg, price_cents, sort_order';
+const COLUMNS =
+  'id, product_slug, label, size_mg, price_cents, kit_size, kit_price_cents, sort_order';
+
+/**
+ * A kit is the same concentration bought several at a time, so it is a column
+ * on the size's row rather than a row of its own — one price change, both
+ * prices, no drift. The storefront still needs it as a separately purchasable
+ * thing, so the id is derived here and nowhere else.
+ */
+export function kitVariantId(baseId: string, kitSize: number): string {
+  return `${baseId}-kit${kitSize}`;
+}
+
+/** Split a derived kit id back into the row it came from. */
+function parseKitId(variantId: string): { baseId: string; kitSize: number } | null {
+  const m = variantId.match(/^(.*)-kit(\d+)$/);
+  if (!m) return null;
+  const kitSize = Number(m[2]);
+  return Number.isInteger(kitSize) && kitSize > 1 ? { baseId: m[1], kitSize } : null;
+}
 
 function toVariant(row: VariantRow): PricedVariant {
   return {
@@ -36,6 +57,27 @@ function toVariant(row: VariantRow): PricedVariant {
     // numeric() comes back as a string from PostgREST.
     sizeMg: row.size_mg === null ? null : Number(row.size_mg),
   };
+}
+
+/** The kit option a row offers, if it has been given a kit price. */
+function toKitVariant(row: VariantRow): PricedVariant | null {
+  const kitSize = row.kit_size ?? 10;
+  if (row.kit_price_cents === null || row.kit_price_cents === undefined) return null;
+  const sizeMg = row.size_mg === null ? null : Number(row.size_mg);
+  return {
+    id: kitVariantId(row.id, kitSize),
+    // The label states the multiplication rather than a total, because a buyer
+    // choosing a kit is counting vials, not milligrams.
+    label: `${kitSize} x ${row.label}`,
+    priceCents: row.kit_price_cents,
+    sizeMg: sizeMg === null ? null : sizeMg * kitSize,
+  };
+}
+
+/** A row expands into the single vial and, where priced, its kit. */
+function expand(row: VariantRow): PricedVariant[] {
+  const kit = toKitVariant(row);
+  return kit ? [toVariant(row), kit] : [toVariant(row)];
 }
 
 /** The seed, shaped like a DB read, for the fallback path. */
@@ -54,7 +96,7 @@ export async function getVariantsFor(slug: string): Promise<PricedVariant[]> {
       .eq('product_slug', slug)
       .order('sort_order', { ascending: true });
     if (error || !data || data.length === 0) return seedFor(slug);
-    return (data as VariantRow[]).map(toVariant);
+    return (data as VariantRow[]).flatMap(expand);
   } catch {
     return seedFor(slug);
   }
@@ -79,7 +121,7 @@ export async function getAllVariants(): Promise<Record<string, PricedVariant[]>>
 
     const grouped: Record<string, PricedVariant[]> = {};
     for (const row of data as VariantRow[]) {
-      (grouped[row.product_slug] ??= []).push(toVariant(row));
+      (grouped[row.product_slug] ??= []).push(...expand(row));
     }
     return grouped;
   } catch {
@@ -97,22 +139,29 @@ export async function resolveVariant(
 ): Promise<{ productSlug: string; productName: string; variant: PricedVariant } | null> {
   const client = createPublicClient();
 
+  // A kit id is derived, so it is not a row. Look up the row it came from and
+  // price the kit from that row's own kit price — never from the single-vial
+  // price multiplied here, which would let a client's chosen quantity define
+  // the discount.
+  const kit = parseKitId(variantId);
+  const lookupId = kit ? kit.baseId : variantId;
+
   if (client) {
     try {
       const { data, error } = await client
         .from('product_variants')
         .select(COLUMNS)
-        .eq('id', variantId)
+        .eq('id', lookupId)
         .limit(1);
       if (!error && data && data.length > 0) {
         const row = data[0] as VariantRow;
         const product = PRODUCTS.find((p) => p.slug === row.product_slug);
         if (product) {
-          return {
-            productSlug: product.slug,
-            productName: product.name,
-            variant: toVariant(row),
-          };
+          const variant = kit ? toKitVariant(row) : toVariant(row);
+          // A kit id whose row carries no kit price is not purchasable.
+          if (variant && variant.id === variantId) {
+            return { productSlug: product.slug, productName: product.name, variant };
+          }
         }
       }
     } catch {

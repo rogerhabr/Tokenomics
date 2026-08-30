@@ -15,6 +15,7 @@ import PurityPlot from '@/components/marketing/PurityPlot';
 import { PRODUCTS } from '@/lib/products';
 import { getAllLots, summarise, RELEASE_SPEC_PCT } from '@/lib/lots';
 import { getContent, text } from '@/lib/content';
+import HorizontalSequence from '@/components/motion/HorizontalSequence';
 
 export const metadata: Metadata = {
   title: 'Axis Labs — Research Compounds, Assayed Against a Published Specification',
@@ -154,17 +155,31 @@ export default async function HomePage() {
       {/* Method. Numbered marginalia rather than icons in tinted squares. */}
       <Section className="pt-0">
         <Container>
-          <SectionHead index="05" rail="Method" title="How a lot is released." />
-          <div className="mt-[39px] grid gap-x-[52px] gap-y-[39px] lg:grid-cols-2">
-            {METHOD.map((m) => (
-              <div key={m.n} className="grid grid-cols-[36px_minmax(0,1fr)] gap-[13px]">
-                <span className="t-1 pt-[4px] text-axis-ink-300">{m.n}</span>
-                <div>
-                  <h3 className="t-4 text-axis-ink">{m.title}</h3>
-                  <p className="t-3 mt-[8px] text-axis-ink-500">{m.body}</p>
+          {/* The four steps are a sequence, which is the only honest reason to
+              move something sideways. The heading rides inside the pin so it is
+              still on screen while they pass. Without motion this renders as the
+              same two-column grid under the same heading — see
+              HorizontalSequence. */}
+          <div style={{ '--sequence-panels': METHOD.length } as React.CSSProperties}>
+            <HorizontalSequence
+              count={METHOD.length}
+              label="How a lot is released"
+              heading={<SectionHead index="05" rail="Method" title="How a lot is released." />}
+            >
+              {METHOD.map((m) => (
+                <div
+                  key={m.n}
+                  data-panel
+                  className="grid grid-cols-[36px_minmax(0,1fr)] gap-[13px]"
+                >
+                  <span className="t-1 pt-[4px] text-axis-ink-300">{m.n}</span>
+                  <div className="max-w-measure">
+                    <h3 className="t-4 text-axis-ink">{m.title}</h3>
+                    <p className="t-3 mt-[8px] text-axis-ink-500">{m.body}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </HorizontalSequence>
           </div>
         </Container>
       </Section>

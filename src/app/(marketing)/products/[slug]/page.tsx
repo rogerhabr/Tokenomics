@@ -243,7 +243,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
             <div className="border border-axis-rule-3 bg-axis-sunk p-[26px]">
               <h2 className="t-1 text-axis-ink-300">Order</h2>
               <div className="mt-[20px]">
-                <AddToCart variants={variants} />
+                <AddToCart variants={variants} productSlug={product.slug} />
               </div>
               <Rule className="mt-[26px]" />
               <p className="t-2 mt-[20px] text-axis-ink-500">
