@@ -211,6 +211,54 @@ export const PRODUCTS: Product[] = [
     molecularWeight: null,
   },
 
+  {
+    slug: 'kpv',
+    name: 'KPV',
+    alias: 'Lys-Pro-Val, alpha-MSH (11-13)',
+    category: 'tissue-repair',
+    summary:
+      'The C-terminal tripeptide of alpha-melanocyte stimulating hormone, which retains the parent hormone\u2019s anti-inflammatory activity in research models without engaging melanocortin receptors or the pigmentation pathway. Studied for NF-kappaB nuclear translocation and inflammasome activity.',
+    researchAreas: ['NF-kappaB signalling', 'Inflammatory bowel research models', 'Wound and dermal models'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
+    casNumber: null,
+    molecularWeight: null,
+  },
+  {
+    slug: 'bpc-157-tb-500',
+    name: 'Dual-Pathway Blend — BPC-157 + TB-500',
+    alias: 'Pentadecapeptide + Thymosin Beta-4',
+    category: 'tissue-repair',
+    summary:
+      'A co-lyophilised formulation pairing a synthetic pentadecapeptide with full-length Thymosin Beta-4, for research models examining angiogenesis and actin-mediated cell migration together rather than in isolation.',
+    researchAreas: ['Angiogenesis', 'Actin dynamics and cell migration', 'Connective tissue models'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: 'Co-lyophilised powder',
+    presentation: null,
+    storage: STORAGE,
+    casNumber: null,
+    molecularWeight: null,
+  },
+  {
+    slug: 'klow-blend',
+    name: 'Multi-Pathway Blend — KLOW',
+    alias: 'KPV + GHK-Cu + BPC-157 + TB-500',
+    category: 'tissue-repair',
+    summary:
+      'A four-component co-lyophilised formulation combining KPV, the copper tripeptide GHK-Cu, BPC-157 and full-length Thymosin Beta-4. Used in research models examining how inflammation signalling, matrix remodelling, angiogenesis and cell migration interact within a single preparation.',
+    researchAreas: ['Multi-pathway repair models', 'Matrix remodelling', 'Inflammation signalling'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: 'Co-lyophilised powder',
+    presentation: null,
+    storage: STORAGE,
+    casNumber: null,
+    molecularWeight: null,
+  },
   // ---- Growth Factor -------------------------------------------------------
   {
     slug: 'tesamorelin',
@@ -245,7 +293,7 @@ export const PRODUCTS: Product[] = [
   },
   {
     slug: 'dual-pathway-research-blend',
-    name: 'Dual-Pathway Research Blend',
+    name: 'Dual-Pathway Blend — Tesamorelin + Ipamorelin',
     alias: 'Tesamorelin 10 mg + Ipamorelin 5 mg',
     category: 'growth-factor',
     summary:
@@ -260,6 +308,38 @@ export const PRODUCTS: Product[] = [
     molecularWeight: null,
   },
 
+  {
+    slug: 'cjc-1295',
+    name: 'CJC-1295',
+    alias: 'GHRH (1-29) analogue',
+    category: 'growth-factor',
+    summary:
+      'A synthetic analogue of growth hormone releasing hormone, modified at four positions to resist enzymatic degradation, used in somatotropic axis and GHRH receptor research. Supplied with or without the drug affinity complex (DAC), which binds albumin and extends circulating half-life; the form is stated on the lot certificate.',
+    researchAreas: ['GHRH receptor signalling', 'Half-life extension studies', 'Somatotropic axis models'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
+    casNumber: null,
+    molecularWeight: null,
+  },
+  {
+    slug: 'cjc-1295-ipamorelin',
+    name: 'Dual-Pathway Blend — CJC-1295 + Ipamorelin',
+    alias: 'GHRH analogue + GHS-R1a agonist',
+    category: 'growth-factor',
+    summary:
+      'A co-lyophilised formulation pairing a GHRH analogue with a selective growth hormone secretagogue receptor agonist, for research models examining both secretagogue pathways in the same preparation rather than separately.',
+    researchAreas: ['Dual-pathway secretagogue models', 'GHRH and GHS-R1a interaction', 'Pituitary signalling research'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: 'Co-lyophilised powder',
+    presentation: null,
+    storage: STORAGE,
+    casNumber: null,
+    molecularWeight: null,
+  },
   // ---- Endocrine Research --------------------------------------------------
   {
     slug: 'pt-141',
@@ -356,6 +436,38 @@ export const PRODUCTS: Product[] = [
     identity: IDENTITY,
     form: FORM,
     presentation: '10-vial kit',
+    storage: STORAGE,
+    casNumber: null,
+    molecularWeight: null,
+  },
+  {
+    slug: 'mots-c',
+    name: 'MOTS-c',
+    alias: 'Mitochondrial ORF of the 12S rRNA type-c',
+    category: 'cellular',
+    summary:
+      'A sixteen-amino-acid peptide encoded in the mitochondrial genome, studied as an AMPK activator acting through the folate-methionine cycle. Used in metabolic homeostasis, insulin sensitivity and mitochondrial bioenergetics research models.',
+    researchAreas: ['AMPK activation', 'Folate-methionine cycle', 'Metabolic homeostasis models'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
+    storage: STORAGE,
+    casNumber: null,
+    molecularWeight: null,
+  },
+  {
+    slug: 'nad',
+    name: 'NAD+',
+    alias: 'Nicotinamide adenine dinucleotide',
+    category: 'cellular',
+    summary:
+      'A pyridine nucleotide coenzyme central to cellular redox reactions and the substrate for sirtuins and PARP enzymes. Supplied for laboratory study of redox balance, NAD salvage and biosynthesis pathways, and mitochondrial metabolism.',
+    researchAreas: ['Redox metabolism', 'Sirtuin and PARP activity', 'NAD salvage pathway research'],
+    purity: PURITY,
+    identity: IDENTITY,
+    form: FORM,
+    presentation: null,
     storage: STORAGE,
     casNumber: null,
     molecularWeight: null,
@@ -469,6 +581,34 @@ const VARIANTS: Record<string, Variant[]> = {
   'ss-31': [
     { id: 'ss-31-10mg', label: '10 mg vial', priceCents: 8900 },
     { id: 'ss-31-10x10mg', label: '10-vial kit', priceCents: 79900 },
+  ],
+  'cjc-1295': [
+    { id: 'cjc-1295-2mg', label: '2 mg vial', priceCents: 4900 },
+    { id: 'cjc-1295-5mg', label: '5 mg vial', priceCents: 8900 },
+    { id: 'cjc-1295-10mg', label: '10 mg vial', priceCents: 15900 },
+  ],
+  'cjc-1295-ipamorelin': [
+    { id: 'cjc-1295-ipamorelin-10mg', label: '10 mg vial', priceCents: 11900 },
+    { id: 'cjc-1295-ipamorelin-10x10mg', label: '10 x 10 mg kit', priceCents: 104900 },
+  ],
+  kpv: [
+    { id: 'kpv-10mg', label: '10 mg vial', priceCents: 4900 },
+    { id: 'kpv-50mg', label: '50 mg vial', priceCents: 17900 },
+  ],
+  'bpc-157-tb-500': [
+    { id: 'bpc-157-tb-500-10mg', label: '10 mg vial', priceCents: 9900 },
+    { id: 'bpc-157-tb-500-20mg', label: '20 mg vial', priceCents: 17900 },
+  ],
+  'klow-blend': [
+    { id: 'klow-blend-80mg', label: '80 mg vial', priceCents: 24900 },
+  ],
+  'mots-c': [
+    { id: 'mots-c-5mg', label: '5 mg vial', priceCents: 6900 },
+    { id: 'mots-c-10mg', label: '10 mg vial', priceCents: 11900 },
+  ],
+  nad: [
+    { id: 'nad-100mg', label: '100 mg vial', priceCents: 8900 },
+    { id: 'nad-500mg', label: '500 mg vial', priceCents: 29900 },
   ],
   methylcobalamin: [
     { id: 'methylcobalamin-5mg', label: '5 mg vial', priceCents: 2900 },
