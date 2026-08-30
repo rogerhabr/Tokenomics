@@ -3,6 +3,7 @@ import { Archivo, Martian_Mono } from 'next/font/google';
 import SiteNav from '@/components/marketing/SiteNav';
 import SiteFooter from '@/components/marketing/SiteFooter';
 import CartDrawer from '@/components/marketing/CartDrawer';
+import EntryGate from '@/components/marketing/EntryGate';
 import { CartProvider } from '@/contexts/CartContext';
 import MotionProvider from '@/components/motion/MotionProvider';
 
@@ -47,6 +48,7 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
         <SiteFooter />
       </div>
       <CartDrawer />
+      <EntryGate />
       <MotionProvider />
     </CartProvider>
   );

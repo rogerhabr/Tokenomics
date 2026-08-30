@@ -161,6 +161,16 @@ summary:focus-visible,
   border-radius: 2px;
 }
 
+/* A dialog moves focus to its heading so a screen reader announces what just
+   opened. The heading is tabIndex=-1, so no keyboard user can ever land on it
+   by tabbing — which makes the visible ring pure noise. Suppress the paint,
+   keep the focus. */
+[data-dialog-heading]:focus,
+[data-dialog-heading]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 .skip-link {
   position: absolute;
   left: -9999px;
