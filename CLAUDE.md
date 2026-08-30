@@ -51,13 +51,19 @@ npm run check:data  # the no-fabricated-data check on its own
 ```
 
 ```bash
+npm run migrate       # apply unapplied migrations (no-ops without SUPABASE_DB_URL)
+npm run migrate:dry   # show what would run
+node scripts/check-rls.mjs <local-db-url>   # prove certificate access follows lot publication
+```
+
+```bash
 node scripts/fetch-molecules.mjs   # refresh reference chemistry + structure SVGs from PubChem
 node scripts/screenshot.mjs <dir> / /products   # visual review against a running server
 ```
 
 ## Setup (new environment)
 
-1. Create a [Supabase](https://supabase.com) project. In the SQL Editor, run the migrations in `supabase/migrations/` in order (`0001_init` → `0002_contact_messages` → `0003_orders` → `0004_lots`).
+1. Create a [Supabase](https://supabase.com) project. **Do not paste SQL anywhere.** Set `SUPABASE_DB_URL` (Project Settings → Database → Connection string → URI, the *direct* one — migrations run DDL and the transaction pooler cannot) and every `npm run build` applies any unapplied migration for you. Set `ADMIN_EMAILS` at the same time and those accounts are promoted to `profiles.role = 'admin'` automatically once they sign up.
 2. Copy `.env.example` to `.env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` from Project Settings → API. Set `NEXT_PUBLIC_SITE_URL` to the production domain so sitemap, robots, canonical and Open Graph URLs are absolute.
 3. (Optional) Create an [Upstash](https://upstash.com) Redis database and add its REST URL/token to `.env.local` to enable API rate limiting.
 4. (Optional) Create a [Sentry](https://sentry.io) project and add its DSN to `.env.local` as `NEXT_PUBLIC_SENTRY_DSN` to enable error tracking.
@@ -141,6 +147,8 @@ The direction is **"against specification"**: every competitor asserts purity, A
 
 ### Data pipelines
 - `scripts/fetch-molecules.mjs` — Resolves each catalogue slug against PubChem, records formula/mass/CAS/InChIKey, and renders the 2D structure as SVG in our own line weight. Stroke is normalised to each molecule's **median bond length**, not to the viewBox, so a 46-atom tripeptide and a 689-atom peptide look drawn by one hand. Merges into its previous output and retries with backoff, so a transient PubChem failure cannot silently drop a compound
+- `scripts/migrate.mjs` — **the reason nobody hand-runs SQL.** Applies unapplied migrations in filename order, each in its own transaction, behind a session advisory lock so two concurrent deploys cannot race. Records a checksum per migration and **fails if an already-applied migration was edited** — that is drift, not a change. No-ops without a database URL so CI and local builds are unaffected; runs as part of `npm run build`. Also promotes `ADMIN_EMAILS` to the admin role, idempotently
+- `scripts/check-rls.mjs` — proves the security claim rather than asserting it: an unpublished lot and its certificate are both invisible to `anon`, publishing reveals both in one action, unpublishing revokes both immediately, and `anon` cannot write. Runs inside a transaction it rolls back, and refuses a non-local database without `--force`
 - `scripts/check-no-fabricated-data.mjs` — Runs in `npm run lint`. See the constraint at the top of this file
 - `scripts/screenshot.mjs` — Screenshots a running server for visual review
 
