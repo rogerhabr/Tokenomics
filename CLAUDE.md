@@ -97,6 +97,11 @@ node scripts/screenshot.mjs <dir> / /products   # visual review against a runnin
 - `supabase/migrations/0004_lots.sql` — `lots` table, the public assay register. RLS is the inverse of `orders`: anon may **select** rows where `published = true` and nothing else; writes are admin-only. **Nothing is seeded** — there are no fixture lots anywhere in this repo
 - `src/lib/supabase/public.ts` — Session-free client for public reads, so lot data does not force product pages out of static generation
 
+### Analytics
+- `src/lib/analytics.ts` — the storefront's **typed event vocabulary**, declared in one place so an event cannot be invented at a call site and quietly become a second name for something already measured (`add_to_cart` and `addToCart` in the same funnel measure nothing)
+- **No event property may carry personal data.** No email, name, address, phone, order reference or IP-adjacent value — who bought what is exactly what must not reach an analytics vendor. Properties are catalogue facts only: a slug, a variant id, a count, a total in cents. `scripts/check-analytics.mjs` types a full set of buyer details into checkout and fails if any of them appear in a payload
+- `@vercel/analytics` + `@vercel/speed-insights` are mounted in the **marketing layout only** — `/dashboard` is an internal tool behind auth and mixing it in would merge two unrelated audiences. Both no-op unless enabled on the Vercel project, so local and preview builds send nothing, and `event()` swallows its own errors: analytics must never be why an order cannot complete
+
 ### Observability
 - `sentry.client.config.ts` / `sentry.server.config.ts` / `sentry.edge.config.ts` — Sentry init for each runtime; all no-op with a console warning if `NEXT_PUBLIC_SENTRY_DSN` isn't set
 - `src/instrumentation.ts` — Next.js instrumentation hook that loads the right Sentry config per runtime and wires up `onRequestError` for Server Component/Route Handler errors

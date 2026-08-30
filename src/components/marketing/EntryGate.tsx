@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Logo from './Logo';
+import { event as trackEvent } from '@/lib/analytics';
 
 const STORAGE_KEY = 'axis-labs-entry-ack-v1';
 const MINIMUM_AGE = 21;
@@ -103,6 +104,7 @@ export default function EntryGate() {
       // Unstorable is not a reason to refuse entry — the visitor answered.
     }
     setAccepted(true);
+    trackEvent({ name: 'entry_accepted' });
   }
 
   const bothConfirmed = isOfAge && understandsResearchUse;
@@ -196,7 +198,10 @@ export default function EntryGate() {
               </button>
               <button
                 type="button"
-                onClick={() => setDeclined(true)}
+                onClick={() => {
+                  setDeclined(true);
+                  trackEvent({ name: 'entry_declined' });
+                }}
                 className="t-3 text-axis-ink-500 underline underline-offset-[4px]"
               >
                 I do not confirm

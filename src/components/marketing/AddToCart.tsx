@@ -5,6 +5,7 @@ import { useCart } from '@/contexts/CartContext';
 import { formatPrice } from '@/lib/products';
 import { formatPerMg, type PricedVariant } from '@/lib/pricing';
 import { OrderButton } from './ui';
+import { event as trackEvent } from '@/lib/analytics';
 
 function perMg(v: PricedVariant): number | null {
   return v.sizeMg && v.sizeMg > 0 ? v.priceCents / v.sizeMg : null;
@@ -19,7 +20,16 @@ function perMg(v: PricedVariant): number | null {
  * under the price — which is how this buyer actually compares a 5 mg vial
  * against a 50 mg one.
  */
-export default function AddToCart({ variants }: { variants: PricedVariant[] }) {
+export default function AddToCart({
+  variants,
+  productSlug,
+}: {
+  variants: PricedVariant[];
+  /** Passed explicitly: variant ids do not uniformly embed the slug — the
+   *  blends use their own shapes — so parsing one out would be wrong exactly
+   *  where the catalogue is least regular. */
+  productSlug: string;
+}) {
   const { add, setDrawerOpen } = useCart();
   const [selected, setSelected] = useState(variants[0]?.id ?? '');
   const [quantity, setQuantity] = useState(1);
@@ -37,6 +47,10 @@ export default function AddToCart({ variants }: { variants: PricedVariant[] }) {
 
   function onAdd() {
     add(variant.id, quantity);
+    trackEvent({
+      name: 'add_to_cart',
+      props: { product: productSlug, variant: variant.id, quantity: quantity },
+    });
     // The drawer opening IS the confirmation — a conversion affordance, not a
     // flourish, so there is no separate "Added" state to time out.
     setDrawerOpen(true);

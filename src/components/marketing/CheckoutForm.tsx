@@ -1,11 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { formatPrice } from '@/lib/products';
 import { COUNTRIES } from '@/lib/countries';
 import { OrderButton, ArrowLink, Rule } from './ui';
+import { event as trackEvent } from '@/lib/analytics';
+import { useEffect } from 'react';
 
 const FIELD =
   'mt-[8px] w-full rounded-plate border border-axis-rule-3 bg-axis-plate px-[13px] py-[11px] text-[16px] text-axis-ink outline-none placeholder:text-axis-ink-300';
@@ -31,6 +33,19 @@ export default function CheckoutForm() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const started = useRef(false);
+
+  // Above the early returns, or this is a conditional hook. Fires once per
+  // mount, the first time there is a real cart to check out with — not on every
+  // re-render, and not for someone who lands here with an empty order.
+  useEffect(() => {
+    if (started.current || !hydrated || resolved.length === 0) return;
+    started.current = true;
+    trackEvent({
+      name: 'checkout_started',
+      props: { lines: resolved.length, subtotal_cents: subtotalCents },
+    });
+  }, [hydrated, resolved.length, subtotalCents]);
 
   if (!hydrated) {
     return <div className="h-[420px] border border-axis-rule-1 bg-axis-sunk" />;
@@ -74,14 +89,22 @@ export default function CheckoutForm() {
 
       if (!res.ok) {
         setError(json.error ?? 'Something went wrong. Please try again.');
+        // The reason, never the input that produced it — a rejected address is
+        // still an address.
+        trackEvent({ name: 'checkout_failed', props: { reason: res.status === 400 ? 'validation' : `http_${res.status}` } });
         setSubmitting(false);
         return;
       }
 
+      trackEvent({
+        name: 'order_placed',
+        props: { lines: resolved.length, subtotal_cents: subtotalCents },
+      });
       clear();
       router.push(`/checkout/confirmed?ref=${encodeURIComponent(json.reference ?? '')}`);
     } catch {
       setError('Could not reach the server. Please try again.');
+      trackEvent({ name: 'checkout_failed', props: { reason: 'network' } });
       setSubmitting(false);
     }
   }
