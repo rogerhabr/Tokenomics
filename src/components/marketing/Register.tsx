@@ -66,7 +66,7 @@ export default function Register({
         </tr>
       </thead>
       <tbody>
-        {products.map((p) => {
+        {products.map((p, index) => {
           const category = CATEGORIES.find((c) => c.id === p.category);
           const molecule = getMolecule(p.slug);
           const variants = prices[p.slug] ?? [];
@@ -76,6 +76,10 @@ export default function Register({
           return (
             <tr
               key={p.slug}
+              // The index lets the position readout report a true record number
+              // rather than a scroll percentage. Rendered whether or not the
+              // readout mounts, so it costs nothing when JS never runs.
+              data-record={index + 1}
               className="register-row block border-b border-axis-rule-1 transition-colors duration-[--dur-1] hover:bg-axis-plate lg:table-row"
             >
               <td className="block py-[13px] pr-[20px] align-top lg:table-cell">

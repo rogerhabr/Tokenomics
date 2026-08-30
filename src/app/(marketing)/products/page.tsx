@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Container, PageHead, Section, ResearchNotice } from '@/components/marketing/ui';
 import Register from '@/components/marketing/Register';
+import RegisterPosition from '@/components/motion/RegisterPosition';
 import { getAllVariants } from '@/lib/variants';
 import { getContent, text, lines } from '@/lib/content';
 import type { ContentMap } from '@/lib/content';
@@ -120,6 +121,7 @@ export default async function ProductsPage({
           )}
 
           <div className="mt-[39px]">
+            <RegisterPosition total={products.length} />
             <Register products={products} prices={prices} />
           </div>
 
