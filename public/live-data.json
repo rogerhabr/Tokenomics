@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-01T11:06:01.380Z",
+  "lastUpdated": "2026-09-02T10:38:20.733Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 220.78,
-      "prevClose": 208.48,
-      "changePct": 5.9,
+      "price": 217.44,
+      "prevClose": 213.05,
+      "changePct": 2.06,
       "marketCap": null
     },
     "MSFT": {
-      "price": 507.29,
-      "prevClose": 487.31,
-      "changePct": 4.1,
+      "price": 501.02,
+      "prevClose": 491.71,
+      "changePct": 1.89,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 339.35,
-      "prevClose": 348.06,
-      "changePct": -2.5,
+      "price": 335.02,
+      "prevClose": 346.96,
+      "changePct": -3.44,
       "marketCap": null
     },
     "AMZN": {
-      "price": 259.77,
-      "prevClose": 262.07,
-      "changePct": -0.88,
+      "price": 254.92,
+      "prevClose": 261.06,
+      "changePct": -2.35,
       "marketCap": null
     },
     "META": {
-      "price": 572.34,
-      "prevClose": 559.02,
-      "changePct": 2.38,
+      "price": 578.54,
+      "prevClose": 570.05,
+      "changePct": 1.49,
       "marketCap": null
     },
     "AMD": {
-      "price": 470.72,
-      "prevClose": 456.75,
-      "changePct": 3.06,
+      "price": 459.61,
+      "prevClose": 479.18,
+      "changePct": -4.08,
       "marketCap": null
     },
     "ORCL": {
-      "price": 149.12,
-      "prevClose": 142.45,
-      "changePct": 4.68,
+      "price": 141.32,
+      "prevClose": 144.76,
+      "changePct": -2.38,
       "marketCap": null
     }
   },
@@ -150,7 +150,8 @@
       "NC288dsxlRTX6kv6",
       "NC64dsxlRTX6Kv6",
       "NCC40adsH100v5",
-      "NC24"
+      "NC24",
+      "Standard_NC16ads_A10_v4"
     ]
   },
   "modelPricing": {
@@ -306,6 +307,13 @@
       "outputPerM": 50,
       "provider": "Anthropic",
       "displayName": "Claude Fable 5",
+      "contextK": 1000
+    },
+    "claude-fable-5-1": {
+      "inputPerM": 10,
+      "outputPerM": 50,
+      "provider": "Anthropic",
+      "displayName": "Claude Fable 5 1",
       "contextK": 1000
     },
     "claude-opus-5": {
