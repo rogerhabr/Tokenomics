@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-03T10:40:23.420Z",
+  "lastUpdated": "2026-09-04T10:35:35.875Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 224.41,
-      "prevClose": 209.66,
-      "changePct": 7.04,
+      "price": 228.45,
+      "prevClose": 227.98,
+      "changePct": 0.21,
       "marketCap": null
     },
     "MSFT": {
-      "price": 496.82,
-      "prevClose": 496.37,
-      "changePct": 0.09,
+      "price": 510.12,
+      "prevClose": 505.06,
+      "changePct": 1,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 337.12,
-      "prevClose": 342,
-      "changePct": -1.43,
+      "price": 342.48,
+      "prevClose": 340.65,
+      "changePct": 0.54,
       "marketCap": null
     },
     "AMZN": {
-      "price": 254.98,
-      "prevClose": 260.28,
-      "changePct": -2.04,
+      "price": 258.9,
+      "prevClose": 256.26,
+      "changePct": 1.03,
       "marketCap": null
     },
     "META": {
-      "price": 592.85,
-      "prevClose": 576.14,
-      "changePct": 2.9,
+      "price": 610.68,
+      "prevClose": 571.1,
+      "changePct": 6.93,
       "marketCap": null
     },
     "AMD": {
-      "price": 457.06,
-      "prevClose": 480.93,
-      "changePct": -4.96,
+      "price": 456.16,
+      "prevClose": 476.67,
+      "changePct": -4.3,
       "marketCap": null
     },
     "ORCL": {
-      "price": 145.75,
-      "prevClose": 148.87,
-      "changePct": -2.1,
+      "price": 154.04,
+      "prevClose": 151.94,
+      "changePct": 1.38,
       "marketCap": null
     }
   },
@@ -428,6 +428,13 @@
       "displayName": "Vertex_ai/Gemini 3.7 Flash",
       "contextK": 1049
     },
+    "vertex_ai/gemini-3.8-flash": {
+      "inputPerM": 0.75,
+      "outputPerM": 3.75,
+      "provider": "Google",
+      "displayName": "Vertex_ai/Gemini 3.8 Flash",
+      "contextK": 1049
+    },
     "vertex_ai/gemini-3.1-pro-preview": {
       "inputPerM": 2,
       "outputPerM": 12,
@@ -693,6 +700,13 @@
       "provider": "OpenAI",
       "displayName": "Gpt 5.3 Chat Latest",
       "contextK": 128
+    },
+    "gpt-6-astra": {
+      "inputPerM": 10,
+      "outputPerM": 50,
+      "provider": "OpenAI",
+      "displayName": "Gpt 6 Astra",
+      "contextK": 922
     },
     "gpt-5.6": {
       "inputPerM": 4,
@@ -1024,11 +1038,11 @@
       "contextK": 40
     },
     "mistral/magistral-medium-latest": {
-      "inputPerM": 2,
-      "outputPerM": 5,
+      "inputPerM": 1.5,
+      "outputPerM": 7.5,
       "provider": "Mistral AI",
       "displayName": "Mistral/Magistral Medium Latest",
-      "contextK": 40
+      "contextK": 262
     },
     "mistral/magistral-small-2506": {
       "inputPerM": 0.5,
@@ -1038,11 +1052,11 @@
       "contextK": 40
     },
     "mistral/magistral-small-latest": {
-      "inputPerM": 0.5,
-      "outputPerM": 1.5,
+      "inputPerM": 0.15,
+      "outputPerM": 0.6,
       "provider": "Mistral AI",
       "displayName": "Mistral/Magistral Small Latest",
-      "contextK": 40
+      "contextK": 262
     },
     "mistral/magistral-small-1-2-2509": {
       "inputPerM": 0.5,
@@ -1094,11 +1108,11 @@
       "contextK": 262
     },
     "mistral/mistral-medium": {
-      "inputPerM": 2.7,
-      "outputPerM": 8.1,
+      "inputPerM": 1.5,
+      "outputPerM": 7.5,
       "provider": "Mistral AI",
       "displayName": "Mistral/Mistral Medium",
-      "contextK": 32
+      "contextK": 262
     },
     "mistral/mistral-medium-2312": {
       "inputPerM": 2.7,
@@ -1721,6 +1735,13 @@
       "outputPerM": 6,
       "provider": "xAI",
       "displayName": "Xai/Grok 4.5 Latest",
+      "contextK": 500
+    },
+    "xai/grok-build-latest": {
+      "inputPerM": 2,
+      "outputPerM": 6,
+      "provider": "xAI",
+      "displayName": "Xai/Grok Build Latest",
       "contextK": 500
     },
     "xai/grok-4.6": {
