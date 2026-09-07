@@ -3,7 +3,38 @@ import { NextResponse, type NextRequest } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { isRateLimited } from '@/lib/rateLimit';
 
-const PUBLIC_PATHS = ['/login', '/auth/callback'];
+// The AXIS LABS marketing site is public; everything else (the tokenomics
+// dashboard included) still requires a session. Listing public routes
+// explicitly — rather than listing protected ones — keeps new routes private
+// by default.
+const PUBLIC_PREFIXES = [
+  '/login',
+  '/auth/callback',
+  '/products',
+  '/lots',
+  '/quality',
+  '/about',
+  '/ordering',
+  '/faq',
+  '/contact',
+  '/cart',
+  '/checkout',
+  // Policy pages. Linked from the footer only, never from the nav, but they
+  // must be reachable without a session — several are legal disclosures.
+  '/prohibited-use',
+  '/terms',
+  '/privacy',
+  '/shipping-returns',
+  '/accessibility',
+];
+const PUBLIC_EXACT = ['/'];
+
+function isPublicPath(pathname: string): boolean {
+  if (PUBLIC_EXACT.includes(pathname)) return true;
+  // Match the route itself or a path below it, but not a route that merely
+  // shares a prefix (e.g. '/aboutus' must not match '/about').
+  return PUBLIC_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'));
+}
 
 // .trim() guards against a trailing newline/space sneaking in from copy-paste
 // into the Vercel dashboard — that alone is enough to make the Supabase SDK
@@ -63,7 +94,7 @@ export async function middleware(request: NextRequest) {
     // Components, which can't write cookies themselves.
     const { data: { user } } = await supabase.auth.getUser();
 
-    const isPublic = PUBLIC_PATHS.some(p => pathname.startsWith(p));
+    const isPublic = isPublicPath(pathname);
 
     if (!user && !isPublic && !isApi) {
       const url = request.nextUrl.clone();
@@ -73,7 +104,7 @@ export async function middleware(request: NextRequest) {
 
     if (user && pathname === '/login') {
       const url = request.nextUrl.clone();
-      url.pathname = '/';
+      url.pathname = '/dashboard';
       return NextResponse.redirect(url);
     }
 

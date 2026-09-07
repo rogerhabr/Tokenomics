@@ -47,7 +47,7 @@ export default function LoginForm() {
 
   if (!isSupabaseConfigured) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-sa-bg px-4">
+      <div className="dashboard-scope min-h-screen flex items-center justify-center bg-sa-bg px-4">
         <div className="w-full max-w-sm bg-sa-card border border-sa-border rounded-xl p-6">
           <div className="flex items-center gap-2.5 mb-6">
             <div className="w-8 h-8 rounded bg-sa-accent flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
@@ -70,7 +70,7 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-sa-bg px-4">
+    <div className="dashboard-scope min-h-screen flex items-center justify-center bg-sa-bg px-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm bg-sa-card border border-sa-border rounded-xl p-6">
         <div className="flex items-center gap-2.5 mb-6">
           <div className="w-8 h-8 rounded bg-sa-accent flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
