@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-12T10:05:38.055Z",
+  "lastUpdated": "2026-09-13T11:05:32.138Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -336,6 +336,13 @@
       "provider": "Anthropic",
       "displayName": "Claude Sonnet 4",
       "contextK": 1000
+    },
+    "computer-use-preview": {
+      "inputPerM": 3,
+      "outputPerM": 12,
+      "provider": "OpenAI",
+      "displayName": "Computer Use Preview",
+      "contextK": 8
     },
     "deepseek-chat": {
       "inputPerM": 0.28,
@@ -1800,16 +1807,23 @@
       "displayName": "Gpt 5 Search Api 2025 10 14",
       "contextK": 272
     },
+    "deepseek-flash": {
+      "inputPerM": 0.3,
+      "outputPerM": 1.2,
+      "provider": "DeepSeek",
+      "displayName": "Deepseek Flash",
+      "contextK": 1000
+    },
     "deepseek-v4-flash": {
-      "inputPerM": 0.44,
-      "outputPerM": 1.32,
+      "inputPerM": 0.3,
+      "outputPerM": 1.2,
       "provider": "DeepSeek",
       "displayName": "Deepseek V4 Flash",
       "contextK": 1000
     },
     "deepseek-v4-flash-vision-exp": {
-      "inputPerM": 0.44,
-      "outputPerM": 1.32,
+      "inputPerM": 0.3,
+      "outputPerM": 1.2,
       "provider": "DeepSeek",
       "displayName": "Deepseek V4 Flash Vision Exp",
       "contextK": 1000
@@ -1821,16 +1835,23 @@
       "displayName": "Deepseek V4 Pro",
       "contextK": 1000
     },
+    "deepseek/deepseek-flash": {
+      "inputPerM": 0.3,
+      "outputPerM": 1.2,
+      "provider": "DeepSeek",
+      "displayName": "Deepseek/Deepseek Flash",
+      "contextK": 1000
+    },
     "deepseek/deepseek-v4-flash": {
-      "inputPerM": 0.44,
-      "outputPerM": 1.32,
+      "inputPerM": 0.3,
+      "outputPerM": 1.2,
       "provider": "DeepSeek",
       "displayName": "Deepseek/Deepseek V4 Flash",
       "contextK": 1000
     },
     "deepseek/deepseek-v4-flash-vision-exp": {
-      "inputPerM": 0.44,
-      "outputPerM": 1.32,
+      "inputPerM": 0.3,
+      "outputPerM": 1.2,
       "provider": "DeepSeek",
       "displayName": "Deepseek/Deepseek V4 Flash Vision Exp",
       "contextK": 1000
