@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-14T11:47:59.243Z",
+  "lastUpdated": "2026-09-15T11:04:19.873Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 218.29,
-      "prevClose": 228.45,
-      "changePct": -4.45,
+      "price": 210.96,
+      "prevClose": 230.36,
+      "changePct": -8.42,
       "marketCap": null
     },
     "MSFT": {
-      "price": 495.63,
-      "prevClose": 510.12,
-      "changePct": -2.84,
+      "price": 505.41,
+      "prevClose": 499.7,
+      "changePct": 1.14,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 338.5,
-      "prevClose": 342.48,
-      "changePct": -1.16,
+      "price": 349.39,
+      "prevClose": 338.46,
+      "changePct": 3.23,
       "marketCap": null
     },
     "AMZN": {
-      "price": 256.78,
-      "prevClose": 258.9,
-      "changePct": -0.82,
+      "price": 253.54,
+      "prevClose": 258.51,
+      "changePct": -1.92,
       "marketCap": null
     },
     "META": {
-      "price": 648.03,
-      "prevClose": 610.68,
-      "changePct": 6.12,
+      "price": 665.6,
+      "prevClose": 616.77,
+      "changePct": 7.92,
       "marketCap": null
     },
     "AMD": {
-      "price": 516.13,
-      "prevClose": 456.16,
-      "changePct": 13.15,
+      "price": 493.41,
+      "prevClose": 477.57,
+      "changePct": 3.32,
       "marketCap": null
     },
     "ORCL": {
-      "price": 150.28,
-      "prevClose": 154.04,
-      "changePct": -2.44,
+      "price": 144.79,
+      "prevClose": 158.78,
+      "changePct": -8.81,
       "marketCap": null
     }
   },
@@ -1988,6 +1988,36 @@
       "provider": "Mistral AI",
       "displayName": "Mistral/Mistral Code Agent Latest",
       "contextK": 256
+    },
+    "vertex_ai/gemini-omni-1.1-flash": {
+      "inputPerM": 1.5,
+      "outputPerM": 9,
+      "provider": "Google",
+      "displayName": "Vertex_ai/Gemini Omni 1.1 Flash"
+    },
+    "vertex_ai/gemini-robotics-er-2": {
+      "inputPerM": 1,
+      "outputPerM": 5,
+      "provider": "Google",
+      "displayName": "Vertex_ai/Gemini Robotics Er 2"
+    },
+    "vertex_ai/gemma-4-26b-a4b-it": {
+      "inputPerM": 0.15,
+      "outputPerM": 0.6,
+      "provider": "Google",
+      "displayName": "Vertex_ai/Gemma 4 26b A4b It"
+    },
+    "gpt-5.5-cyber": {
+      "inputPerM": 12.5,
+      "outputPerM": 75,
+      "provider": "OpenAI",
+      "displayName": "Gpt 5.5 Cyber"
+    },
+    "gpt-rosalind-research": {
+      "inputPerM": 5,
+      "outputPerM": 25,
+      "provider": "OpenAI",
+      "displayName": "Gpt Rosalind Research"
     }
   },
   "nvdaFinancials": null,
