@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-16T10:50:44.448Z",
+  "lastUpdated": "2026-09-17T10:58:24.261Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 212.17,
-      "prevClose": 225.73,
-      "changePct": -6.01,
+      "price": 213.9,
+      "prevClose": 223.67,
+      "changePct": -4.37,
       "marketCap": null
     },
     "MSFT": {
-      "price": 497.12,
-      "prevClose": 493.95,
-      "changePct": 0.64,
+      "price": 490.3,
+      "prevClose": 491.65,
+      "changePct": -0.27,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 344.98,
-      "prevClose": 338.36,
-      "changePct": 1.96,
+      "price": 342.87,
+      "prevClose": 330.65,
+      "changePct": 3.7,
       "marketCap": null
     },
     "AMZN": {
-      "price": 248.42,
-      "prevClose": 256.97,
-      "changePct": -3.33,
+      "price": 245.96,
+      "prevClose": 252.4,
+      "changePct": -2.55,
       "marketCap": null
     },
     "META": {
-      "price": 670.24,
-      "prevClose": 613.48,
-      "changePct": 9.25,
+      "price": 673.31,
+      "prevClose": 653.69,
+      "changePct": 3,
       "marketCap": null
     },
     "AMD": {
-      "price": 504.2,
-      "prevClose": 505.74,
-      "changePct": -0.3,
+      "price": 512.5,
+      "prevClose": 521.1,
+      "changePct": -1.65,
       "marketCap": null
     },
     "ORCL": {
-      "price": 140.35,
-      "prevClose": 162.52,
-      "changePct": -13.64,
+      "price": 143.16,
+      "prevClose": 161.63,
+      "changePct": -11.43,
       "marketCap": null
     }
   },
@@ -216,14 +216,14 @@
       "outputPerM": 15,
       "provider": "Anthropic",
       "displayName": "Claude Sonnet 4.5",
-      "contextK": 200
+      "contextK": 1000
     },
     "claude-sonnet-4-5-20250929": {
       "inputPerM": 3,
       "outputPerM": 15,
       "provider": "Anthropic",
       "displayName": "Claude Sonnet 4 5",
-      "contextK": 200
+      "contextK": 1000
     },
     "claude-sonnet-5": {
       "inputPerM": 2,
@@ -762,7 +762,7 @@
       "outputPerM": 20,
       "provider": "OpenAI",
       "displayName": "Daybreak Blue Latest",
-      "contextK": 1050
+      "contextK": 922
     },
     "chat-latest": {
       "inputPerM": 5,
@@ -1014,6 +1014,27 @@
       "outputPerM": 4.4,
       "provider": "Mistral AI",
       "displayName": "Mistral/Zai Glm 5 2",
+      "contextK": 1049
+    },
+    "mistral/zai-glm-5-3": {
+      "inputPerM": 1.4,
+      "outputPerM": 4.4,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Zai Glm 5 3",
+      "contextK": 1049
+    },
+    "mistral/zai-glm-5": {
+      "inputPerM": 1.4,
+      "outputPerM": 4.4,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Zai Glm 5",
+      "contextK": 1049
+    },
+    "mistral/zai-glm-latest": {
+      "inputPerM": 1.4,
+      "outputPerM": 4.4,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Zai Glm Latest",
       "contextK": 1049
     },
     "mistral/glm-5-2": {
