@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-18T10:34:22.102Z",
+  "lastUpdated": "2026-09-19T10:18:39.160Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 219.34,
-      "prevClose": 218.36,
-      "changePct": 0.45,
+      "price": 222.27,
+      "prevClose": 218.29,
+      "changePct": 1.82,
       "marketCap": null
     },
     "MSFT": {
-      "price": 497.75,
-      "prevClose": 492.44,
-      "changePct": 1.08,
+      "price": 493.78,
+      "prevClose": 495.63,
+      "changePct": -0.37,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 347.33,
-      "prevClose": 332.6,
-      "changePct": 4.43,
+      "price": 349.54,
+      "prevClose": 338.5,
+      "changePct": 3.26,
       "marketCap": null
     },
     "AMZN": {
-      "price": 251.19,
-      "prevClose": 251.89,
-      "changePct": -0.28,
+      "price": 253.71,
+      "prevClose": 256.78,
+      "changePct": -1.2,
       "marketCap": null
     },
     "META": {
-      "price": 682.31,
-      "prevClose": 644.38,
-      "changePct": 5.89,
+      "price": 665.75,
+      "prevClose": 648.03,
+      "changePct": 2.73,
       "marketCap": null
     },
     "AMD": {
-      "price": 545.09,
-      "prevClose": 503.6,
-      "changePct": 8.24,
+      "price": 559.82,
+      "prevClose": 516.13,
+      "changePct": 8.46,
       "marketCap": null
     },
     "ORCL": {
-      "price": 150.59,
-      "prevClose": 152.94,
-      "changePct": -1.54,
+      "price": 147.61,
+      "prevClose": 150.28,
+      "changePct": -1.78,
       "marketCap": null
     }
   },
