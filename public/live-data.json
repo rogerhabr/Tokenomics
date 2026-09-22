@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-21T11:59:46.577Z",
+  "lastUpdated": "2026-09-22T10:57:55.693Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 222.27,
-      "prevClose": 218.29,
-      "changePct": 1.82,
+      "price": 227.38,
+      "prevClose": 210.96,
+      "changePct": 7.78,
       "marketCap": null
     },
     "MSFT": {
-      "price": 493.78,
-      "prevClose": 495.63,
-      "changePct": -0.37,
+      "price": 501.61,
+      "prevClose": 505.41,
+      "changePct": -0.75,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 349.54,
-      "prevClose": 338.5,
-      "changePct": 3.26,
+      "price": 354.97,
+      "prevClose": 349.39,
+      "changePct": 1.6,
       "marketCap": null
     },
     "AMZN": {
-      "price": 253.71,
-      "prevClose": 256.78,
-      "changePct": -1.2,
+      "price": 258.45,
+      "prevClose": 253.54,
+      "changePct": 1.94,
       "marketCap": null
     },
     "META": {
-      "price": 665.75,
-      "prevClose": 648.03,
-      "changePct": 2.73,
+      "price": 741.245,
+      "prevClose": 665.6,
+      "changePct": 11.36,
       "marketCap": null
     },
     "AMD": {
-      "price": 559.82,
-      "prevClose": 516.13,
-      "changePct": 8.46,
+      "price": 615.52,
+      "prevClose": 493.41,
+      "changePct": 24.75,
       "marketCap": null
     },
     "ORCL": {
-      "price": 147.61,
-      "prevClose": 150.28,
-      "changePct": -1.78,
+      "price": 148.56,
+      "prevClose": 144.79,
+      "changePct": 2.6,
       "marketCap": null
     }
   },
@@ -1793,6 +1793,13 @@
       "displayName": "Xai/Grok 4.6",
       "contextK": 500
     },
+    "xai/grok-4.7": {
+      "inputPerM": 2,
+      "outputPerM": 6,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.7",
+      "contextK": 500
+    },
     "xai/grok-code-fast": {
       "inputPerM": 1,
       "outputPerM": 2,
@@ -2039,6 +2046,118 @@
       "outputPerM": 25,
       "provider": "OpenAI",
       "displayName": "Gpt Rosalind Research"
+    },
+    "xai/grok-4.20-0309": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 0309",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-beta": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Beta",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-beta-0309": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Beta 0309",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-beta-latest": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Beta Latest",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-beta-latest-non-reasoning": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Beta Latest Non Reasoning",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-beta-latest-reasoning": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Beta Latest Reasoning",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-beta-non-reasoning": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Beta Non Reasoning",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-beta-reasoning": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Beta Reasoning",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-experimental-beta-0304": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Experimental Beta 0304",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-experimental-beta-0304-non-reasoning": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Experimental Beta 0304 Non Reasoning",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-experimental-beta-0304-reasoning": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Experimental Beta 0304 Reasoning",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-experimental-beta-latest": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Experimental Beta Latest",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-experimental-beta-non-reasoning-latest": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Experimental Beta Non Reasoning Latest",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-experimental-beta-reasoning-latest": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Experimental Beta Reasoning Latest",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-non-reasoning-gv2": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Non Reasoning Gv2",
+      "contextK": 1000
+    },
+    "xai/grok-4.20-reasoning-gv2": {
+      "inputPerM": 1.25,
+      "outputPerM": 2.5,
+      "provider": "xAI",
+      "displayName": "Xai/Grok 4.20 Reasoning Gv2",
+      "contextK": 1000
     }
   },
   "nvdaFinancials": null,
