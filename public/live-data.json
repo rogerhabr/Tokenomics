@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-22T10:57:55.693Z",
+  "lastUpdated": "2026-09-23T10:46:21.260Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 227.38,
-      "prevClose": 210.96,
-      "changePct": 7.78,
+      "price": 228.87,
+      "prevClose": 212.17,
+      "changePct": 7.87,
       "marketCap": null
     },
     "MSFT": {
-      "price": 501.61,
-      "prevClose": 505.41,
-      "changePct": -0.75,
+      "price": 498,
+      "prevClose": 497.12,
+      "changePct": 0.18,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 354.97,
-      "prevClose": 349.39,
-      "changePct": 1.6,
+      "price": 351.16,
+      "prevClose": 344.98,
+      "changePct": 1.79,
       "marketCap": null
     },
     "AMZN": {
-      "price": 258.45,
-      "prevClose": 253.54,
-      "changePct": 1.94,
+      "price": 254.98,
+      "prevClose": 248.42,
+      "changePct": 2.64,
       "marketCap": null
     },
     "META": {
-      "price": 741.245,
-      "prevClose": 665.6,
-      "changePct": 11.36,
+      "price": 736.595,
+      "prevClose": 670.24,
+      "changePct": 9.9,
       "marketCap": null
     },
     "AMD": {
-      "price": 615.52,
-      "prevClose": 493.41,
-      "changePct": 24.75,
+      "price": 623.77,
+      "prevClose": 504.2,
+      "changePct": 23.71,
       "marketCap": null
     },
     "ORCL": {
-      "price": 148.56,
-      "prevClose": 144.79,
-      "changePct": 2.6,
+      "price": 149.2,
+      "prevClose": 140.35,
+      "changePct": 6.31,
       "marketCap": null
     }
   },
@@ -155,13 +155,6 @@
     ]
   },
   "modelPricing": {
-    "chatgpt-4o-latest": {
-      "inputPerM": 5,
-      "outputPerM": 15,
-      "provider": "OpenAI",
-      "displayName": "Chatgpt 4o Latest",
-      "contextK": 128
-    },
     "claude-haiku-4-5-20251001": {
       "inputPerM": 1,
       "outputPerM": 5,
@@ -175,41 +168,6 @@
       "provider": "Anthropic",
       "displayName": "Claude Haiku 4 5",
       "contextK": 200
-    },
-    "claude-3-7-sonnet-20250219": {
-      "inputPerM": 3,
-      "outputPerM": 15,
-      "provider": "Anthropic",
-      "displayName": "Claude 3 7 Sonnet",
-      "contextK": 200
-    },
-    "claude-3-haiku-20240307": {
-      "inputPerM": 0.25,
-      "outputPerM": 1.25,
-      "provider": "Anthropic",
-      "displayName": "Claude 3 Haiku",
-      "contextK": 200
-    },
-    "claude-3-opus-20240229": {
-      "inputPerM": 15,
-      "outputPerM": 75,
-      "provider": "Anthropic",
-      "displayName": "Claude 3 Opus",
-      "contextK": 200
-    },
-    "claude-4-opus-20250514": {
-      "inputPerM": 15,
-      "outputPerM": 75,
-      "provider": "Anthropic",
-      "displayName": "Claude 4 Opus",
-      "contextK": 200
-    },
-    "claude-4-sonnet-20250514": {
-      "inputPerM": 3,
-      "outputPerM": 15,
-      "provider": "Anthropic",
-      "displayName": "Claude 4 Sonnet",
-      "contextK": 1000
     },
     "claude-sonnet-4-5": {
       "inputPerM": 3,
@@ -238,27 +196,6 @@
       "provider": "Anthropic",
       "displayName": "Claude Sonnet 4.6",
       "contextK": 1000
-    },
-    "claude-opus-4-1": {
-      "inputPerM": 15,
-      "outputPerM": 75,
-      "provider": "Anthropic",
-      "displayName": "Claude Opus 4 1",
-      "contextK": 200
-    },
-    "claude-opus-4-1-20250805": {
-      "inputPerM": 15,
-      "outputPerM": 75,
-      "provider": "Anthropic",
-      "displayName": "Claude Opus 4 1",
-      "contextK": 200
-    },
-    "claude-opus-4-20250514": {
-      "inputPerM": 15,
-      "outputPerM": 75,
-      "provider": "Anthropic",
-      "displayName": "Claude Opus 4",
-      "contextK": 200
     },
     "claude-opus-4-5-20251101": {
       "inputPerM": 5,
@@ -316,6 +253,13 @@
       "displayName": "Claude Fable 5 1",
       "contextK": 1000
     },
+    "claude-opus-5-5": {
+      "inputPerM": 4,
+      "outputPerM": 20,
+      "provider": "Anthropic",
+      "displayName": "Claude Opus 5 5",
+      "contextK": 1000
+    },
     "claude-opus-5": {
       "inputPerM": 5,
       "outputPerM": 25,
@@ -328,13 +272,6 @@
       "outputPerM": 25,
       "provider": "Anthropic",
       "displayName": "Claude Opus 4.8",
-      "contextK": 1000
-    },
-    "claude-sonnet-4-20250514": {
-      "inputPerM": 3,
-      "outputPerM": 15,
-      "provider": "Anthropic",
-      "displayName": "Claude Sonnet 4",
       "contextK": 1000
     },
     "computer-use-preview": {
@@ -533,13 +470,6 @@
       "displayName": "Gpt 4o 2024 11 20",
       "contextK": 128
     },
-    "gpt-4o-audio-preview": {
-      "inputPerM": 2.5,
-      "outputPerM": 10,
-      "provider": "OpenAI",
-      "displayName": "Gpt 4o Audio Preview",
-      "contextK": 128
-    },
     "gpt-4o-audio-preview-2024-12-17": {
       "inputPerM": 2.5,
       "outputPerM": 10,
@@ -582,13 +512,6 @@
       "displayName": "Gpt Audio Mini",
       "contextK": 128
     },
-    "gpt-audio-mini-2025-10-06": {
-      "inputPerM": 0.6,
-      "outputPerM": 2.4,
-      "provider": "OpenAI",
-      "displayName": "Gpt Audio Mini 2025 10 06",
-      "contextK": 128
-    },
     "gpt-audio-mini-2025-12-15": {
       "inputPerM": 0.6,
       "outputPerM": 2.4,
@@ -610,13 +533,6 @@
       "displayName": "Gpt 4o Mini 2024 07 18",
       "contextK": 128
     },
-    "gpt-4o-mini-audio-preview": {
-      "inputPerM": 0.15,
-      "outputPerM": 0.6,
-      "provider": "OpenAI",
-      "displayName": "Gpt 4o Mini Audio Preview",
-      "contextK": 128
-    },
     "gpt-4o-mini-audio-preview-2024-12-17": {
       "inputPerM": 0.15,
       "outputPerM": 0.6,
@@ -631,25 +547,11 @@
       "displayName": "Gpt 4o Mini Search Preview",
       "contextK": 128
     },
-    "gpt-4o-mini-search-preview-2025-03-11": {
-      "inputPerM": 0.15,
-      "outputPerM": 0.6,
-      "provider": "OpenAI",
-      "displayName": "Gpt 4o Mini Search Preview 2025 03 11",
-      "contextK": 128
-    },
     "gpt-4o-search-preview": {
       "inputPerM": 2.5,
       "outputPerM": 10,
       "provider": "OpenAI",
       "displayName": "Gpt 4o Search Preview",
-      "contextK": 128
-    },
-    "gpt-4o-search-preview-2025-03-11": {
-      "inputPerM": 2.5,
-      "outputPerM": 10,
-      "provider": "OpenAI",
-      "displayName": "Gpt 4o Search Preview 2025 03 11",
       "contextK": 128
     },
     "gpt-5": {
@@ -673,13 +575,6 @@
       "displayName": "Gpt 5.1 2025 11 13",
       "contextK": 272
     },
-    "gpt-5.1-chat-latest": {
-      "inputPerM": 1.25,
-      "outputPerM": 10,
-      "provider": "OpenAI",
-      "displayName": "Gpt 5.1 Chat Latest",
-      "contextK": 128
-    },
     "gpt-5.2": {
       "inputPerM": 1.75,
       "outputPerM": 14,
@@ -694,25 +589,25 @@
       "displayName": "Gpt 5.2 2025 12 11",
       "contextK": 272
     },
-    "gpt-5.2-chat-latest": {
-      "inputPerM": 1.75,
-      "outputPerM": 14,
-      "provider": "OpenAI",
-      "displayName": "Gpt 5.2 Chat Latest",
-      "contextK": 128
-    },
-    "gpt-5.3-chat-latest": {
-      "inputPerM": 1.75,
-      "outputPerM": 14,
-      "provider": "OpenAI",
-      "displayName": "Gpt 5.3 Chat Latest",
-      "contextK": 128
-    },
     "gpt-6-astra": {
       "inputPerM": 10,
       "outputPerM": 50,
       "provider": "OpenAI",
       "displayName": "Gpt 6 Astra",
+      "contextK": 922
+    },
+    "gpt-6-sol": {
+      "inputPerM": 2,
+      "outputPerM": 10,
+      "provider": "OpenAI",
+      "displayName": "Gpt 6 Sol",
+      "contextK": 922
+    },
+    "gpt-6-luna": {
+      "inputPerM": 0.09999999999999999,
+      "outputPerM": 0.5,
+      "provider": "OpenAI",
+      "displayName": "Gpt 6 Luna",
       "contextK": 922
     },
     "gpt-5.6": {
@@ -841,13 +736,6 @@
       "displayName": "Gpt 5 Chat",
       "contextK": 128
     },
-    "gpt-5-chat-latest": {
-      "inputPerM": 1.25,
-      "outputPerM": 10,
-      "provider": "OpenAI",
-      "displayName": "Gpt 5 Chat Latest",
-      "contextK": 128
-    },
     "gpt-5-mini": {
       "inputPerM": 0.25,
       "outputPerM": 2,
@@ -876,13 +764,6 @@
       "displayName": "Gpt 5 Nano 2025 08 07",
       "contextK": 272
     },
-    "mistral/codestral-2405": {
-      "inputPerM": 1,
-      "outputPerM": 3,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Codestral 2405",
-      "contextK": 32
-    },
     "mistral/codestral-2508": {
       "inputPerM": 0.3,
       "outputPerM": 0.8999999999999999,
@@ -904,39 +785,11 @@
       "displayName": "Mistral/Codestral Mamba Latest",
       "contextK": 256
     },
-    "mistral/devstral-medium-2507": {
-      "inputPerM": 0.39999999999999997,
-      "outputPerM": 2,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Devstral Medium 2507",
-      "contextK": 128
-    },
-    "mistral/devstral-small-2505": {
-      "inputPerM": 0.09999999999999999,
-      "outputPerM": 0.3,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Devstral Small 2505",
-      "contextK": 128
-    },
-    "mistral/devstral-small-2507": {
-      "inputPerM": 0.09999999999999999,
-      "outputPerM": 0.3,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Devstral Small 2507",
-      "contextK": 128
-    },
     "mistral/devstral-small-latest": {
       "inputPerM": 0.09999999999999999,
       "outputPerM": 0.3,
       "provider": "Mistral AI",
       "displayName": "Mistral/Devstral Small Latest",
-      "contextK": 256
-    },
-    "mistral/labs-devstral-small-2512": {
-      "inputPerM": 0.09999999999999999,
-      "outputPerM": 0.3,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Labs Devstral Small 2512",
       "contextK": 256
     },
     "mistral/devstral-latest": {
@@ -951,13 +804,6 @@
       "outputPerM": 2,
       "provider": "Mistral AI",
       "displayName": "Mistral/Devstral Medium Latest",
-      "contextK": 256
-    },
-    "mistral/devstral-2512": {
-      "inputPerM": 0.39999999999999997,
-      "outputPerM": 2,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Devstral 2512",
       "contextK": 256
     },
     "mistral/ministral-14b-2512": {
@@ -1044,27 +890,6 @@
       "displayName": "Mistral/Glm 5 2",
       "contextK": 1049
     },
-    "mistral/magistral-medium-2506": {
-      "inputPerM": 2,
-      "outputPerM": 5,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Magistral Medium 2506",
-      "contextK": 40
-    },
-    "mistral/magistral-medium-2509": {
-      "inputPerM": 2,
-      "outputPerM": 5,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Magistral Medium 2509",
-      "contextK": 40
-    },
-    "mistral/magistral-medium-1-2-2509": {
-      "inputPerM": 2,
-      "outputPerM": 5,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Magistral Medium 1 2 2509",
-      "contextK": 40
-    },
     "mistral/magistral-medium-latest": {
       "inputPerM": 1.5,
       "outputPerM": 7.5,
@@ -1072,47 +897,12 @@
       "displayName": "Mistral/Magistral Medium Latest",
       "contextK": 262
     },
-    "mistral/magistral-small-2506": {
-      "inputPerM": 0.5,
-      "outputPerM": 1.5,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Magistral Small 2506",
-      "contextK": 40
-    },
     "mistral/magistral-small-latest": {
       "inputPerM": 0.15,
       "outputPerM": 0.6,
       "provider": "Mistral AI",
       "displayName": "Mistral/Magistral Small Latest",
       "contextK": 262
-    },
-    "mistral/magistral-small-1-2-2509": {
-      "inputPerM": 0.5,
-      "outputPerM": 1.5,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Magistral Small 1 2 2509",
-      "contextK": 40
-    },
-    "mistral/mistral-large-2402": {
-      "inputPerM": 4,
-      "outputPerM": 12,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Mistral Large 2402",
-      "contextK": 32
-    },
-    "mistral/mistral-large-2407": {
-      "inputPerM": 3,
-      "outputPerM": 9,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Mistral Large 2407",
-      "contextK": 128
-    },
-    "mistral/mistral-large-2411": {
-      "inputPerM": 2,
-      "outputPerM": 6,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Mistral Large 2411",
-      "contextK": 128
     },
     "mistral/mistral-large-latest": {
       "inputPerM": 0.5,
@@ -1142,27 +932,6 @@
       "displayName": "Mistral/Mistral Medium",
       "contextK": 262
     },
-    "mistral/mistral-medium-2312": {
-      "inputPerM": 2.7,
-      "outputPerM": 8.1,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Mistral Medium 2312",
-      "contextK": 32
-    },
-    "mistral/mistral-medium-2505": {
-      "inputPerM": 0.39999999999999997,
-      "outputPerM": 2,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Mistral Medium 2505",
-      "contextK": 131
-    },
-    "mistral/mistral-medium-2508": {
-      "inputPerM": 0.39999999999999997,
-      "outputPerM": 2,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Mistral Medium 2508",
-      "contextK": 131
-    },
     "mistral/mistral-medium-2604": {
       "inputPerM": 1.5,
       "outputPerM": 7.5,
@@ -1176,13 +945,6 @@
       "provider": "Mistral AI",
       "displayName": "Mistral/Mistral Medium Latest",
       "contextK": 262
-    },
-    "mistral/mistral-medium-3-1-2508": {
-      "inputPerM": 0.39999999999999997,
-      "outputPerM": 2,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Mistral Medium 3 1 2508",
-      "contextK": 131
     },
     "mistral/mistral-medium-3-5": {
       "inputPerM": 1.5,
@@ -1204,13 +966,6 @@
       "provider": "Mistral AI",
       "displayName": "Mistral/Mistral Small Latest",
       "contextK": 262
-    },
-    "mistral/mistral-small-3-2-2506": {
-      "inputPerM": 0.06,
-      "outputPerM": 0.18,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Mistral Small 3 2 2506",
-      "contextK": 131
     },
     "mistral/ministral-3-3b-2512": {
       "inputPerM": 0.09999999999999999,
@@ -1254,60 +1009,11 @@
       "displayName": "Mistral/Mistral Tiny",
       "contextK": 32
     },
-    "mistral/open-codestral-mamba": {
-      "inputPerM": 0.25,
-      "outputPerM": 0.25,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Open Codestral Mamba",
-      "contextK": 256
-    },
-    "mistral/open-mistral-7b": {
-      "inputPerM": 0.25,
-      "outputPerM": 0.25,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Open Mistral 7b",
-      "contextK": 32
-    },
     "mistral/open-mistral-nemo": {
       "inputPerM": 0.3,
       "outputPerM": 0.3,
       "provider": "Mistral AI",
       "displayName": "Mistral/Open Mistral Nemo",
-      "contextK": 128
-    },
-    "mistral/open-mistral-nemo-2407": {
-      "inputPerM": 0.3,
-      "outputPerM": 0.3,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Open Mistral Nemo 2407",
-      "contextK": 128
-    },
-    "mistral/open-mixtral-8x22b": {
-      "inputPerM": 2,
-      "outputPerM": 6,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Open Mixtral 8x22b",
-      "contextK": 65
-    },
-    "mistral/open-mixtral-8x7b": {
-      "inputPerM": 0.7,
-      "outputPerM": 0.7,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Open Mixtral 8x7b",
-      "contextK": 32
-    },
-    "mistral/pixtral-12b-2409": {
-      "inputPerM": 0.15,
-      "outputPerM": 0.15,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Pixtral 12b 2409",
-      "contextK": 128
-    },
-    "mistral/pixtral-large-2411": {
-      "inputPerM": 2,
-      "outputPerM": 6,
-      "provider": "Mistral AI",
-      "displayName": "Mistral/Pixtral Large 2411",
       "contextK": 128
     },
     "mistral/pixtral-large-latest": {
@@ -1317,32 +1023,11 @@
       "displayName": "Mistral/Pixtral Large Latest",
       "contextK": 128
     },
-    "moonshot/kimi-k2-0711-preview": {
-      "inputPerM": 0.6,
-      "outputPerM": 2.5,
-      "provider": "Moonshot",
-      "displayName": "Moonshot/Kimi K2 0711 Preview",
-      "contextK": 131
-    },
-    "moonshot/kimi-k2-0905-preview": {
-      "inputPerM": 0.6,
-      "outputPerM": 2.5,
-      "provider": "Moonshot",
-      "displayName": "Moonshot/Kimi K2 0905 Preview",
-      "contextK": 262
-    },
     "moonshot/kimi-k2.7-code": {
       "inputPerM": 0.95,
       "outputPerM": 4,
       "provider": "Moonshot",
       "displayName": "Moonshot/Kimi K2.7 Code",
-      "contextK": 262
-    },
-    "moonshot/kimi-k2-turbo-preview": {
-      "inputPerM": 1.15,
-      "outputPerM": 8,
-      "provider": "Moonshot",
-      "displayName": "Moonshot/Kimi K2 Turbo Preview",
       "contextK": 262
     },
     "moonshot/kimi-k2.5": {
@@ -1366,67 +1051,11 @@
       "displayName": "Moonshot/Kimi K3",
       "contextK": 1049
     },
-    "moonshot/kimi-latest": {
-      "inputPerM": 2,
-      "outputPerM": 5,
-      "provider": "Moonshot",
-      "displayName": "Moonshot/Kimi Latest",
-      "contextK": 131
-    },
-    "moonshot/kimi-latest-128k": {
-      "inputPerM": 2,
-      "outputPerM": 5,
-      "provider": "Moonshot",
-      "displayName": "Moonshot/Kimi Latest 128k",
-      "contextK": 131
-    },
-    "moonshot/kimi-latest-32k": {
-      "inputPerM": 1,
-      "outputPerM": 3,
-      "provider": "Moonshot",
-      "displayName": "Moonshot/Kimi Latest 32k",
-      "contextK": 33
-    },
-    "moonshot/kimi-latest-8k": {
-      "inputPerM": 0.19999999999999998,
-      "outputPerM": 2,
-      "provider": "Moonshot",
-      "displayName": "Moonshot/Kimi Latest 8k",
-      "contextK": 8
-    },
-    "moonshot/kimi-thinking-preview": {
-      "inputPerM": 0.6,
-      "outputPerM": 2.5,
-      "provider": "Moonshot",
-      "displayName": "Moonshot/Kimi Thinking Preview",
-      "contextK": 131
-    },
-    "moonshot/kimi-k2-thinking": {
-      "inputPerM": 0.6,
-      "outputPerM": 2.5,
-      "provider": "Moonshot",
-      "displayName": "Moonshot/Kimi K2 Thinking",
-      "contextK": 262
-    },
-    "moonshot/kimi-k2-thinking-turbo": {
-      "inputPerM": 1.15,
-      "outputPerM": 8,
-      "provider": "Moonshot",
-      "displayName": "Moonshot/Kimi K2 Thinking Turbo",
-      "contextK": 262
-    },
     "moonshot/moonshot-v1-128k": {
       "inputPerM": 2,
       "outputPerM": 5,
       "provider": "Moonshot",
       "displayName": "Moonshot/Moonshot V1 128k",
-      "contextK": 131
-    },
-    "moonshot/moonshot-v1-128k-0430": {
-      "inputPerM": 2,
-      "outputPerM": 5,
-      "provider": "Moonshot",
-      "displayName": "Moonshot/Moonshot V1 128k 0430",
       "contextK": 131
     },
     "moonshot/moonshot-v1-128k-vision-preview": {
@@ -1443,13 +1072,6 @@
       "displayName": "Moonshot/Moonshot V1 32k",
       "contextK": 33
     },
-    "moonshot/moonshot-v1-32k-0430": {
-      "inputPerM": 1,
-      "outputPerM": 3,
-      "provider": "Moonshot",
-      "displayName": "Moonshot/Moonshot V1 32k 0430",
-      "contextK": 33
-    },
     "moonshot/moonshot-v1-32k-vision-preview": {
       "inputPerM": 1,
       "outputPerM": 3,
@@ -1462,13 +1084,6 @@
       "outputPerM": 2,
       "provider": "Moonshot",
       "displayName": "Moonshot/Moonshot V1 8k",
-      "contextK": 8
-    },
-    "moonshot/moonshot-v1-8k-0430": {
-      "inputPerM": 0.19999999999999998,
-      "outputPerM": 2,
-      "provider": "Moonshot",
-      "displayName": "Moonshot/Moonshot V1 8k 0430",
       "contextK": 8
     },
     "moonshot/moonshot-v1-8k-vision-preview": {
@@ -1583,153 +1198,6 @@
       "displayName": "Vertex_ai/Xai/Grok 4.6",
       "contextK": 524
     },
-    "xai/grok-3": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 3",
-      "contextK": 131
-    },
-    "xai/grok-3-beta": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 3 Beta",
-      "contextK": 131
-    },
-    "xai/grok-3-fast-beta": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 3 Fast Beta",
-      "contextK": 131
-    },
-    "xai/grok-3-fast-latest": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 3 Fast Latest",
-      "contextK": 131
-    },
-    "xai/grok-3-latest": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 3 Latest",
-      "contextK": 131
-    },
-    "xai/grok-3-mini": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 3 Mini",
-      "contextK": 131
-    },
-    "xai/grok-3-mini-beta": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 3 Mini Beta",
-      "contextK": 131
-    },
-    "xai/grok-3-mini-fast": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 3 Mini Fast",
-      "contextK": 131
-    },
-    "xai/grok-3-mini-fast-beta": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 3 Mini Fast Beta",
-      "contextK": 131
-    },
-    "xai/grok-3-mini-fast-latest": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 3 Mini Fast Latest",
-      "contextK": 131
-    },
-    "xai/grok-3-mini-latest": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 3 Mini Latest",
-      "contextK": 131
-    },
-    "xai/grok-4": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 4",
-      "contextK": 256
-    },
-    "xai/grok-4-fast-reasoning": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 4 Fast Reasoning",
-      "contextK": 2000
-    },
-    "xai/grok-4-fast-non-reasoning": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 4 Fast Non Reasoning",
-      "contextK": 2000
-    },
-    "xai/grok-4-0709": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 4 0709",
-      "contextK": 256
-    },
-    "xai/grok-4-latest": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 4 Latest",
-      "contextK": 256
-    },
-    "xai/grok-4-1-fast": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 4 1 Fast",
-      "contextK": 2000
-    },
-    "xai/grok-4-1-fast-reasoning": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 4 1 Fast Reasoning",
-      "contextK": 2000
-    },
-    "xai/grok-4-1-fast-reasoning-latest": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 4 1 Fast Reasoning Latest",
-      "contextK": 2000
-    },
-    "xai/grok-4-1-fast-non-reasoning": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 4 1 Fast Non Reasoning",
-      "contextK": 2000
-    },
-    "xai/grok-4-1-fast-non-reasoning-latest": {
-      "inputPerM": 1.25,
-      "outputPerM": 2.5,
-      "provider": "xAI",
-      "displayName": "Xai/Grok 4 1 Fast Non Reasoning Latest",
-      "contextK": 2000
-    },
     "xai/grok-4.20-beta-0309-reasoning": {
       "inputPerM": 1.25,
       "outputPerM": 2.5,
@@ -1799,27 +1267,6 @@
       "provider": "xAI",
       "displayName": "Xai/Grok 4.7",
       "contextK": 500
-    },
-    "xai/grok-code-fast": {
-      "inputPerM": 1,
-      "outputPerM": 2,
-      "provider": "xAI",
-      "displayName": "Xai/Grok Code Fast",
-      "contextK": 256
-    },
-    "xai/grok-code-fast-1": {
-      "inputPerM": 1,
-      "outputPerM": 2,
-      "provider": "xAI",
-      "displayName": "Xai/Grok Code Fast 1",
-      "contextK": 256
-    },
-    "xai/grok-code-fast-1-0825": {
-      "inputPerM": 1,
-      "outputPerM": 2,
-      "provider": "xAI",
-      "displayName": "Xai/Grok Code Fast 1 0825",
-      "contextK": 256
     },
     "gpt-5-search-api": {
       "inputPerM": 1.25,
@@ -2023,11 +1470,11 @@
       "provider": "Google",
       "displayName": "Vertex_ai/Gemini Omni 1.1 Flash"
     },
-    "vertex_ai/gemini-robotics-er-2": {
-      "inputPerM": 1,
-      "outputPerM": 5,
+    "vertex_ai/gemini-omni-1.1-flash-preview": {
+      "inputPerM": 1.5,
+      "outputPerM": 9,
       "provider": "Google",
-      "displayName": "Vertex_ai/Gemini Robotics Er 2"
+      "displayName": "Vertex_ai/Gemini Omni 1.1 Flash Preview"
     },
     "vertex_ai/gemma-4-26b-a4b-it": {
       "inputPerM": 0.15,
@@ -2158,6 +1605,39 @@
       "provider": "xAI",
       "displayName": "Xai/Grok 4.20 Reasoning Gv2",
       "contextK": 1000
+    },
+    "xai/grok-code-fast": {
+      "inputPerM": 1,
+      "outputPerM": 2,
+      "provider": "xAI",
+      "displayName": "Xai/Grok Code Fast",
+      "contextK": 256
+    },
+    "xai/grok-code-fast-1": {
+      "inputPerM": 1,
+      "outputPerM": 2,
+      "provider": "xAI",
+      "displayName": "Xai/Grok Code Fast 1",
+      "contextK": 256
+    },
+    "xai/grok-code-fast-1-0825": {
+      "inputPerM": 1,
+      "outputPerM": 2,
+      "provider": "xAI",
+      "displayName": "Xai/Grok Code Fast 1 0825",
+      "contextK": 256
+    },
+    "vertex_ai/gemini-2.0-flash": {
+      "inputPerM": 0.15,
+      "outputPerM": 0.6,
+      "provider": "Google",
+      "displayName": "Vertex_ai/Gemini 2.0 Flash"
+    },
+    "vertex_ai/gemini-2.0-flash-lite": {
+      "inputPerM": 0.075,
+      "outputPerM": 0.3,
+      "provider": "Google",
+      "displayName": "Vertex_ai/Gemini 2.0 Flash Lite"
     }
   },
   "nvdaFinancials": null,
