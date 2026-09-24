@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-23T10:46:21.260Z",
+  "lastUpdated": "2026-09-24T11:06:57.841Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 228.87,
-      "prevClose": 212.17,
-      "changePct": 7.87,
+      "price": 225.51,
+      "prevClose": 213.9,
+      "changePct": 5.43,
       "marketCap": null
     },
     "MSFT": {
-      "price": 498,
-      "prevClose": 497.12,
-      "changePct": 0.18,
+      "price": 500.59,
+      "prevClose": 490.3,
+      "changePct": 2.1,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 351.16,
-      "prevClose": 344.98,
-      "changePct": 1.79,
+      "price": 337.83,
+      "prevClose": 342.87,
+      "changePct": -1.47,
       "marketCap": null
     },
     "AMZN": {
-      "price": 254.98,
-      "prevClose": 248.42,
-      "changePct": 2.64,
+      "price": 249.27,
+      "prevClose": 245.96,
+      "changePct": 1.35,
       "marketCap": null
     },
     "META": {
-      "price": 736.595,
-      "prevClose": 670.24,
-      "changePct": 9.9,
+      "price": 744.1,
+      "prevClose": 673.31,
+      "changePct": 10.51,
       "marketCap": null
     },
     "AMD": {
-      "price": 623.77,
-      "prevClose": 504.2,
-      "changePct": 23.71,
+      "price": 614.61,
+      "prevClose": 512.5,
+      "changePct": 19.92,
       "marketCap": null
     },
     "ORCL": {
-      "price": 149.2,
-      "prevClose": 140.35,
-      "changePct": 6.31,
+      "price": 144.56,
+      "prevClose": 143.16,
+      "changePct": 0.98,
       "marketCap": null
     }
   },
@@ -379,6 +379,13 @@
       "displayName": "Vertex_ai/Gemini 3.8 Flash",
       "contextK": 1049
     },
+    "vertex_ai/gemini-3.8-flash-cyber": {
+      "inputPerM": 1.5,
+      "outputPerM": 7.5,
+      "provider": "Google",
+      "displayName": "Vertex_ai/Gemini 3.8 Flash Cyber",
+      "contextK": 1049
+    },
     "vertex_ai/gemini-3.1-pro-preview": {
       "inputPerM": 2,
       "outputPerM": 12,
@@ -568,6 +575,13 @@
       "displayName": "Gpt 5.1",
       "contextK": 272
     },
+    "gpt-5.1-chat-latest": {
+      "inputPerM": 1.25,
+      "outputPerM": 10,
+      "provider": "OpenAI",
+      "displayName": "Gpt 5.1 Chat Latest",
+      "contextK": 128
+    },
     "gpt-5.1-2025-11-13": {
       "inputPerM": 1.25,
       "outputPerM": 10,
@@ -581,6 +595,13 @@
       "provider": "OpenAI",
       "displayName": "Gpt 5.2",
       "contextK": 272
+    },
+    "gpt-5.2-chat-latest": {
+      "inputPerM": 1.75,
+      "outputPerM": 14,
+      "provider": "OpenAI",
+      "displayName": "Gpt 5.2 Chat Latest",
+      "contextK": 128
     },
     "gpt-5.2-2025-12-11": {
       "inputPerM": 1.75,
@@ -734,6 +755,20 @@
       "outputPerM": 10,
       "provider": "OpenAI",
       "displayName": "Gpt 5 Chat",
+      "contextK": 128
+    },
+    "gpt-5-chat-latest": {
+      "inputPerM": 1.25,
+      "outputPerM": 10,
+      "provider": "OpenAI",
+      "displayName": "Gpt 5 Chat Latest",
+      "contextK": 128
+    },
+    "gpt-5.3-chat-latest": {
+      "inputPerM": 1.75,
+      "outputPerM": 14,
+      "provider": "OpenAI",
+      "displayName": "Gpt 5.3 Chat Latest",
       "contextK": 128
     },
     "gpt-5-mini": {
