@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-28T12:55:02.276Z",
+  "lastUpdated": "2026-09-29T12:07:56.765Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 225.07,
-      "prevClose": 222.27,
-      "changePct": 1.26,
+      "price": 228.86,
+      "prevClose": 227.38,
+      "changePct": 0.65,
       "marketCap": null
     },
     "MSFT": {
-      "price": 516.17,
-      "prevClose": 493.78,
-      "changePct": 4.53,
+      "price": 509.22,
+      "prevClose": 501.61,
+      "changePct": 1.52,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 343.92,
-      "prevClose": 349.54,
-      "changePct": -1.61,
+      "price": 342.75,
+      "prevClose": 354.97,
+      "changePct": -3.44,
       "marketCap": null
     },
     "AMZN": {
-      "price": 249.67,
-      "prevClose": 253.71,
-      "changePct": -1.59,
+      "price": 246.15,
+      "prevClose": 258.45,
+      "changePct": -4.76,
       "marketCap": null
     },
     "META": {
-      "price": 751.66,
-      "prevClose": 665.75,
-      "changePct": 12.9,
+      "price": 715.62,
+      "prevClose": 741.25,
+      "changePct": -3.46,
       "marketCap": null
     },
     "AMD": {
-      "price": 630.63,
-      "prevClose": 559.82,
-      "changePct": 12.65,
+      "price": 607.87,
+      "prevClose": 615.52,
+      "changePct": -1.24,
       "marketCap": null
     },
     "ORCL": {
-      "price": 137.1,
-      "prevClose": 147.61,
-      "changePct": -7.12,
+      "price": 132.6,
+      "prevClose": 148.56,
+      "changePct": -10.74,
       "marketCap": null
     }
   },
@@ -188,6 +188,13 @@
       "outputPerM": 10,
       "provider": "Anthropic",
       "displayName": "Claude Sonnet 5",
+      "contextK": 1000
+    },
+    "claude-sonnet-5-5": {
+      "inputPerM": 2,
+      "outputPerM": 10,
+      "provider": "Anthropic",
+      "displayName": "Claude Sonnet 5 5",
       "contextK": 1000
     },
     "claude-sonnet-4-6": {
