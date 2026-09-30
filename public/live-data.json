@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-29T12:07:56.765Z",
+  "lastUpdated": "2026-09-30T11:55:32.358Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 228.86,
-      "prevClose": 227.38,
-      "changePct": 0.65,
+      "price": 227.21,
+      "prevClose": 228.87,
+      "changePct": -0.73,
       "marketCap": null
     },
     "MSFT": {
-      "price": 509.22,
-      "prevClose": 501.61,
-      "changePct": 1.52,
+      "price": 508.96,
+      "prevClose": 498,
+      "changePct": 2.2,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 342.75,
-      "prevClose": 354.97,
-      "changePct": -3.44,
+      "price": 340.92,
+      "prevClose": 351.16,
+      "changePct": -2.92,
       "marketCap": null
     },
     "AMZN": {
-      "price": 246.15,
-      "prevClose": 258.45,
-      "changePct": -4.76,
+      "price": 246.67,
+      "prevClose": 254.98,
+      "changePct": -3.26,
       "marketCap": null
     },
     "META": {
-      "price": 715.62,
-      "prevClose": 741.25,
-      "changePct": -3.46,
+      "price": 738.79,
+      "prevClose": 736.6,
+      "changePct": 0.3,
       "marketCap": null
     },
     "AMD": {
-      "price": 607.87,
-      "prevClose": 615.52,
-      "changePct": -1.24,
+      "price": 607.57,
+      "prevClose": 623.77,
+      "changePct": -2.6,
       "marketCap": null
     },
     "ORCL": {
-      "price": 132.6,
-      "prevClose": 148.56,
-      "changePct": -10.74,
+      "price": 137.79,
+      "prevClose": 149.2,
+      "changePct": -7.65,
       "marketCap": null
     }
   },
@@ -1680,6 +1680,13 @@
       "outputPerM": 0.3,
       "provider": "Google",
       "displayName": "Vertex_ai/Gemini 2.0 Flash Lite"
+    },
+    "gpt-6.1-sol": {
+      "inputPerM": 2,
+      "outputPerM": 10,
+      "provider": "OpenAI",
+      "displayName": "Gpt 6.1 Sol",
+      "contextK": 922
     }
   },
   "nvdaFinancials": null,
