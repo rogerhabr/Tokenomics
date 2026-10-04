@@ -85,7 +85,11 @@ class World:
 def make_world(seed: int, n: int, *, quote_size: float = 50.0, horizon: int = 10, fees: FeeModel = FeeModel(),
                mock_kw: dict | None = None, informed_mult: float = 1.0) -> World:
     blocks, labels = LOBSimulator(SimConfig(seed=seed, regimes=scaled_regimes(informed_mult))).run(n)
-    pnl = block_pnl(blocks, quote_size, horizon, fees)
+    # A decision made after observing block t can only rest during block t+1.
+    # pnl[t] is therefore the markout of fills in block t+1 (stage-4 fix: stage 3
+    # originally credited block t's own trades -- a look-ahead).
+    raw = block_pnl(blocks, quote_size, horizon, fees)
+    pnl = raw[1:] + [0.0]
     truth = build_truth(blocks, labels, horizon=horizon, markout=pnl)
     pin = "jev-mock-derive"
     lyr = DecisionLayer(MockJev(truth, model=pin, seed=seed + 1000,

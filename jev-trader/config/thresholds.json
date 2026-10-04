@@ -1,5 +1,5 @@
 {
-  "toxic_pull": 0.6,
+  "toxic_pull": 0.8,
   "stress_widen": 0.7,
   "crisis_stand_down": 0.5,
   "quote_both": 0.35,
@@ -21,14 +21,14 @@
       105
     ],
     "blocks": 6000,
-    "G": -0.0020646135133247623,
-    "L": -0.007382397786213969,
+    "G": -0.0022939348128430243,
+    "L": -0.004729706181760485,
     "theta_star": 0.0,
     "train": {
-      "pnl": 57.219514583951906,
-      "quote_frac": 0.4871264367816092,
-      "acc_tox": 0.9281321839080459,
-      "acc_q": 0.8409902130109383
+      "pnl": 52.26535507215685,
+      "quote_frac": 0.490316091954023,
+      "acc_tox": 0.9219252873563218,
+      "acc_q": 0.8382556131260794
     },
     "warning": "derived on a SIMULATOR with a MOCK Jev; re-derive on logged real decisions"
   }

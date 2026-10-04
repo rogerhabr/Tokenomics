@@ -10,7 +10,7 @@ from jev_trader.decision import BATTERY, OK, Decision, DecisionLayer, JevConfig,
 from jev_trader.policy import QUOTING, Action, PolicyEngine, PolicyThresholds, fallback_action, jev_action
 from jev_trader.pricing import (PricingConfig, gamma_for_skew, inventory_pressure, make_quotes, optimal_spread,
                                 reservation_price)
-from jev_trader.sim.derive import GRID, WARMUP, FeeModel, World, derive, economics, evaluate, fast_action, grids, make_world
+from jev_trader.sim.derive import block_pnl, GRID, WARMUP, FeeModel, World, derive, economics, evaluate, fast_action, grids, make_world
 from jev_trader.sim.mock_jev import Truth
 from jev_trader.state import FIELDS, Snapshot
 from jev_trader.types import Level
@@ -275,3 +275,10 @@ def test_grid_handles_exact_ties_like_the_policy():
         for j in range(0, len(GRID), 3):
             th = replace(PolicyThresholds(), toxic_pull=GRID[k], quote_both=GRID[j])
             assert pnl[k][j] == pytest.approx(evaluate(w, th, FeeModel())["pnl"], abs=1e-9)
+
+
+def test_decision_at_t_is_credited_with_fills_from_t_plus_1_only():
+    """No look-ahead in the derivation: a quote decided after block t rests during t+1."""
+    w = make_world(3, 600)
+    raw = block_pnl(w.blocks, 50.0, 10, FeeModel())
+    assert w.pnl[:-1] == raw[1:]
