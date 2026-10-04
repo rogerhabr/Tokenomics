@@ -40,5 +40,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install pytest
+      - run: pip install pytest typesafe-sdk==0.7.2
       - run: python -m pytest -q
