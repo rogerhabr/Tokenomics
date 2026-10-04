@@ -10,13 +10,14 @@ pull iff p > theta* = G / (G - L), where
 The accuracy-optimal cut for a calibrated p is 0.5. They agree only if G = -L.
 
 Fill/fee model (assumptions, all explicit):
-  * QUOTE_BOTH rests `quote_size` at the touch on both sides.
-  * Pro-rata fill: each aggressive trade fills us trade_size * q / (L1_size + q).
-  * Markout at `horizon` blocks against the displayed mid.
+  * QUOTE_BOTH rests `quote_size` at the touch on both sides, decided after block
+    t, matched against block t+1 by `paper.PaperVenue` (same code as the loop).
+  * Markout at `horizon` blocks after the fill against the displayed mid.
   * Fees: maker_bps on fills; replace_cost_bps per order replaced per quoting
     block (on-chain cancel/replace). "Typical on-chain CLOB" defaults, not a venue.
-  * The sim's aggressive trades never sweep past L1, so wide quotes never fill:
-    QUOTE_WIDE/WIDEN earn 0 and pay replace cost. (Stage 6 needs a sweep model.)
+  * QUOTE_WIDE/WIDEN are still scored as 0 fills + replace cost here; the sweep
+    model (stage 4) lets them fill in the paper loop -- derivation of a width
+    threshold is future work.
 
 Statistics: PnL is dominated by seed (regime path) variance, so every comparison
 is PAIRED by seed (same market path, different policy) across several seeds.
@@ -52,20 +53,24 @@ def scaled_regimes(informed_mult: float) -> dict:
 
 
 def block_pnl(blocks: list[BlockData], quote_size: float, horizon: int, fees: FeeModel) -> list[float]:
-    """PnL (quote ccy) per block of resting quote_size at the touch on both sides."""
+    """pnl[t] = outcome of a QUOTE_BOTH decision made after observing block t:
+    quote `quote_size` at block t's touch, matched against block t+1's trades by
+    the same PaperVenue the live loop uses, marked out `horizon` blocks later,
+    minus maker fees and replace cost. No information from >= t+1 enters the
+    decision; t+1 only determines the outcome."""
+    from jev_trader.paper import PaperVenue
+
+    venue = PaperVenue(fees.maker_bps, fees.taker_bps)
     mids = [(b.bids[0].price + b.asks[0].price) / 2 for b in blocks]
     out = [0.0] * len(blocks)
-    for t, b in enumerate(blocks):
-        if t + horizon >= len(blocks):
-            break
-        m_fut, pnl = mids[t + horizon], 0.0
-        for tr in b.trades:
-            l1 = b.asks[0].size if tr.aggressor == "buy" else b.bids[0].size
-            fill = tr.size * quote_size / (l1 + quote_size)
-            edge = (tr.price - m_fut) if tr.aggressor == "buy" else (m_fut - tr.price)
-            pnl += fill * edge - fill * tr.price * fees.maker_bps * 1e-4
-        pnl -= replace_cost(quote_size, mids[t], fees)
-        out[t] = pnl
+    for t in range(len(blocks) - 1 - horizon):
+        b, nxt = blocks[t], blocks[t + 1]
+        m = venue.match(b.bids[0].price, quote_size, b.asks[0].price, quote_size, nxt)
+        m_fut, pnl = mids[t + 1 + horizon], 0.0
+        for f in m.fills:
+            edge = (m_fut - f.price) if f.side == "buy" else (f.price - m_fut)
+            pnl += f.size * edge - f.size * f.price * fees.maker_bps * 1e-4
+        out[t] = pnl - replace_cost(quote_size, mids[t], fees)
     return out
 
 
@@ -85,11 +90,9 @@ class World:
 def make_world(seed: int, n: int, *, quote_size: float = 50.0, horizon: int = 10, fees: FeeModel = FeeModel(),
                mock_kw: dict | None = None, informed_mult: float = 1.0) -> World:
     blocks, labels = LOBSimulator(SimConfig(seed=seed, regimes=scaled_regimes(informed_mult))).run(n)
-    # A decision made after observing block t can only rest during block t+1.
-    # pnl[t] is therefore the markout of fills in block t+1 (stage-4 fix: stage 3
-    # originally credited block t's own trades -- a look-ahead).
-    raw = block_pnl(blocks, quote_size, horizon, fees)
-    pnl = raw[1:] + [0.0]
+    # pnl[t] is already aligned: decided at t, filled in t+1 (see block_pnl).
+    # (Stage 3 originally credited block t's own trades -- a look-ahead.)
+    pnl = block_pnl(blocks, quote_size, horizon, fees)
     truth = build_truth(blocks, labels, horizon=horizon, markout=pnl)
     pin = "jev-mock-derive"
     lyr = DecisionLayer(MockJev(truth, model=pin, seed=seed + 1000,

@@ -1,8 +1,8 @@
 {
-  "toxic_pull": 0.8,
+  "toxic_pull": 0.85,
   "stress_widen": 0.7,
   "crisis_stand_down": 0.5,
-  "quote_both": 0.35,
+  "quote_both": 0.4,
   "quote_wide": 0.6,
   "min_confidence": 0.0,
   "fb_max_rv30s_bps": 12.0,
@@ -21,14 +21,14 @@
       105
     ],
     "blocks": 6000,
-    "G": -0.0022939348128430243,
-    "L": -0.004729706181760485,
-    "theta_star": 0.0,
+    "G": 0.0043913434385231005,
+    "L": -0.003977479220729397,
+    "theta_star": 0.5247265496381465,
     "train": {
-      "pnl": 52.26535507215685,
-      "quote_frac": 0.490316091954023,
-      "acc_tox": 0.9219252873563218,
-      "acc_q": 0.8382556131260794
+      "pnl": 156.3827824417989,
+      "quote_frac": 0.47169540229885065,
+      "acc_tox": 0.9149712643678161,
+      "acc_q": 0.8402993667242372
     },
     "warning": "derived on a SIMULATOR with a MOCK Jev; re-derive on logged real decisions"
   }

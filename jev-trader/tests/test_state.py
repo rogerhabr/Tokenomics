@@ -194,3 +194,12 @@ def test_update_plus_snapshot_is_far_below_block_time():
 def test_snapshot_json_roundtrip():
     _, snaps = feed(stream(10)[0])
     assert json.loads(snaps[-1].to_json()) == snaps[-1].fields
+
+
+def test_sim_daily_vol_is_calibrated():
+    """Guard against a mis-scaled price process (stages 1-3 had ~70%/hour trends)."""
+    blocks, _ = LOBSimulator(SimConfig(seed=1)).run(60_000)
+    mids = [(b.bids[0].price + b.asks[0].price) / 2 for b in blocks]
+    br = [math.log(mids[i + 1000] / mids[i]) for i in range(0, len(mids) - 1000, 1000)]
+    daily = math.sqrt(sum(x * x for x in br) / len(br) * 288) * 100
+    assert 3.0 < daily < 10.0, daily

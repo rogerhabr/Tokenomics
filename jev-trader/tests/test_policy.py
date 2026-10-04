@@ -278,7 +278,19 @@ def test_grid_handles_exact_ties_like_the_policy():
 
 
 def test_decision_at_t_is_credited_with_fills_from_t_plus_1_only():
-    """No look-ahead in the derivation: a quote decided after block t rests during t+1."""
-    w = make_world(3, 600)
-    raw = block_pnl(w.blocks, 50.0, 10, FeeModel())
-    assert w.pnl[:-1] == raw[1:]
+    """No look-ahead: changing block t's trades cannot change pnl[t];
+    changing block t+1's trades must."""
+    from jev_trader.sim.lob import LOBSimulator, SimConfig
+    from jev_trader.types import Trade
+    blocks, _ = LOBSimulator(SimConfig(seed=3)).run(300)
+    base = block_pnl(blocks, 50.0, 10, FeeModel())
+    from jev_trader.sim.derive import replace_cost
+    mid = lambda i: (blocks[i].bids[0].price + blocks[i].asks[0].price) / 2  # noqa: E731
+    t = next(i for i in range(100, 250) if abs(base[i] + replace_cost(50.0, mid(i), FeeModel())) > 1e-12)  # had fills
+    b = blocks[t]
+    big = (Trade(b.asks[0].price, 1e4, "buy"), Trade(b.bids[0].price, 1e4, "sell"))
+    alt_t = blocks[:t] + [replace(b, trades=big)] + blocks[t + 1:]
+    assert block_pnl(alt_t, 50.0, 10, FeeModel())[t] == base[t]
+    n = blocks[t + 1]
+    alt_t1 = blocks[:t + 1] + [replace(n, trades=())] + blocks[t + 2:]
+    assert block_pnl(alt_t1, 50.0, 10, FeeModel())[t] != base[t]

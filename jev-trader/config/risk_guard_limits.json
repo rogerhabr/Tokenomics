@@ -1,0 +1,29 @@
+{
+  "max_api_error_streak": 5,
+  "max_latency_p50_ms": 716.7,
+  "latency_window": 10,
+  "max_data_age_ms": 803.4,
+  "max_reject_ratio": 0.04,
+  "reject_window": 50,
+  "max_order_size": 50.0,
+  "max_hold_blocks": 40676,
+  "_meta": {
+    "p_target_per_block": 9.865877004244794e-10,
+    "derived_by": "scripts/stage4_limits.py",
+    "assumed_models": {
+      "p_err": 0.01,
+      "latency": {
+        "median_ms": 150.0,
+        "sigma": 0.45,
+        "spike_prob": 0.005,
+        "spike_lo_ms": 1200.0,
+        "spike_hi_ms": 2250.0
+      },
+      "feed_delay": [
+        40.0,
+        0.5
+      ]
+    },
+    "warning": "guard limits only; budget limits (position, daily loss, drawdown, leverage) come from the operator"
+  }
+}

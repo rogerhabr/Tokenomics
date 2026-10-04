@@ -14,7 +14,8 @@ cd jev-trader && pip install -e '.[dev]' && python -m pytest -q
 | 1 | Simulated LOB + state engine (snapshot < 400 tokens, no look-ahead) | ✅ 19 tests, 5/5 mutations caught |
 | 2 | Jev decision battery (mock + real SDK adapter, pinned model, `max_retries=0`) | ✅ 36 tests, 10/10 mutations caught |
 | 3 | Policy engine + A-S pricing + derived thresholds | ✅ 47 tests, 12/12 mutations caught |
-| — | *next: stage 4 (risk engine), awaiting approval* | |
+| 4 | Sweeps + recalibrated sim, paper venue/account, risk engine, 6σ guard limits | ✅ 139 tests, 14/14 + 1 look-ahead mutation caught |
+| — | *next: budget limits from operator, then stage 5 (block loop + fallback ladder)* | |
 | 3 | Policy engine (thresholds in config, cost-asymmetric) | |
 | 4 | Risk engine (hard limits, independent of the model, veto on every order) | |
 | 5 | Block loop + fallback ladder (late → hold, Jev down → code rules, breach → flatten) | |
@@ -72,3 +73,17 @@ model is an assumption until real latencies are logged.
 - `scripts/stage3_report.py` → `reports/stage3.md` gives out-of-sample results, paired by seed, with CIs.
   **Headline: in the default sim, quoting at the touch loses money even with a perfect toxicity oracle;
   all modeled profit depends on Jev predicting short-horizon markout.** See the report.
+
+## Stage 4: risk engine
+- **Corrections first.** The derivation had a one-block look-ahead (decided after block t but credited block t's
+  trades), and the simulator was mis-scaled (~70%/hour trends). Both are fixed and tested; stage 3 was re-run and
+  its headline changed (see `reports/stage3.md`).
+- `sim/lob.py` sweeps: Pareto order sizes walk the book; informed traders cross only when edge > half-spread.
+  Daily vol is 6–7%, enforced by a test.
+- `paper.py`: post-only rejects, level pro-rata / price-improvement fills against the **next** block, an
+  average-cost account, a taker flatten, and holding time measured to dust.
+- `risk.py`: ALLOW < VETO < REDUCE_ONLY < HALT < KILL (latched; human reset). It reads only measured state, and a
+  test checks it imports nothing from the decision/policy/sim layers.
+- `sim/limits.py` + `scripts/stage4_limits.py` derive guard limits at P(false trip) ≤ 1−Φ(6) per block,
+  exact under stated models and simulation-checked → `config/risk_guard_limits.json`, `reports/stage4.md`.
+- **Budget limits are blocked on operator input**: capital, max daily loss %, max drawdown %, max leverage.

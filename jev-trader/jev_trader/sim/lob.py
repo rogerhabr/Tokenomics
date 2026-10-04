@@ -38,11 +38,15 @@ class RegimeParams:
     noise_rate: float  # Poisson mean noise trades / block
 
 
+# Calibration target (stage 4 recalibration): ~5-6% daily vol overall, i.e. an
+# altcoin. 288k blocks/day, so per-block sigma 0.5 bp ≈ 2.7%/day in calm regimes,
+# 1.5 bp ≈ 8%/day in high_vol. Trending drift 0.03 bp/block ≈ 30 bp per 5-min episode.
+# (Stages 1-3 used sigma 1.5-9 bp and drift 0.6 bp/block -- 72%/hour trends.)
 DEFAULT_REGIMES: dict[str, RegimeParams] = {
-    "trending": RegimeParams(1.5, 0.6, 0.0, 1.0, 1.0, 0.6, 2.0),
-    "mean_reverting": RegimeParams(1.5, 0.0, 0.05, 1.0, 1.2, 0.2, 2.5),
-    "high_vol": RegimeParams(5.0, 0.0, 0.0, 2.0, 0.7, 0.8, 2.5),
-    "crisis": RegimeParams(9.0, 0.0, 0.0, 5.0, 0.2, 1.5, 1.0),
+    "trending": RegimeParams(0.5, 0.03, 0.0, 1.0, 1.0, 0.6, 2.0),
+    "mean_reverting": RegimeParams(0.5, 0.0, 0.05, 1.0, 1.2, 0.2, 2.5),
+    "high_vol": RegimeParams(1.5, 0.0, 0.0, 2.0, 0.7, 0.8, 2.5),
+    "crisis": RegimeParams(3.0, 0.0, 0.0, 5.0, 0.2, 1.5, 1.0),
 }
 
 
@@ -61,6 +65,15 @@ class SimConfig:
     regime_stay_prob: float = 0.999  # ~1000 blocks (~5 min) mean regime life
     crisis_entry_weight: float = 0.1  # crisis is rarer than other regimes
     ref_noise_bps: float = 0.5
+    # Sweeps (stage 4): heavy-tailed order sizes that walk the book, so quotes
+    # away from the touch can fill -- and the orders that reach them are
+    # disproportionately large/informed. sweeps=False reproduces stages 1-3.
+    sweeps: bool = True
+    noise_size_min: float = 8.0
+    noise_pareto_alpha: float = 1.8  # mean = a*xm/(a-1) ≈ 18
+    informed_size_min: float = 25.0  # scaled by regime depth_mult
+    informed_pareto_alpha: float = 1.6  # heavier tail than noise: big orders skew informed
+    size_cap: float = 5000.0
     regimes: dict[str, RegimeParams] = field(default_factory=lambda: dict(DEFAULT_REGIMES))
 
 
@@ -74,6 +87,10 @@ def _poisson(rng: random.Random, lam: float) -> int:
         if p <= limit:
             return k
         k += 1
+
+
+def _pareto(rng: random.Random, xm: float, alpha: float, cap: float) -> float:
+    return round(min(cap, xm / (1.0 - rng.random()) ** (1.0 / alpha)), 2)
 
 
 class LOBSimulator:
@@ -149,23 +166,45 @@ class LOBSimulator:
 
         trades: list[Trade] = []
         ib = is_ = nb = ns = 0.0
+        orders: list[tuple[str, float, bool]] = []  # (side, size, informed)
         for _ in range(_poisson(rng, p.informed_rate)):
+            if abs(fv_future - mid) <= half:  # informed traders only cross when edge > half-spread
+                continue
             side = "buy" if fv_future > mid else "sell"
-            size = round(rng.uniform(20, 80) * p.depth_mult + 10, 2)
-            trades.append(Trade(best_ask if side == "buy" else best_bid, size, side))
-            if side == "buy":
-                ib += size
+            if cfg.sweeps:
+                size = _pareto(rng, cfg.informed_size_min * p.depth_mult + 5, cfg.informed_pareto_alpha, cfg.size_cap)
             else:
-                is_ += size
+                size = round(rng.uniform(20, 80) * p.depth_mult + 10, 2)
+            orders.append((side, size, True))
         for _ in range(_poisson(rng, p.noise_rate)):
             side = rng.choice(("buy", "sell"))
-            size = round(rng.uniform(5, 40), 2)
-            trades.append(Trade(best_ask if side == "buy" else best_bid, size, side))
-            if side == "buy":
-                nb += size
+            size = (_pareto(rng, cfg.noise_size_min, cfg.noise_pareto_alpha, cfg.size_cap) if cfg.sweeps
+                    else round(rng.uniform(5, 40), 2))
+            orders.append((side, size, False))
+        rng.shuffle(orders)
+        # Walk the book: each aggressive order consumes levels in price order and
+        # prints one Trade per level touched. Depth consumed earlier in the block is
+        # gone for later orders. Volume beyond the visible book is not filled.
+        remaining = {"buy": [lv.size for lv in asks], "sell": [lv.size for lv in bids]}
+        for side, size, informed in orders:
+            levels = asks if side == "buy" else bids
+            rem, left, done = remaining[side], size, 0.0
+            for i, lv in enumerate(levels):
+                if left <= 0:
+                    break
+                if not cfg.sweeps and i > 0:
+                    break
+                take = left if not cfg.sweeps else min(left, rem[i])
+                if take <= 0:
+                    continue
+                trades.append(Trade(lv.price, round(take, 2), side))
+                rem[i] -= take
+                left -= take
+                done += take
+            if informed:
+                ib, is_ = (ib + done, is_) if side == "buy" else (ib, is_ + done)
             else:
-                ns += size
-        rng.shuffle(trades)
+                nb, ns = (nb + done, ns) if side == "buy" else (nb, ns + done)
 
         self.funding_bps += -0.001 * self.funding_bps + rng.gauss(0.0, 0.01)  # bounded OU
         ref = fv_now * (1 + rng.gauss(0.0, cfg.ref_noise_bps * 1e-4))
