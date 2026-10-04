@@ -13,7 +13,8 @@ cd jev-trader && pip install -e '.[dev]' && python -m pytest -q
 |---|---|---|
 | 1 | Simulated LOB + state engine (snapshot < 400 tokens, no look-ahead) | ✅ 19 tests, 5/5 mutations caught |
 | 2 | Jev decision battery (mock + real SDK adapter, pinned model, `max_retries=0`) | ✅ 36 tests, 10/10 mutations caught |
-| — | *next: stage 3, awaiting approval* | |
+| 3 | Policy engine + A-S pricing + derived thresholds | ✅ 47 tests, 12/12 mutations caught |
+| — | *next: stage 4 (risk engine), awaiting approval* | |
 | 3 | Policy engine (thresholds in config, cost-asymmetric) | |
 | 4 | Risk engine (hard limits, independent of the model, veto on every order) | |
 | 5 | Block loop + fallback ladder (late → hold, Jev down → code rules, breach → flatten) | |
@@ -56,3 +57,18 @@ Raw accuracy is not evidence of skill; only skill over the base rate counts.
 
 The 13% late rate matches the analytic value, 1−Φ(ln(250/150)/0.45). The lognormal latency
 model is an assumption until real latencies are logged.
+
+## Stage 3: policy engine
+- `pricing.py` holds the Avellaneda-Stoikov reservation price and spread, with gamma derived from
+  "skew X bps at max position". Quotes are post-only and capped by position limits. `inventory_pressure`
+  is code now: it was arithmetic, so it was removed from the Jev battery (5 questions).
+- `policy.py` holds the gates. They work on probabilities, never on `Score.score`. Advisory `direction`
+  is provably inert (property test). Unusable decisions go to code-only fallback rules.
+  Kill/drawdown checks are **not** here; they belong to the risk engine.
+- `sim/derive.py` maximizes markout PnL subject to "accuracy within `acc_tol` of max".
+  The grid search uses O(N+G²) difference arrays, proven equal to brute force including exact ties.
+  The analytic θ* = G/(G−L) is recovered to within one grid step on synthetic data.
+- Fees ("typical on-chain", assumed): maker 0 bp, taker 3.5 bp, replace 0.05 bp/order.
+- `scripts/stage3_report.py` → `reports/stage3.md` gives out-of-sample results, paired by seed, with CIs.
+  **Headline: in the default sim, quoting at the touch loses money even with a perfect toxicity oracle;
+  all modeled profit depends on Jev predicting short-horizon markout.** See the report.

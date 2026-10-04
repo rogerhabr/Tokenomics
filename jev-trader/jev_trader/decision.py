@@ -36,7 +36,6 @@ from jev_trader.state import Snapshot
 REGIMES = ("trending", "mean_reverting", "high_vol", "crisis")
 DIRECTIONS = ("up", "down", "neutral")
 QUOTE_LEVELS = ("Do not quote", "Marginal", "Standard", "Excellent")
-INVENTORY_LEVELS = ("None", "Mild", "Skew hard", "Reduce now")
 
 
 @dataclass(frozen=True)
@@ -53,6 +52,9 @@ class QuestionSpec:
         return tuple(str(i) for i in range(len(self.criteria)))
 
 
+# Stage 3: `inventory_pressure` was removed -- it is position/limit and holding
+# time, i.e. arithmetic (rule #1: never spend a Jev call on math). It now lives
+# in `pricing.inventory_pressure`.
 BATTERY: dict[str, QuestionSpec] = {
     "regime": QuestionSpec("choice", "What regime is the market in right now", {
         "trending": "Persistent move in one direction",
@@ -66,7 +68,6 @@ BATTERY: dict[str, QuestionSpec] = {
     "toxic_flow": QuestionSpec("noul", "Aggressive flow is likely informed traders, not noise"),
     "liquidity_stressed": QuestionSpec("noul", "The order book is thinner than its normal level"),
     "quote_environment": QuestionSpec("score", "How favorable is this state for providing liquidity", list(QUOTE_LEVELS)),
-    "inventory_pressure": QuestionSpec("score", "How urgently inventory should be reduced", list(INVENTORY_LEVELS)),
 }
 
 # Logged and calibrated, but the policy must not consume these until a

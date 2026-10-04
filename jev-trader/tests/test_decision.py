@@ -48,7 +48,7 @@ def test_from_env_requires_pin(monkeypatch):
 def test_battery_matches_roadmap_and_direction_is_advisory():
     assert {k: s.kind for k, s in BATTERY.items()} == {
         "regime": "choice", "direction": "choice", "toxic_flow": "noul",
-        "liquidity_stressed": "noul", "quote_environment": "score", "inventory_pressure": "score"}
+        "liquidity_stressed": "noul", "quote_environment": "score"}
     assert ADVISORY == {"direction"}
 
 
@@ -120,7 +120,7 @@ def good_answers(world_truth, snaps):
     lambda a: a["regime"].__setitem__("choice", min(a["regime"]["probabilities"], key=a["regime"]["probabilities"].get)),
     lambda a: a["quote_environment"].__setitem__("score", 3.0 if a["quote_environment"]["score"] < 1.5 else 0.0),
     lambda a: a["quote_environment"]["probabilities"].pop("3"),
-    lambda a: a["inventory_pressure"].__setitem__("confidence", -0.1),
+    lambda a: a["quote_environment"].__setitem__("confidence", -0.1),
 ])
 def test_malformed_answers_are_invalid_not_crash(world, breaker):
     _, _, snaps, truth = world

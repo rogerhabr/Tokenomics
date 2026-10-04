@@ -17,10 +17,13 @@ Ground truth (defined here, documented, partly arbitrary -- see README):
   direction           sign of fv[t+H] vs displayed mid[t], neutral band ±band_bps
   toxic_flow          informed share of aggressive volume over last W blocks > 0.5
   liquidity_stressed  sim thin_book flag
-  quote_environment   crisis or toxic -> 0, high_vol -> 1, trending -> 2, mean_reverting -> 3
-  inventory_pressure  bucket of |inventory| / max_position and hold time -- this is
-                      ARITHMETIC; it stays in the battery only to test whether a Jev
-                      call beats the one-line code rule (stage 3 decides).
+  quote_environment   if `markout` (per-block PnL of quoting at the touch) is given -- the
+                      economic definition used for threshold derivation:
+                        0: pnl < -c, 1: -c <= pnl < 0, 2: 0 <= pnl < c, 3: pnl >= c,
+                        c = median |pnl| over blocks with fills.
+                      Otherwise a regime heuristic (crisis/toxic 0, high_vol 1,
+                      trending 2, mean_reverting 3). Stage-3 lesson: a label not tied
+                      to PnL makes an *accurate* judgment worthless for money.
 """
 
 from __future__ import annotations
@@ -42,11 +45,15 @@ class Truth:
 
 
 def build_truth(blocks: list[BlockData], labels: list[HiddenLabels], horizon: int = 10,
-                band_bps: float = 2.0, toxic_window: int = 20, battery: dict[str, QuestionSpec] = BATTERY) -> Truth:
+                band_bps: float = 2.0, toxic_window: int = 20, battery: dict[str, QuestionSpec] = BATTERY,
+                markout: list[float] | None = None) -> Truth:
     n = len(blocks)
     lab: dict[str, list[int | None]] = {k: [None] * n for k in battery}
     reg = battery["regime"].labels()
     dirs = battery["direction"].labels()
+    if markout is not None:
+        nz = sorted(abs(x) for x in markout if x != 0.0)
+        c = nz[len(nz) // 2] if nz else 1.0
     inf = tot = 0.0
     win: list[tuple[float, float]] = []
     for t in range(n):
@@ -63,14 +70,16 @@ def build_truth(blocks: list[BlockData], labels: list[HiddenLabels], horizon: in
         toxic = tot > 0 and inf / tot > 0.5
         lab["toxic_flow"][t] = int(toxic)
         lab["liquidity_stressed"][t] = int(L.thin_book)
-        lab["quote_environment"][t] = (0 if L.regime == "crisis" or toxic else
-                                       {"high_vol": 1, "trending": 2, "mean_reverting": 3}[L.regime])
+        if markout is not None:
+            if t + horizon < n:
+                x = markout[t]
+                lab["quote_environment"][t] = 0 if x < -c else 1 if x < 0 else 2 if x < c else 3
+        else:
+            lab["quote_environment"][t] = (0 if L.regime == "crisis" or toxic else
+                                           {"high_vol": 1, "trending": 2, "mean_reverting": 3}[L.regime])
     priors = {}
     for k, spec in battery.items():
         K = len(spec.labels())
-        if k == "inventory_pressure":
-            priors[k] = [0.55, 0.25, 0.15, 0.05]
-            continue
         counts = [1.0] * K  # Laplace
         for y in lab[k]:
             if y is not None:
@@ -78,14 +87,6 @@ def build_truth(blocks: list[BlockData], labels: list[HiddenLabels], horizon: in
         s = sum(counts)
         priors[k] = [c / s for c in counts]
     return Truth(lab, priors)
-
-
-def inventory_truth(state: dict[str, float], max_position: float, max_hold_blocks: int) -> int:
-    frac = abs(state.get("inventory", 0.0)) / max_position if max_position > 0 else 0.0
-    lvl = 0 if frac < 0.25 else 1 if frac < 0.5 else 2 if frac < 0.8 else 3
-    if state.get("hold_blocks", 0) > max_hold_blocks:
-        lvl = min(3, lvl + 1)
-    return lvl
 
 
 @dataclass
@@ -112,12 +113,11 @@ class FailurePlan:
 class MockJev:
     def __init__(self, truth: Truth, *, model: str = "jev-mock-2026-09-15", skill: tuple[float, float] = (0.4, 0.95),
                  temperature: float = 1.0, latency: LatencyModel | None = None, failures: FailurePlan | None = None,
-                 max_position: float = 1000.0, max_hold_blocks: int = 2000, seed: int = 11,
+                 seed: int = 11,
                  skill_by_question: dict[str, tuple[float, float]] | None = None) -> None:
         self.truth, self.model, self.skill, self.temperature = truth, model, skill, temperature
         self.latency = latency or LatencyModel()
         self.failures = failures or FailurePlan()
-        self.max_position, self.max_hold_blocks = max_position, max_hold_blocks
         self.skill_by_question = skill_by_question or {}
         self.rng = random.Random(seed)
         self.calls = 0
@@ -142,10 +142,7 @@ class MockJev:
             raise BackendError("mock transient error")
         answers: dict[str, Any] = {}
         for name, spec in battery.items():
-            if name == "inventory_pressure":
-                y: int | None = inventory_truth(state, self.max_position, self.max_hold_blocks)
-            else:
-                y = self.truth.labels[name][block] if block < len(self.truth.labels[name]) else None
+            y = self.truth.labels[name][block] if block < len(self.truth.labels[name]) else None
             prior = self.truth.priors[name]
             skill = self.skill_by_question.get(name, self.skill)
             q = list(prior) if y is None else self._posterior(y, prior, skill)

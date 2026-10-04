@@ -1,0 +1,35 @@
+{
+  "toxic_pull": 0.6,
+  "stress_widen": 0.7,
+  "crisis_stand_down": 0.5,
+  "quote_both": 0.35,
+  "quote_wide": 0.6,
+  "min_confidence": 0.0,
+  "fb_max_rv30s_bps": 12.0,
+  "fb_min_depth_vs_norm": 0.5,
+  "fb_max_abs_ret1m_bps": 60.0,
+  "_meta": {
+    "derived_by": "scripts/stage3_report.py",
+    "scenario": "informed_mult=1.0, quote_env skill strong (mock)",
+    "acc_tol": 0.02,
+    "train_seeds": [
+      100,
+      101,
+      102,
+      103,
+      104,
+      105
+    ],
+    "blocks": 6000,
+    "G": -0.0020646135133247623,
+    "L": -0.007382397786213969,
+    "theta_star": 0.0,
+    "train": {
+      "pnl": 57.219514583951906,
+      "quote_frac": 0.4871264367816092,
+      "acc_tox": 0.9281321839080459,
+      "acc_q": 0.8409902130109383
+    },
+    "warning": "derived on a SIMULATOR with a MOCK Jev; re-derive on logged real decisions"
+  }
+}
