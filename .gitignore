@@ -18,3 +18,7 @@ npm-debug.log*
 
 # Transient PR body written by the throughput agent (committed only via create-pull-request add-paths)
 throughput-update-report.md
+
+# python
+__pycache__/
+.pytest_cache/

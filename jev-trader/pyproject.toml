@@ -1,0 +1,13 @@
+[project]
+name = "jev-trader"
+version = "0.1.0"
+description = "Block-speed market maker: math in code, judgment in Jev, final say in the risk engine. Paper trading only."
+requires-python = ">=3.10"
+dependencies = []  # stage 1 is stdlib-only; typesafe-sdk arrives in stage 2
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
