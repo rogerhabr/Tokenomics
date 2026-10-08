@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-07T12:39:07.379Z",
+  "lastUpdated": "2026-10-08T12:48:52.557Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 239.24,
-      "prevClose": 227.21,
-      "changePct": 5.29,
+      "price": 237.47,
+      "prevClose": 228.38,
+      "changePct": 3.98,
       "marketCap": null
     },
     "MSFT": {
-      "price": 529.3,
-      "prevClose": 508.96,
-      "changePct": 4,
+      "price": 529.76,
+      "prevClose": 512.9,
+      "changePct": 3.29,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 347.68,
-      "prevClose": 340.92,
-      "changePct": 1.98,
+      "price": 350.5,
+      "prevClose": 344.08,
+      "changePct": 1.87,
       "marketCap": null
     },
     "AMZN": {
-      "price": 256.29,
-      "prevClose": 246.67,
-      "changePct": 3.9,
+      "price": 259.92,
+      "prevClose": 249.15,
+      "changePct": 4.32,
       "marketCap": null
     },
     "META": {
-      "price": 738.88,
-      "prevClose": 738.79,
-      "changePct": 0.01,
+      "price": 721.31,
+      "prevClose": 725.18,
+      "changePct": -0.53,
       "marketCap": null
     },
     "AMD": {
-      "price": 649.42,
-      "prevClose": 607.57,
-      "changePct": 6.89,
+      "price": 645.86,
+      "prevClose": 611.76,
+      "changePct": 5.57,
       "marketCap": null
     },
     "ORCL": {
-      "price": 144.77,
-      "prevClose": 137.79,
-      "changePct": 5.07,
+      "price": 143.56,
+      "prevClose": 137.3,
+      "changePct": 4.56,
       "marketCap": null
     }
   },
@@ -1709,6 +1709,13 @@
       "provider": "Google",
       "displayName": "Vertex_ai/Xai/Grok 4.7",
       "contextK": 524
+    },
+    "claude-haiku-5-5": {
+      "inputPerM": 0.09999999999999999,
+      "outputPerM": 0.5,
+      "provider": "Anthropic",
+      "displayName": "Claude Haiku 5 5",
+      "contextK": 1000
     }
   },
   "nvdaFinancials": null,
