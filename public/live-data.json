@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-08T12:48:52.557Z",
+  "lastUpdated": "2026-10-09T12:34:27.831Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 237.47,
-      "prevClose": 228.38,
-      "changePct": 3.98,
+      "price": 230.48,
+      "prevClose": 230.86,
+      "changePct": -0.16,
       "marketCap": null
     },
     "MSFT": {
-      "price": 529.76,
-      "prevClose": 512.9,
-      "changePct": 3.29,
+      "price": 522.61,
+      "prevClose": 512.8,
+      "changePct": 1.91,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 350.5,
-      "prevClose": 344.08,
-      "changePct": 1.87,
+      "price": 348.29,
+      "prevClose": 338.24,
+      "changePct": 2.97,
       "marketCap": null
     },
     "AMZN": {
-      "price": 259.92,
-      "prevClose": 249.15,
-      "changePct": 4.32,
+      "price": 254.06,
+      "prevClose": 248.23,
+      "changePct": 2.35,
       "marketCap": null
     },
     "META": {
-      "price": 721.31,
-      "prevClose": 725.18,
-      "changePct": -0.53,
+      "price": 720.89,
+      "prevClose": 725.93,
+      "changePct": -0.69,
       "marketCap": null
     },
     "AMD": {
-      "price": 645.86,
-      "prevClose": 611.76,
-      "changePct": 5.57,
+      "price": 620.68,
+      "prevClose": 615.73,
+      "changePct": 0.8,
       "marketCap": null
     },
     "ORCL": {
-      "price": 143.56,
-      "prevClose": 137.3,
-      "changePct": 4.56,
+      "price": 135.69,
+      "prevClose": 138.07,
+      "changePct": -1.72,
       "marketCap": null
     }
   },
@@ -952,14 +952,14 @@
       "outputPerM": 2.09,
       "provider": "Mistral AI",
       "displayName": "Mistral/Mistral Large 4",
-      "contextK": 524
+      "contextK": 1049
     },
     "mistral/mistral-large-4-0": {
       "inputPerM": 0.6799999999999999,
       "outputPerM": 2.09,
       "provider": "Mistral AI",
       "displayName": "Mistral/Mistral Large 4 0",
-      "contextK": 524
+      "contextK": 1049
     },
     "mistral/mistral-large-latest": {
       "inputPerM": 0.5,
