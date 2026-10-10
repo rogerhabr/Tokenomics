@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-09T12:34:27.831Z",
+  "lastUpdated": "2026-10-10T11:54:45.696Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 230.48,
-      "prevClose": 230.86,
-      "changePct": -0.16,
+      "price": 229.28,
+      "prevClose": 233.95,
+      "changePct": -2,
       "marketCap": null
     },
     "MSFT": {
-      "price": 522.61,
-      "prevClose": 512.8,
-      "changePct": 1.91,
+      "price": 535.07,
+      "prevClose": 517.53,
+      "changePct": 3.39,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 348.29,
-      "prevClose": 338.24,
-      "changePct": 2.97,
+      "price": 351.66,
+      "prevClose": 343.5,
+      "changePct": 2.38,
       "marketCap": null
     },
     "AMZN": {
-      "price": 254.06,
-      "prevClose": 248.23,
-      "changePct": 2.35,
+      "price": 262.43,
+      "prevClose": 251.52,
+      "changePct": 4.34,
       "marketCap": null
     },
     "META": {
-      "price": 720.89,
-      "prevClose": 725.93,
-      "changePct": -0.69,
+      "price": 718.67,
+      "prevClose": 728.08,
+      "changePct": -1.29,
       "marketCap": null
     },
     "AMD": {
-      "price": 620.68,
-      "prevClose": 615.73,
-      "changePct": 0.8,
+      "price": 608.1,
+      "prevClose": 633.91,
+      "changePct": -4.07,
       "marketCap": null
     },
     "ORCL": {
-      "price": 135.69,
-      "prevClose": 138.07,
-      "changePct": -1.72,
+      "price": 141.4,
+      "prevClose": 142.3,
+      "changePct": -0.63,
       "marketCap": null
     }
   },
@@ -175,14 +175,14 @@
       "outputPerM": 15,
       "provider": "Anthropic",
       "displayName": "Claude Sonnet 4.5",
-      "contextK": 1000
+      "contextK": 200
     },
     "claude-sonnet-4-5-20250929": {
       "inputPerM": 3,
       "outputPerM": 15,
       "provider": "Anthropic",
       "displayName": "Claude Sonnet 4 5",
-      "contextK": 1000
+      "contextK": 200
     },
     "claude-sonnet-5": {
       "inputPerM": 2,
@@ -1716,6 +1716,12 @@
       "provider": "Anthropic",
       "displayName": "Claude Haiku 5 5",
       "contextK": 1000
+    },
+    "gpt-rosalind-discovery": {
+      "inputPerM": 5,
+      "outputPerM": 25,
+      "provider": "OpenAI",
+      "displayName": "Gpt Rosalind Discovery"
     }
   },
   "nvdaFinancials": null,
