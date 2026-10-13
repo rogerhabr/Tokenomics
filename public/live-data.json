@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-12T14:25:53.569Z",
+  "lastUpdated": "2026-10-13T13:34:24.719Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 225.44,
-      "prevClose": 238.9,
-      "changePct": -5.63,
+      "price": 224.18,
+      "prevClose": 239.24,
+      "changePct": -6.29,
       "marketCap": null
     },
     "MSFT": {
-      "price": 538.92,
-      "prevClose": 525.18,
-      "changePct": 2.62,
+      "price": 548.45,
+      "prevClose": 529.3,
+      "changePct": 3.62,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 353.265,
-      "prevClose": 346.47,
-      "changePct": 1.96,
+      "price": 354.39,
+      "prevClose": 347.68,
+      "changePct": 1.93,
       "marketCap": null
     },
     "AMZN": {
-      "price": 261.43,
-      "prevClose": 251.4,
-      "changePct": 3.99,
+      "price": 260.258,
+      "prevClose": 256.29,
+      "changePct": 1.55,
       "marketCap": null
     },
     "META": {
-      "price": 743.43,
-      "prevClose": 741.9,
-      "changePct": 0.21,
+      "price": 741.915,
+      "prevClose": 738.88,
+      "changePct": 0.41,
       "marketCap": null
     },
     "AMD": {
-      "price": 589.5,
-      "prevClose": 631.75,
-      "changePct": -6.69,
+      "price": 574,
+      "prevClose": 649.42,
+      "changePct": -11.61,
       "marketCap": null
     },
     "ORCL": {
-      "price": 137.98,
-      "prevClose": 142.48,
-      "changePct": -3.16,
+      "price": 136.788,
+      "prevClose": 144.77,
+      "changePct": -5.51,
       "marketCap": null
     }
   },
@@ -289,6 +289,13 @@
       "displayName": "Computer Use Preview",
       "contextK": 8
     },
+    "computer-use-preview-2025-03-11": {
+      "inputPerM": 3,
+      "outputPerM": 12,
+      "provider": "OpenAI",
+      "displayName": "Computer Use Preview 2025 03 11",
+      "contextK": 8
+    },
     "deepseek-chat": {
       "inputPerM": 0.28,
       "outputPerM": 0.42,
@@ -527,6 +534,13 @@
       "displayName": "Gpt Audio Mini",
       "contextK": 128
     },
+    "gpt-audio-mini-2025-10-06": {
+      "inputPerM": 0.6,
+      "outputPerM": 2.4,
+      "provider": "OpenAI",
+      "displayName": "Gpt Audio Mini 2025 10 06",
+      "contextK": 128
+    },
     "gpt-audio-mini-2025-12-15": {
       "inputPerM": 0.6,
       "outputPerM": 2.4,
@@ -562,11 +576,25 @@
       "displayName": "Gpt 4o Mini Search Preview",
       "contextK": 128
     },
+    "gpt-4o-mini-search-preview-2025-03-11": {
+      "inputPerM": 0.15,
+      "outputPerM": 0.6,
+      "provider": "OpenAI",
+      "displayName": "Gpt 4o Mini Search Preview 2025 03 11",
+      "contextK": 128
+    },
     "gpt-4o-search-preview": {
       "inputPerM": 2.5,
       "outputPerM": 10,
       "provider": "OpenAI",
       "displayName": "Gpt 4o Search Preview",
+      "contextK": 128
+    },
+    "gpt-4o-search-preview-2025-03-11": {
+      "inputPerM": 2.5,
+      "outputPerM": 10,
+      "provider": "OpenAI",
+      "displayName": "Gpt 4o Search Preview 2025 03 11",
       "contextK": 128
     },
     "gpt-5": {
@@ -1722,6 +1750,13 @@
       "outputPerM": 25,
       "provider": "OpenAI",
       "displayName": "Gpt Rosalind Discovery"
+    },
+    "vertex_ai/gemini-robotics-er-2-preview": {
+      "inputPerM": 1,
+      "outputPerM": 5,
+      "provider": "Google",
+      "displayName": "Vertex_ai/Gemini Robotics Er 2 Preview",
+      "contextK": 131
     }
   },
   "nvdaFinancials": null,
