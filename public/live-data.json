@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-13T13:34:24.719Z",
+  "lastUpdated": "2026-10-14T11:11:03.905Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 224.18,
+      "price": 228.52,
       "prevClose": 239.24,
-      "changePct": -6.29,
+      "changePct": -4.48,
       "marketCap": null
     },
     "MSFT": {
-      "price": 548.45,
+      "price": 543.45,
       "prevClose": 529.3,
-      "changePct": 3.62,
+      "changePct": 2.67,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 354.39,
+      "price": 353.78,
       "prevClose": 347.68,
-      "changePct": 1.93,
+      "changePct": 1.75,
       "marketCap": null
     },
     "AMZN": {
-      "price": 260.258,
+      "price": 258.58,
       "prevClose": 256.29,
-      "changePct": 1.55,
+      "changePct": 0.89,
       "marketCap": null
     },
     "META": {
-      "price": 741.915,
+      "price": 762.5,
       "prevClose": 738.88,
-      "changePct": 0.41,
+      "changePct": 3.2,
       "marketCap": null
     },
     "AMD": {
-      "price": 574,
+      "price": 605.53,
       "prevClose": 649.42,
-      "changePct": -11.61,
+      "changePct": -6.76,
       "marketCap": null
     },
     "ORCL": {
-      "price": 136.788,
+      "price": 143.2,
       "prevClose": 144.77,
-      "changePct": -5.51,
+      "changePct": -1.08,
       "marketCap": null
     }
   },
@@ -1757,6 +1757,20 @@
       "provider": "Google",
       "displayName": "Vertex_ai/Gemini Robotics Er 2 Preview",
       "contextK": 131
+    },
+    "vertex_ai/gemini-4-argon": {
+      "inputPerM": 2,
+      "outputPerM": 10,
+      "provider": "Google",
+      "displayName": "Vertex_ai/Gemini 4 Argon",
+      "contextK": 1049
+    },
+    "vertex_ai/gemini-4-argon-cyber-permissive": {
+      "inputPerM": 4,
+      "outputPerM": 20,
+      "provider": "Google",
+      "displayName": "Vertex_ai/Gemini 4 Argon Cyber Permissive",
+      "contextK": 1049
     }
   },
   "nvdaFinancials": null,
