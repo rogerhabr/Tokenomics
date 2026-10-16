@@ -165,6 +165,54 @@ so this is a direct privilege-escalation path into any gate that trusts it.
 `role` from `authenticated`, and move role mutation behind a `SECURITY DEFINER` function
 that writes to the audit ledger. Carried as finding **F-17** in `04-FMEA.md`.
 
+### DR-06 — Org and objective trees use a materialised TEXT path, not `ltree`
+**Decision:** `org_unit.path` / `objective.path` are `text` with a
+`text_pattern_ops` index; ancestor and descendant queries are prefix `LIKE`s.
+
+**Rationale:** removes Stage 0 open item **O-1** (whether `ltree` is available on
+the Supabase plan in use) at no functional loss. One fewer extension dependency.
+
+**Bug this surfaced during implementation:** the subtree re-path trigger was
+originally `AFTER UPDATE OF path`. Postgres arms an `UPDATE OF col` trigger from
+the columns **named in the statement**, not from columns a BEFORE trigger went on
+to change — and `update org_unit set parent_id = ...` never names `path`. The
+result was that a practice could move while every descendant kept a stale path
+and a wrong depth, silently. Both triggers now fire unconditionally and guard on
+`is distinct from`. Proven by executing a real subtree move, not by review.
+
+### DR-07 — Client-side users authenticate into the platform
+**Decision:** `CLIENT_SPONSOR`, `CLIENT_UAT_APPROVER` and `CLIENT_OBSERVER` are
+real `app_user` rows (`party = 'CLIENT'`, pinned to one `client_id`) with real
+time-windowed `user_role` grants.
+
+**Consequence:** invariant **I-3** applies to client signatures too. A client UAT
+sign-off is tied to an authenticated identity whose grant was provably live at
+the moment of signing, rather than to an attached document. Enforced by
+`guard_uat_executor_role()` — a UAT case cannot be executed by anyone without a
+live `CLIENT_UAT_APPROVER` grant in scope. Resolves open item **O-3**.
+
+### DR-08 — Single currency at launch, multi-currency schema in place
+**Decision:** every money column carries `currency`; cross-currency aggregates
+require an explicit `fx_rate_version_id`; `firm.multi_currency_enabled` is
+`false` at launch and `fx_rate_version` is seeded with identity rates.
+Resolves open item **O-4**. Fiscal year starts in **January** (open item **O-2**).
+
+### DR-09 — A shipped formula default is not an approved one
+**Decision:** `formula_version.provenance ∈ {SEEDED, HUMAN, AGENT_PROPOSED}`. A
+`SEEDED` version may be `ACTIVE` with **no** approver, and is forbidden from
+carrying one.
+
+**Rationale:** this surfaced as a constraint violation while seeding. The
+constraint was right and the seed was wrong. `seed_firm_defaults()` originally
+set `state='ACTIVE', approved_at=now()` with a null approver; the obvious
+"fixes" were to relax the constraint or to stamp a system user as approver.
+Both put a falsehood in the audit trail — nobody at the firm has approved a
+vendor default. `SEEDED` says so explicitly, and
+`consulting.formula_staleness` turns it into the FMEA **F-01b** ossification
+report: every threshold still running on a default nobody here has ever looked
+at. The two failure halves of F-01b — silent edits and silent ossification —
+are now both visible.
+
 ---
 
 ## 3. Architectural Invariants

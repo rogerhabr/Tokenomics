@@ -427,10 +427,10 @@ audit_ledger (append-only, hash-chained) ── ledger_checkpoint
 
 ## 12. Open items carried to Stage 1
 
-| # | Item | Why it matters |
+| # | Item | Status |
 |---|---|---|
-| O-1 | `ltree` extension availability on the Supabase plan in use | `org_unit.path` design; fall back to a materialised closure table if unavailable |
-| O-2 | Fiscal calendar definition (firm's FY start month) | all `fiscal_period` keys and period-close logic |
-| O-3 | Whether client-side users authenticate into this instance or receive exported signoff packets | changes `CLIENT_*` role plumbing and the signature model |
-| O-4 | Base currency and whether multi-currency is live at launch | if single-currency, `fx_rate_version` can be seeded with identity rates |
-| O-5 | Does `pg_cron` / Supabase scheduled functions drive agent runs, or a GitHub Action like `refresh-data.yml` | agent scheduler implementation |
+| O-1 | `ltree` availability | **Resolved — DR-06.** Avoided entirely: materialised `text` path with a `text_pattern_ops` index. No extension dependency. |
+| O-2 | Fiscal calendar | **Resolved.** `firm.fiscal_year_start_month = 1` (calendar year). |
+| O-3 | Client-side authentication | **Resolved — DR-07.** Client users authenticate in, so I-3 covers client signatures. |
+| O-4 | Multi-currency at launch | **Resolved — DR-08.** Single currency live, multi-currency schema in place. |
+| O-5 | Agent scheduler: `pg_cron` vs a GitHub Action | **Open — Stage 4.** Does not block Stages 1–3; `agent_def.schedule_cron` holds the schedule either way. |

@@ -78,12 +78,22 @@ fail=0
 shopt -s nullglob
 for f in "$REPO"/supabase/tests/[1-9]*.sql; do
   echo "--- $(basename "$f")"
-  if out=$(psql -h "$SOCK" -p "$PORT" -U postgres -d "$DB" -X -q -f "$f" 2>&1); then
-    echo "$out" | grep -vE '^\s*$|^NOTICE' || true
-  else
-    echo "$out" | grep -vE '^\s*$' | head -40; fail=1
+  out=$(psql -h "$SOCK" -p "$PORT" -U postgres -d "$DB" -X -q -f "$f" 2>&1) || true
+
+  # Show the proofs, and any error that is not a proof line.
+  echo "$out" | grep -E 'PROOF (PASS|FAIL)' | sed 's/^.*NOTICE:  //' || true
+  errs=$(echo "$out" | grep -E '^psql.*(ERROR|FATAL)' | grep -v 'PROOF' || true)
+  [ -n "$errs" ] && { echo "$errs" | head -20; fail=1; }
+
+  # A test file that dies before its first assertion produces no PROOF FAIL at
+  # all, so silence would otherwise read as success. Require evidence.
+  n=$(echo "$out" | grep -c 'PROOF PASS' || true)
+  if [ "$n" = "0" ]; then
+    echo "    NO PROOFS EMITTED -- the file errored before asserting anything"
+    fail=1
   fi
-  if echo "$out" | grep -q 'PROOF FAIL'; then fail=1; fi
+  echo "$out" | grep -q 'PROOF FAIL' && fail=1
+  echo "    ($n passed)"
 done
 
 echo

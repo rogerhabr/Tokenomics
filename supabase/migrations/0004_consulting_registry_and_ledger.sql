@@ -55,6 +55,14 @@ create table consulting.formula_version (
   input_bindings jsonb not null default '{}'::jsonb,
   state          text not null default 'DRAFT'
                    check (state in ('DRAFT','PENDING_APPROVAL','ACTIVE','SUPERSEDED','RETIRED')),
+  -- Where this version came from. A shipped default was never approved by
+  -- anyone at this firm, and recording a human approver for it would put a
+  -- falsehood in the audit trail -- so SEEDED is its own provenance rather
+  -- than a fake signature. It also makes the FMEA F-01b staleness report
+  -- trivial: anything still SEEDED is running on vendor defaults that nobody
+  -- here has ever looked at.
+  provenance     text not null default 'HUMAN'
+                   check (provenance in ('SEEDED','HUMAN','AGENT_PROPOSED')),
   content_hash   bytea not null,
   notes          text,
   created_at     timestamptz not null default now(),
@@ -62,15 +70,23 @@ create table consulting.formula_version (
   approved_by    uuid references consulting.app_user(id),
   approved_at    timestamptz,
   unique (formula_id, version),
-  -- Invariant I-8 part 1: ACTIVE implies approved. The test-case gate is
-  -- enforced by the activation function below, which is the only legal path.
+  -- Invariant I-8 part 1: ACTIVE implies approved, unless it is a shipped
+  -- default. The test-case gate is enforced by the activation function below,
+  -- which is the only legal path for a HUMAN or AGENT_PROPOSED version.
   constraint formula_version_active_approved check (
-    state <> 'ACTIVE' or (approved_by is not null and approved_at is not null)
+    state <> 'ACTIVE'
+    or provenance = 'SEEDED'
+    or (approved_by is not null and approved_at is not null)
   ),
   -- FMEA F-02 / segregation of duties: an author may not approve their own
   -- formula version.
   constraint formula_version_no_self_approval check (
     approved_by is null or approved_by <> created_by
+  ),
+  -- A SEEDED version carries no approver at all. Without this, seeding could
+  -- quietly stamp someone's name against a threshold they never saw.
+  constraint formula_version_seeded_unapproved check (
+    provenance <> 'SEEDED' or (approved_by is null and created_by is null)
   )
 );
 alter table consulting.formula_version enable row level security;
@@ -142,6 +158,28 @@ create table consulting.formula_change_request (
   updated_by          uuid
 );
 alter table consulting.formula_change_request enable row level security;
+
+-- FMEA F-01b, the ossification half: the risk is not only that someone edits a
+-- formula, it is that NOBODY EVER DOES and the shipped defaults harden into
+-- de-facto hardcoded constants. This view is what the monthly PMO report reads.
+create or replace view consulting.formula_staleness as
+select
+  fo.firm_id,
+  fo.code,
+  fo.name,
+  fo.domain,
+  fv.version,
+  fv.provenance,
+  fv.input_bindings,
+  fv.created_at as in_force_since,
+  (now() - fv.created_at) as age,
+  fv.provenance = 'SEEDED' as never_reviewed_here
+from consulting.formula fo
+join consulting.formula_version fv on fv.formula_id = fo.id and fv.state = 'ACTIVE';
+
+comment on view consulting.formula_staleness is
+  'Which thresholds are still running on shipped defaults nobody at this firm '
+  'has reviewed. FMEA F-01b mitigation 4.';
 
 -- ---------------------------------------------------------------- immutability
 -- An ACTIVE or SUPERSEDED version is history. Its expression, bindings and hash
