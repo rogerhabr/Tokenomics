@@ -2,7 +2,9 @@
 
 *"Analyse how your architecture will fail. Address failure points."*
 
-Twenty failure modes. Each is scored on **S** (severity of effect, 1–5), **O** (likelihood
+Twenty-one failure modes — the twenty identified in Stage 0, plus **F-21**,
+which Stage 1 found by executing the policies against a two-tenant fixture
+rather than by reviewing them. Each is scored on **S** (severity of effect, 1–5), **O** (likelihood
 of occurrence if unmitigated, 1–5) and **D** (difficulty of detection, 1–5 where 5 = silent).
 **RPN = S × O × D**. Ranked by RPN descending. Every mitigation maps to a concrete
 artefact — a constraint, a trigger, a test, a metric, or a gate criterion.
@@ -14,6 +16,7 @@ make the platform produce confident, wrong answers.
 
 | ID | Failure mode | S | O | D | **RPN** |
 |---|---|---|---|---|---|
+| F-21 | A firm-wide role leaks ACROSS TENANTS because the visibility predicate tests the caller, not the target row | 5 | 4 | 5 | **100** |
 | F-01 | RLS bypass via the Supabase service-role key | 5 | 4 | 4 | **80** |
 | F-02 | Gate theatre: signoffs become rubber stamps | 5 | 4 | 4 | **80** |
 | F-16 | Serial re-baselining hides scope creep | 5 | 4 | 4 | **80** |
@@ -34,6 +37,46 @@ make the platform produce confident, wrong answers.
 | F-08 | Agent proposal flood → humans stop reading → whole loop dies | 4 | 5 | 2 | **40** |
 | F-15 | Phase skip via direct DB access | 5 | 2 | 3 | **30** |
 | F-13 | Giant chart collapses at real portfolio scale | 3 | 5 | 1 | **15** |
+
+
+---
+
+## F-21 · A firm role leaks across tenants — RPN 100 · **found by execution, Stage 1**
+
+**Mechanism.** `can_see_engagement()` was written as:
+
+```sql
+not conflict_blocked(id) and (is_engagement_member(id) or has_firm_role(['DIRECTOR', …]))
+```
+
+`has_firm_role()` inspects the **caller's** grants. It says nothing about which
+firm the *target row* belongs to. So a Director in firm A satisfied the role
+branch for an engagement in firm B and read it — along with every project, WBS,
+baseline, timesheet and EVM snapshot hanging off it.
+
+**Effect.** Total cross-tenant disclosure to anyone holding a firm governance
+role. Strictly worse than F-01, because it needs no service key and no mistake
+at the application layer: the policy itself grants it.
+
+**Why detection is hard, and why it was nearly missed.** A single-tenant
+deployment can never surface it — with one firm in the database the predicate is
+accidentally correct. Every table-specific test passed. It was caught by proof
+**40.3f**, which asserts that a Director with no engagement membership sees *three*
+projects and got **four**: proof 30's fixture had left a second firm behind, and
+the Director read into it.
+
+Two lessons, both now encoded:
+1. **The negative test fixture must contain a second tenant.** A barrier suite
+   with one tenant cannot test tenancy.
+2. **Count without a firm filter.** Proof 40.3f deliberately queries
+   `select count(*) from consulting.project` with no `where firm_id = …`. Scoping
+   the *query* to the firm would have hidden the leak — the *predicate* has to do
+   the scoping, and only an unscoped query tests that.
+
+**Mitigation.** `can_see_engagement()` and `can_see_client()` now both require
+`firm_id = consulting.current_firm()` **before** the role branch is considered.
+A firm role widens reach across clients, never across tenants, and never across
+the conflict wall. Asserted by 40.3f and 40.9c.
 
 ---
 

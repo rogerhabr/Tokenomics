@@ -234,8 +234,31 @@ Non-negotiable. Every subsequent stage is tested against these.
 | **I-11** | No arithmetic inside the LLM boundary. `src/lib/consulting/engine/**` is pure, deterministic, dependency-free of any model client. | CI test asserting no AI SDK import under `engine/` |
 | **I-12** | Agents cannot hold a role, sign, waive, or advance a phase. | schema: no agent identity in `user_role`/`signoff` |
 | **I-13** | Cross-client visibility is denied by default and governed by `conflict_group`; aggregate views apply the same barrier, not just row views. | RLS on base tables + barrier views |
-| **I-14** | Money columns never sum without an explicit `currency` + `fx_rate_version`. | composite type + check constraint |
+| **I-14** | *(restated in Stage 1 — see note below)* No money aggregate in this codebase uses bare `sum()`; `consulting.money_sum()` **raises** on mixed currencies unless given an `fx_rate_version`, and a locked rate version is immutable. | aggregate function + trigger + CI check |
 | **I-15** | Every mutation that touches budget, timeline, scope, role, or formula writes a ledger row **in the same transaction**. | trigger, not application code |
+
+### Note on I-14 — an invariant corrected during Stage 1
+
+As first written, I-14 said *"money columns never sum without an explicit
+currency + `fx_rate_version`"*, enforced by a "composite type + check
+constraint". **That is not implementable and the claim was wrong.** A `CHECK`
+constraint evaluates one row; `select sum(amount) from …` across mixed
+currencies is a valid query no constraint can intercept. Leaving the original
+wording would have left a governance invariant on the page that does not exist
+in the database — the worst kind of documentation.
+
+What `0013_consulting_money.sql` actually delivers:
+
+| Mechanism | Property |
+|---|---|
+| `consulting.money_sum(amount, currency)` | **raises** on mixed currencies |
+| `consulting.money_sum(amount, currency, fx_id)` | converts explicitly, then sums |
+| `consulting.convert_money(...)` | refuses without a rate version; refuses a missing rate rather than defaulting to 1 |
+| `guard_fx_version_locked` | a closed period's rates cannot move |
+| `scripts/check-sql-hygiene.sh` | CI fails on a bare `sum()` over a money column |
+
+The restated invariant is testable, and proof 50 tests it. The stronger claim is
+gone rather than quietly left standing.
 
 ---
 

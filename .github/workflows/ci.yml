@@ -24,6 +24,23 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # Static checks that encode FMEA mitigations the test suite cannot reach,
+      # because they are about code that does not exist yet: the service-role
+      # key stays confined, no bare sum() over money, the calculation engine
+      # stays pure. See scripts/check-sql-hygiene.sh.
+      - name: SQL + architecture hygiene
+        run: ./scripts/check-sql-hygiene.sh
+
+      # Applies every migration to a throwaway Postgres 16 cluster and runs the
+      # governance proof suite (ledger integrity, privilege escalation, the gate
+      # machine's attempt-to-cheat suite, the RLS barrier, money arithmetic).
+      - name: Database proofs
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-16 >/dev/null
+          sudo useradd -m pgproof 2>/dev/null || true
+          PGBIN=/usr/lib/postgresql/16/bin ./scripts/db-test.sh
+
       - name: Build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}

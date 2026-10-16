@@ -714,12 +714,26 @@ as $$
 $$;
 
 -- The predicate every delivery-table policy uses.
+--
+-- The firm check is load-bearing and was missing in a first version: a FIRM
+-- role widens reach ACROSS CLIENTS, and has_firm_role() only inspects the
+-- CALLER's grants -- it says nothing about which firm the target row belongs
+-- to. Without the tenant test, a Director in firm A satisfied the role branch
+-- for an engagement in firm B and read it. Found by proof 40.3f, which expected
+-- a Director to see 3 projects and got 4 because another firm's fixture was
+-- still in the database. A single-tenant deployment would never have surfaced
+-- it; the test did because it had two firms.
 create or replace function consulting.can_see_engagement(p_engagement_id uuid)
 returns boolean
 language sql stable security definer
 set search_path = consulting, public, pg_temp
 as $$
   select p_engagement_id is not null
+     and exists (
+       select 1 from consulting.engagement e
+        where e.id = p_engagement_id
+          and e.firm_id = consulting.current_firm()
+     )
      and not consulting.conflict_blocked(p_engagement_id)
      and (
           consulting.is_engagement_member(p_engagement_id)

@@ -424,7 +424,7 @@ passes a firm-side human first.
 | Stage | Deliverable | Gate condition |
 |---|---|---|
 | **0** | `docs/consulting/00`–`05` | **your sign-off** |
-| **1** | 7 migrations + RLS + ledger | negative RLS suite green; ledger tamper-proof under `service_role`; F-17 closed |
+| **1** | 12 migrations + RLS + ledger | **COMPLETE.** 147 proofs green via `./scripts/db-test.sh`: ledger tamper-proof under `service_role` *and* under a disabled trigger (10.5f/10.6a); F-17 closed (8 cases); 20-attack gate suite refused (30.x); negative RLS suite incl. the two-tenant case that found F-21 (40.x); money arithmetic (50.x) |
 | **2** | pure engine + fixtures | determinism proven; EVM reproduces PMI references; **SPI≈1.00 while SPI(t)<0.8** on a late project; backtest beats all three naive benchmarks |
 | **3** | state machine + gates + API | **all 20 attempt-to-cheat attacks refused with correct errors** |
 | **4** | 10 agents + 4 loops | L2 containment proven; L4 impossible; flood control holds at 20×30 sweeps; calibration cannot self-apply |
