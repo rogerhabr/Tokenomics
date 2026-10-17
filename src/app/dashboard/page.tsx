@@ -79,7 +79,7 @@ export default function Home() {
 
   return (
     <ParamsProvider activeSection={active} onNavigate={setActive}>
-      <div className="flex min-h-screen bg-sa-bg">
+      <div className="dashboard-scope flex min-h-screen bg-sa-bg">
         <Sidebar
           sections={SECTIONS}
           active={active}
