@@ -31,6 +31,7 @@ const WorkflowAllocation          = dynamic(() => import('@/components/sections/
 const DataCenterCostBreakdown     = dynamic(() => import('@/components/sections/DataCenterCostBreakdown'),        { ssr: false, loading: LOADING });
 const ScenarioBar            = dynamic(() => import('@/components/ScenarioBar'),                       { ssr: false });
 const DataSources            = dynamic(() => import('@/components/sections/DataSources'),               { ssr: false, loading: LOADING });
+const AIFactoryModel         = dynamic(() => import('@/components/sections/AIFactoryModel'),            { ssr: false, loading: LOADING });
 
 const SECTIONS = [
   { id: 'overview',            label: 'Overview',                icon: '🏠', group: 'Dashboard' },
@@ -46,6 +47,7 @@ const SECTIONS = [
   { id: 'hardware-demand',     label: 'Hardware Demand Forecast',icon: '📦', group: 'Economics' },
   { id: 'revenue-profit',      label: 'Revenue & Profit',        icon: '💰', group: 'Economics' },
   { id: 'dc-cost-breakdown',   label: 'AI Data Center Costs',    icon: '🏭', group: 'Economics' },
+  { id: 'ai-factory',          label: 'AI Factory Model',        icon: '🏗️', group: 'Economics' },
   { id: 'token-cost',          label: 'Token Cost Anatomy',      icon: '🧬', group: 'Tokenomics' },
   { id: 'workflow-allocation', label: 'Workflow Allocation',     icon: '🕸️', group: 'Tokenomics' },
   { id: 'data-sources',        label: 'Data Sources',            icon: '🔍', group: 'Methodology' },
@@ -66,6 +68,7 @@ function SectionContent({ id }: { id: string }) {
     case 'hardware-demand':    return <HardwareDemandForecast />;
     case 'revenue-profit':     return <RevenueProfit />;
     case 'dc-cost-breakdown':  return <DataCenterCostBreakdown />;
+    case 'ai-factory':         return <AIFactoryModel />;
     case 'token-cost':         return <TokenCostAnatomy />;
     case 'workflow-allocation':return <WorkflowAllocation />;
     case 'data-sources':       return <DataSources />;

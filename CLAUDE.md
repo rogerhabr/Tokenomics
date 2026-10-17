@@ -58,6 +58,8 @@ npm run lint     # ESLint via next lint
 - `src/hooks/useThroughputData.ts` — Token throughput data hook
 - `scripts/fetch-live-data.mjs` — Script to refresh `live-data.json` from external APIs
 - `scripts/monitor-throughput.mjs` — Autonomous throughput monitoring agent
+- `src/lib/aiFactory.ts` — AI Factory model engine (TS port of the verified Excel/Python model; parity-tested by `npm run test:model` against a Python-generated fixture)
+- `scripts/create_ai_factory_model.py` / `scripts/test_ai_factory_model.py` — Excel workbook generator + independent verification harness (AI_Factory_Model.xlsx)
 
 ### Auth & Backend
 - `src/middleware.ts` — Runs on every request: refreshes the Supabase session, redirects unauthenticated requests to `/login`, and applies rate limiting to `/api/*`
@@ -98,6 +100,7 @@ npm run lint     # ESLint via next lint
 | hardware-demand | Hardware Demand Forecast |
 | revenue-profit | Revenue & Profit |
 | dc-cost-breakdown | AI Data Center Costs |
+| ai-factory | AI Factory Model |
 | token-cost | Token Cost Anatomy |
 | workflow-allocation | Workflow Allocation |
 | data-sources | Data Sources |
