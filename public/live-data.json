@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-15T10:51:39.495Z",
+  "lastUpdated": "2026-10-21T11:10:19.614Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 221.3,
-      "prevClose": 237.47,
-      "changePct": -6.81,
+      "price": 216.47,
+      "prevClose": 228.52,
+      "changePct": -5.27,
       "marketCap": null
     },
     "MSFT": {
-      "price": 533.69,
-      "prevClose": 529.76,
-      "changePct": 0.74,
+      "price": 531.87,
+      "prevClose": 543.45,
+      "changePct": -2.13,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 347.64,
-      "prevClose": 350.5,
-      "changePct": -0.82,
+      "price": 340.275,
+      "prevClose": 353.78,
+      "changePct": -3.82,
       "marketCap": null
     },
     "AMZN": {
-      "price": 254.08,
-      "prevClose": 259.92,
-      "changePct": -2.25,
+      "price": 262.63,
+      "prevClose": 258.58,
+      "changePct": 1.57,
       "marketCap": null
     },
     "META": {
-      "price": 737.54,
-      "prevClose": 721.31,
-      "changePct": 2.25,
+      "price": 694.25,
+      "prevClose": 762.5,
+      "changePct": -8.95,
       "marketCap": null
     },
     "AMD": {
-      "price": 570.82,
-      "prevClose": 645.86,
-      "changePct": -11.62,
+      "price": 534.74,
+      "prevClose": 605.53,
+      "changePct": -11.69,
       "marketCap": null
     },
     "ORCL": {
-      "price": 130.55,
-      "prevClose": 143.56,
-      "changePct": -9.06,
+      "price": 131.14,
+      "prevClose": 143.2,
+      "changePct": -8.42,
       "marketCap": null
     }
   },
@@ -1572,6 +1572,12 @@
       "outputPerM": 75,
       "provider": "OpenAI",
       "displayName": "Gpt 5.5 Cyber"
+    },
+    "gpt-5.5-cyber-preview": {
+      "inputPerM": 12.5,
+      "outputPerM": 75,
+      "provider": "OpenAI",
+      "displayName": "Gpt 5.5 Cyber Preview"
     },
     "gpt-rosalind-research": {
       "inputPerM": 5,
