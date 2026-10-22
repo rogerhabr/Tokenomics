@@ -52,8 +52,22 @@ export interface Prices { inputPerM: number; outputPerM: number }
 // the 4B proposer (no separate 4B listing; this overstates proposer cost slightly).
 export const SMALL_MODEL_PRICES: Prices = { inputPerM: 0.05, outputPerM: 0.40 };
 
+// Frontier what-if preset: solver priced at a frontier API rate, proposer kept at
+// the small-model rate (the paper's design: a 4B proposer revising for the solver).
+// Accuracy defaults are placeholders, NOT paper results — a stronger seed with a
+// smaller relative uplift is the conservative prior.
+export const FRONTIER_PRESET = {
+  solverPrices: { inputPerM: 2, outputPerM: 10 } as Prices, // Claude Sonnet 5.5, live-data.json
+  seedAccuracy: 0.50,
+  adaptedAccuracy: 0.58,
+} as const;
+
 export interface HarnessInputs {
   benchmarkId: string;
+  // Frontier-solver what-if: the paper has no accuracy data above an 8B solver,
+  // so J0/J1 must be supplied by the user when these are set.
+  seedAccuracyOverride?: number;
+  adaptedAccuracyOverride?: number;
   rounds: number;
   candidatesPerRound: number;
   scoringQuestions: number;
@@ -129,6 +143,8 @@ export interface HarnessResult {
   cpcSeed: number;
   cpcAdaptedAsymptotic: number;
   cpcAdaptedAtVolume: number;
+  accuracyRatio: number;           // J1/J0
+  costPerQueryRatio: number;       // c1/c0 — break-even exists iff J1/J0 > c1/c0
   breakEvenVolumeCpc: number;      // Infinity if never
   breakEvenVolumeValue: number;    // Infinity if never
   netValueAtVolume: number;
@@ -168,8 +184,8 @@ export function calcHarnessEconomics(i: HarnessInputs): HarnessResult {
     + i.feedbackQuestions * (tokensPerQuerySeed + fbRuns * tokensPerQueryAdapted);
   const adaptTokens = proposerTokens + solverTokens;
 
-  const J0 = benchmark.seed;
-  const J1 = benchmark.tenRoundMean;
+  const J0 = i.seedAccuracyOverride ?? benchmark.seed;
+  const J1 = i.adaptedAccuracyOverride ?? benchmark.tenRoundMean;
   const N = i.queryVolume;
 
   const cpcSeed = costPerQuerySeed / J0;
@@ -210,6 +226,7 @@ export function calcHarnessEconomics(i: HarnessInputs): HarnessResult {
     costPerQuerySeed, costPerQueryAdapted, tokensPerQuerySeed, tokensPerQueryAdapted,
     costPerProposal, adaptCost, adaptTokens, adaptProposerCost, adaptScoringCost, adaptFeedbackCost,
     adaptQueryEquivalents: adaptTokens / tokensPerQueryAdapted,
+    accuracyRatio: J1 / J0, costPerQueryRatio: costPerQueryAdapted / costPerQuerySeed,
     cpcSeed, cpcAdaptedAsymptotic, cpcAdaptedAtVolume, breakEvenVolumeCpc, breakEvenVolumeValue, netValueAtVolume,
     tokensPerQueryMultiplier, tokensPerCorrectMultiplier, totalTokenDemandMultiplier,
     proposerCostRatioTeacherVs4B, qualityPerDollarRatio4BVsTeacher, flopRatioTeacherVs4B,

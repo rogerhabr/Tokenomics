@@ -17,6 +17,14 @@ A = dict(  # labelled assumptions (paper reports no token counts)
 )
 J0, J1 = 0.1438, 0.27  # MuSiQue seed (Table 23), ten-round mean (§5.3)
 
+# Optional case override: python3 reference_model.py '{"s_in":2,"s_out":10,"J0":0.5,"J1":0.58}'
+# s_in/s_out reprice the solver only; the proposer keeps p_in/p_out.
+A.update(p_in=A['s_in'], p_out=A['s_out'])
+if len(sys.argv) > 1:
+    ov = json.loads(sys.argv[1])
+    J0, J1 = ov.pop('J0', J0), ov.pop('J1', J1)
+    A.update(ov)
+
 def cost(i, o, pi, po): return (i * pi + o * po) / 1e6
 
 c_call = cost(A['tin'], A['tout'], A['s_in'], A['s_out'])
@@ -25,7 +33,7 @@ tok_call = A['tin'] + A['tout']
 q0, q1 = P['k0'] * tok_call, A['k1'] * tok_call
 
 props = P['T'] * P['G']
-c_prop = cost(A['pin'], A['pout'], A['s_in'], A['s_out'])
+c_prop = cost(A['pin'], A['pout'], A['p_in'], A['p_out'])
 C_prop = props * c_prop
 C_score = props * P['Qscore'] * c1
 C_fb = P['Qfb'] * (c0 + (P['T'] - 1) * c1)
@@ -36,7 +44,8 @@ tok_solver = props * P['Qscore'] * q1 + P['Qfb'] * (q0 + (P['T'] - 1) * q1)
 
 cpc0 = c0 / J0
 cpcN = (C + A['N'] * c1) / (A['N'] * J1)
-Nstar_cpc = C / (c0 * J1 / J0 - c1)
+cm = c0 * J1 / J0 - c1  # break-even exists only if J1/J0 > c1/c0
+Nstar_cpc = C / cm if cm > 0 else math.inf
 vm = (J1 - J0) * A['V'] - (c1 - c0)
 Nstar_val = C / vm if vm > 0 else math.inf
 
@@ -56,6 +65,7 @@ out = dict(
     totalTokenDemandMultiplier=demand_mult,
     proposerCostRatioTeacherVs4B=t_prop / c_prop,
     qualityPerDollarRatio4BVsTeacher=(0.62 / c_prop) / (0.56 / t_prop),
+    cpcAdaptedAsymptotic=c1 / J1, netValueAtVolume=A['N'] * vm - C,
     adaptGpuHours=gpu_h, adaptKwh=gpu_h * A['kw'] * A['pue'],
 )
 json.dump(out, sys.stdout, indent=1)

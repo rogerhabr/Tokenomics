@@ -7,9 +7,10 @@ import {
 import SectionHeader from '../SectionHeader';
 import MetricCard from '../MetricCard';
 import {
-  QA_BENCHMARKS, QA_PROTOCOL, PROPOSER_QUALITY, DEFAULT_HARNESS_INPUTS,
-  calcHarnessEconomics, cpcCurve, type HarnessInputs,
+  QA_BENCHMARKS, QA_PROTOCOL, PROPOSER_QUALITY, DEFAULT_HARNESS_INPUTS, FRONTIER_PRESET, SMALL_MODEL_PRICES,
+  calcHarnessEconomics, cpcCurve, type HarnessInputs, type Prices,
 } from '@/lib/harnessEconomics';
+import { useLiveData } from '@/hooks/useLiveData';
 
 const SEED_COLOR = '#3b82f6';     // sa-blue
 const ADAPTED_COLOR = '#f97316';  // sa-accent
@@ -34,6 +35,8 @@ function fmtNum(n: number): string {
 }
 
 const fmtX = (n: number) => `${n.toFixed(2)}×`;
+const fmtQueries = (n: number) => (Number.isFinite(n) ? `${fmtNum(n)} q` : 'never');
+const fmtPct = (n: number) => `${n > 0 ? '+' : ''}${n.toFixed(0)}%`;
 
 interface SliderProps {
   label: string; value: number; min: number; max: number; step: number;
@@ -54,7 +57,26 @@ function Slider({ label, value, min, max, step, display, note, onChange }: Slide
 }
 
 export default function HarnessAdaptationEconomics() {
+  const { liveData, liveLoaded } = useLiveData();
   const [inp, setInp] = useState<HarnessInputs>(DEFAULT_HARNESS_INPUTS);
+  // '' = small open model (paper scale), 'frontier' = preset, else a live-data model key
+  const [solverTier, setSolverTier] = useState('');
+  const isFrontier = solverTier !== '';
+
+  const pickTier = (tier: string) => {
+    setSolverTier(tier);
+    const live = liveData.modelPricing?.[tier];
+    const prices: Prices = tier === '' ? SMALL_MODEL_PRICES
+      : live ? { inputPerM: live.inputPerM, outputPerM: live.outputPerM }
+      : FRONTIER_PRESET.solverPrices;
+    setInp(p => ({
+      ...p,
+      solverPrices: prices,
+      // proposer stays the small trained model in every tier
+      seedAccuracyOverride: tier === '' ? undefined : p.seedAccuracyOverride ?? FRONTIER_PRESET.seedAccuracy,
+      adaptedAccuracyOverride: tier === '' ? undefined : p.adaptedAccuracyOverride ?? FRONTIER_PRESET.adaptedAccuracy,
+    }));
+  };
   const set = <K extends keyof HarnessInputs>(k: K, v: HarnessInputs[K]) => setInp(p => ({ ...p, [k]: v }));
 
   const r = useMemo(() => calcHarnessEconomics(inp), [inp]);
@@ -91,7 +113,7 @@ export default function HarnessAdaptationEconomics() {
         <div className="lg:col-span-1 bg-sa-card rounded-xl border border-sa-border p-4 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-white">Inputs</h3>
-            <button onClick={() => setInp(DEFAULT_HARNESS_INPUTS)} className="text-[11px] text-sa-accent hover:underline">
+            <button onClick={() => { setInp(DEFAULT_HARNESS_INPUTS); setSolverTier(''); }} className="text-[11px] text-sa-accent hover:underline">
               Reset to paper defaults
             </button>
           </div>
@@ -138,9 +160,37 @@ export default function HarnessAdaptationEconomics() {
             <Slider label="Demand elasticity ε (answers vs $/correct)" value={inp.demandElasticity} min={0} max={3} step={0.1}
               display={inp.demandElasticity.toFixed(1)} note="ε > 1: cheaper answers grow total token demand (Jevons)"
               onChange={v => set('demandElasticity', v)} />
-            <Slider label="Solver/proposer output $/M" value={inp.solverPrices.outputPerM} min={0.05} max={15} step={0.05}
-              display={`$${inp.solverPrices.outputPerM.toFixed(2)}`} note={`Input $${inp.solverPrices.inputPerM.toFixed(2)}/M held fixed`}
-              onChange={v => setInp(p => ({ ...p, solverPrices: { ...p.solverPrices, outputPerM: v }, proposerPrices: { ...p.proposerPrices, outputPerM: v } }))} />
+          </div>
+
+          <div className="space-y-3 pt-3 border-t border-sa-border">
+            <p className="text-[11px] uppercase tracking-wider text-sa-muted">Solver price tier</p>
+            <div>
+              <select value={solverTier} onChange={e => pickTier(e.target.value)} className="w-full text-xs">
+                <option value="">Small open model — Qwen3-8B ${SMALL_MODEL_PRICES.inputPerM}/${SMALL_MODEL_PRICES.outputPerM} (paper scale)</option>
+                <option value="frontier">Frontier preset — Sonnet 5.5 ${FRONTIER_PRESET.solverPrices.inputPerM}/${FRONTIER_PRESET.solverPrices.outputPerM}</option>
+                {liveLoaded && Object.entries(liveData.modelPricing || {}).map(([model, p]) => (
+                  <option key={model} value={model}>{p.displayName} — ${p.inputPerM}/${p.outputPerM} (live)</option>
+                ))}
+              </select>
+              <p className="text-[10px] text-sa-muted mt-1">
+                Solver ${inp.solverPrices.inputPerM}/${inp.solverPrices.outputPerM} per M · proposer stays the small
+                4B model at ${inp.proposerPrices.inputPerM}/${inp.proposerPrices.outputPerM}
+              </p>
+            </div>
+            {isFrontier && (
+              <>
+                <p className="text-[10px] text-sa-yellow leading-relaxed">
+                  The paper has no results above an 8B solver. Accuracy below is your input, not data — the
+                  defaults assume a stronger seed with a smaller relative uplift.
+                </p>
+                <Slider label="Seed accuracy J₀" value={inp.seedAccuracyOverride ?? FRONTIER_PRESET.seedAccuracy} min={0.05} max={0.95} step={0.01}
+                  display={(inp.seedAccuracyOverride ?? FRONTIER_PRESET.seedAccuracy).toFixed(2)}
+                  onChange={v => set('seedAccuracyOverride', v)} />
+                <Slider label="Adapted accuracy J₁" value={inp.adaptedAccuracyOverride ?? FRONTIER_PRESET.adaptedAccuracy} min={0.05} max={1} step={0.01}
+                  display={(inp.adaptedAccuracyOverride ?? FRONTIER_PRESET.adaptedAccuracy).toFixed(2)}
+                  onChange={v => set('adaptedAccuracyOverride', v)} />
+              </>
+            )}
           </div>
         </div>
 
@@ -148,14 +198,14 @@ export default function HarnessAdaptationEconomics() {
         <div className="lg:col-span-2 space-y-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <MetricCard label="Adaptation capex" value={fmtUSD(r.adaptCost)} subtext={`${fmtNum(r.adaptTokens)} tokens, one run`} accent />
-            <MetricCard label="Break-even (cost/correct)" value={`${fmtNum(r.breakEvenVolumeCpc)} q`}
+            <MetricCard label="Break-even (cost/correct)" value={fmtQueries(r.breakEvenVolumeCpc)}
               subtext="queries to match seed $/correct" />
             <MetricCard label="$/correct @ N" value={fmtUSD(r.cpcAdaptedAtVolume)}
               subtext={`seed ${fmtUSD(r.cpcSeed)}`}
-              change={Number.isFinite(r.cpcAdaptedAtVolume) ? `${((r.cpcAdaptedAtVolume / r.cpcSeed - 1) * 100).toFixed(0)}% vs seed` : undefined}
+              change={Number.isFinite(r.cpcAdaptedAtVolume) ? `${fmtPct((r.cpcAdaptedAtVolume / r.cpcSeed - 1) * 100)} vs seed` : undefined}
               changePositive={r.cpcAdaptedAtVolume < r.cpcSeed} />
             <MetricCard label="Net value @ N" value={fmtUSD(r.netValueAtVolume)}
-              subtext={`break-even ${fmtNum(r.breakEvenVolumeValue)} q at V`}
+              subtext={Number.isFinite(r.breakEvenVolumeValue) ? `break-even ${fmtQueries(r.breakEvenVolumeValue)} at V` : 'never breaks even at this V'}
               changePositive={r.netValueAtVolume > 0}
               change={r.netValueAtVolume > 0 ? 'NPV-positive (undiscounted)' : 'loss-making'} />
           </div>
@@ -165,7 +215,13 @@ export default function HarnessAdaptationEconomics() {
             <h3 className="text-sm font-semibold text-white mb-1">Levelised Cost per Correct Answer vs Volume</h3>
             <p className="text-xs text-sa-muted mb-3">
               LCPCA(N) = (C_adapt + N·c₁) / (N·J₁) against seed c₀/J₀. Adaptation pays back once
-              N &gt; C_adapt / (c₀·J₁/J₀ − c₁) — the dashed line.
+              N &gt; C_adapt / (c₀·J₁/J₀ − c₁) — the dashed line. A break-even exists only if the accuracy ratio
+              beats the cost-per-query ratio, and it does not depend on price level: scaling every price by k scales
+              capex and margin alike.
+            </p>
+            <p className={`text-xs mb-3 number-cell ${r.accuracyRatio > r.costPerQueryRatio ? 'text-sa-green' : 'text-sa-red'}`}>
+              J₁/J₀ = {fmtX(r.accuracyRatio)} {r.accuracyRatio > r.costPerQueryRatio ? '>' : '≤'} c₁/c₀ = {fmtX(r.costPerQueryRatio)}
+              {' — '}{r.accuracyRatio > r.costPerQueryRatio ? 'adaptation can pay back' : 'adaptation never pays back on cost per correct answer'}
             </p>
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={curve} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
