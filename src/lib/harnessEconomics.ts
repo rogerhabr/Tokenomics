@@ -171,6 +171,7 @@ export interface HarnessResult {
   proposerCostRatioTeacherVs4B: number;
   qualityPerDollarRatio4BVsTeacher: number;
   flopRatioTeacherVs4B: number;
+  adaptCachedTokens: number;       // cache-hit tokens: billed at the cache rate, no prefill FLOPs
   adaptGpuHours: number;
   adaptKwh: number;
 }
@@ -208,6 +209,12 @@ export function calcHarnessEconomics(i: HarnessInputs): HarnessResult {
   const solverTokens = proposals * i.scoringQuestions * tokensPerQueryAdapted
     + i.feedbackQuestions * (tokensPerQuerySeed + fbRuns * tokensPerQueryAdapted);
   const adaptTokens = proposerTokens + solverTokens;
+  // Prompt-cache hits skip prefill compute (KV is reused), so they are kept in the
+  // token totals (demand, KV memory) but excluded from FLOPs below.
+  const cachedTokensPerAdaptedQuery = i.editType === 'evidence-rewiring'
+    ? i.rewiringExtraInputTokens * Math.min(Math.max(i.rewiringCachedShare, 0), 1) : 0;
+  const adaptedQueryRuns = proposals * i.scoringQuestions + i.feedbackQuestions * fbRuns;
+  const adaptCachedTokens = adaptedQueryRuns * cachedTokensPerAdaptedQuery;
 
   const J0 = i.seedAccuracyOverride ?? benchmark.seed;
   const J1 = i.adaptedAccuracyOverride ?? benchmark.tenRoundMean;
@@ -241,8 +248,9 @@ export function calcHarnessEconomics(i: HarnessInputs): HarnessResult {
     (PROPOSER_QUALITY.rl4B / costPerProposal) / (PROPOSER_QUALITY.teacher35B / teacherCostPerProposal);
   const flopRatioTeacherVs4B = i.teacherActiveParamsB / i.proposerActiveParamsB;
 
-  // Compute: FLOPs ≈ 2 · active params · tokens
-  const flops = 2 * (i.proposerActiveParamsB * 1e9 * proposerTokens + i.solverActiveParamsB * 1e9 * solverTokens);
+  // Compute: FLOPs ≈ 2 · active params · tokens actually computed (cache hits excluded)
+  const flops = 2 * (i.proposerActiveParamsB * 1e9 * proposerTokens
+    + i.solverActiveParamsB * 1e9 * (solverTokens - adaptCachedTokens));
   const adaptGpuHours = flops / (i.gpuPeakTflops * 1e12 * i.mfu) / 3600;
   const adaptKwh = adaptGpuHours * i.gpuPowerKw * i.pue;
 
@@ -255,7 +263,7 @@ export function calcHarnessEconomics(i: HarnessInputs): HarnessResult {
     cpcSeed, cpcAdaptedAsymptotic, cpcAdaptedAtVolume, breakEvenVolumeCpc, breakEvenVolumeValue, netValueAtVolume,
     tokensPerQueryMultiplier, tokensPerCorrectMultiplier, totalTokenDemandMultiplier,
     proposerCostRatioTeacherVs4B, qualityPerDollarRatio4BVsTeacher, flopRatioTeacherVs4B,
-    adaptGpuHours, adaptKwh,
+    adaptCachedTokens, adaptGpuHours, adaptKwh,
   };
 }
 

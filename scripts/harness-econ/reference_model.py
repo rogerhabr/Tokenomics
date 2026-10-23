@@ -58,7 +58,10 @@ Nstar_val = C / vm if vm > 0 else math.inf
 tpc_mult = (q1 / J1) / (q0 / J0)
 demand_mult = (cpcN / cpc0) ** (-A['eps']) * tpc_mult
 
-flops = 2 * (A['p_params'] * 1e9 * tok_prop + A['s_params'] * 1e9 * tok_solver)
+# cache hits: counted as tokens, but no prefill FLOPs
+cached_q = A['x'] * A['cache'] if A['edit'] == 'evidence-rewiring' else 0.0
+tok_cached = (props * P['Qscore'] + P['Qfb'] * (P['T'] - 1)) * cached_q
+flops = 2 * (A['p_params'] * 1e9 * tok_prop + A['s_params'] * 1e9 * (tok_solver - tok_cached))
 gpu_h = flops / (A['tflops'] * 1e12 * A['mfu']) / 3600
 
 t_prop = cost(A['pin'], A['pout'], A['t_in'], A['t_out'])
@@ -72,6 +75,6 @@ out = dict(
     proposerCostRatioTeacherVs4B=t_prop / c_prop,
     qualityPerDollarRatio4BVsTeacher=(0.62 / c_prop) / (0.56 / t_prop),
     cpcAdaptedAsymptotic=c1 / J1, netValueAtVolume=A['N'] * vm - C,
-    adaptGpuHours=gpu_h, adaptKwh=gpu_h * A['kw'] * A['pue'],
+    adaptCachedTokens=tok_cached, adaptGpuHours=gpu_h, adaptKwh=gpu_h * A['kw'] * A['pue'],
 )
 json.dump(out, sys.stdout, indent=1)

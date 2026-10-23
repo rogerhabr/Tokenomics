@@ -351,6 +351,12 @@ export default function HarnessAdaptationEconomics() {
                   Teacher / 4B FLOPs per token
                   <span className="block text-[10px] text-sa-muted">Active params; set teacher to 3 if it is an A3B MoE — paper does not say</span></td>
                 <td className="number-cell text-right text-white">{fmtX(r.flopRatioTeacherVs4B)}</td></tr>
+              {r.adaptCachedTokens > 0 && (
+                <tr className="border-t border-sa-border"><td className="py-1.5 text-slate-300">
+                    Cache-hit tokens excluded from compute
+                    <span className="block text-[10px] text-sa-muted">{((r.adaptCachedTokens / r.adaptTokens) * 100).toFixed(0)}% of adaptation tokens — still billed and held in KV</span></td>
+                  <td className="number-cell text-right text-white">{fmtNum(r.adaptCachedTokens)}</td></tr>
+              )}
               <tr className="border-t border-sa-border"><td className="py-1.5 text-slate-300">Adaptation compute (H100-hours @ {Math.round(inp.mfu * 100)}% MFU)</td>
                 <td className="number-cell text-right text-white">{r.adaptGpuHours.toFixed(2)}</td></tr>
               <tr className="border-t border-sa-border"><td className="py-1.5 text-slate-300">Adaptation energy (kWh @ PUE {inp.pue})</td>
@@ -372,7 +378,7 @@ export default function HarnessAdaptationEconomics() {
           <li>One revision run is priced. The paper&apos;s headline curves average 4 runs (320 proposals) and its best-run figures select on held-out data.</li>
           <li>Adaptation needs a grader and dev questions at test time; most production workloads have neither, so the addressable share of tokens is below 100%.</li>
           <li>Solvers are 4B/8B with low absolute accuracy (MuSiQue 0.27 EM); gains on frontier solvers are unproven.</li>
-          <li>Adaptation GPU-hours count cache-hit tokens as full prefill, which overstates compute for the evidence-rewiring edit.</li>
+          <li>Cache-hit tokens are excluded from adaptation FLOPs (prefill skipped) but still counted as tokens; their KV-memory and decode-attention cost is not modelled.</li>
           <li>Failed or zero-scoring candidates (1–5% in QA, Table 23) are priced as full runs — a slight overstatement.</li>
         </ul>
       </div>
