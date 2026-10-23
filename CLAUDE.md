@@ -77,7 +77,7 @@ npm run lint     # ESLint via next lint
 
 ### UI Structure
 - `src/app/page.tsx` — Root page; renders sidebar + header + section content; sections are lazy-loaded with `next/dynamic`. Protected by `middleware.ts`, not a client-side gate.
-- `src/components/Sidebar.tsx` — Navigation sidebar (16 sections grouped into Dashboard / Supply / Demand / Economics / Tokenomics / Methodology)
+- `src/components/Sidebar.tsx` — Navigation sidebar (17 sections grouped into Dashboard / Supply / Demand / Economics / Tokenomics / Methodology)
 - `src/components/sections/` — One component per dashboard section
 - `src/components/AssumptionsPanel.tsx` — Slide-in panel for tweaking global parameters
 - `src/components/ScenarioBar.tsx` — Bear/Base/Bull scenario switcher
@@ -100,6 +100,7 @@ npm run lint     # ESLint via next lint
 | dc-cost-breakdown | AI Data Center Costs |
 | token-cost | Token Cost Anatomy |
 | workflow-allocation | Workflow Allocation |
+| harness-economics | Harness Adaptation (`src/lib/harnessEconomics.ts`; cross-check vs Python reference: `node scripts/harness-econ/crosscheck.mts`) |
 | data-sources | Data Sources |
 
 ## Styling Conventions
