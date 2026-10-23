@@ -353,17 +353,29 @@ export default function HarnessAdaptationEconomics() {
                 <td className="number-cell text-right text-white">{fmtX(r.flopRatioTeacherVs4B)}</td></tr>
               {r.adaptCachedTokens > 0 && (
                 <tr className="border-t border-sa-border"><td className="py-1.5 text-slate-300">
-                    Cache-hit tokens excluded from compute
-                    <span className="block text-[10px] text-sa-muted">{((r.adaptCachedTokens / r.adaptTokens) * 100).toFixed(0)}% of adaptation tokens — still billed and held in KV</span></td>
+                    Cache-hit tokens (no prefill FLOPs)
+                    <span className="block text-[10px] text-sa-muted">{((r.adaptCachedTokens / r.adaptTokens) * 100).toFixed(0)}% of adaptation tokens — still billed, still read from KV every decode step</span></td>
                   <td className="number-cell text-right text-white">{fmtNum(r.adaptCachedTokens)}</td></tr>
               )}
-              <tr className="border-t border-sa-border"><td className="py-1.5 text-slate-300">Adaptation compute (H100-hours @ {Math.round(inp.mfu * 100)}% MFU)</td>
-                <td className="number-cell text-right text-white">{r.adaptGpuHours.toFixed(2)}</td></tr>
+              <tr className="border-t border-sa-border"><td className="py-1.5 text-slate-300">FLOPs: prefill + weights (H100-h @ {Math.round(inp.mfu * 100)}% MFU)</td>
+                <td className="number-cell text-right text-white">{r.adaptFlopGpuHours.toFixed(2)}</td></tr>
+              <tr className="border-t border-sa-border"><td className="py-1.5 text-slate-300">
+                  Decode KV reads (H100-h @ {inp.hbmBandwidthTBs} TB/s × {Math.round(inp.mbu * 100)}% MBU)
+                  <span className="block text-[10px] text-sa-muted">
+                    {(inp.solverKvBytesPerToken / 1024).toFixed(0)} KiB/token (Qwen3 config) · proposer {r.adaptProposerKvReadGpuHours.toFixed(2)} h
+                    {r.adaptCachedKvReadGpuHours > 0 && <> · cache hits {r.adaptCachedKvReadGpuHours.toFixed(2)} h</>}
+                  </span></td>
+                <td className="number-cell text-right text-white">{r.adaptKvReadGpuHours.toFixed(2)}</td></tr>
+              <tr className="border-t border-sa-border"><td className="py-1.5 text-slate-300 font-semibold">Adaptation compute, total (H100-hours)</td>
+                <td className="number-cell text-right text-white font-bold">{r.adaptGpuHours.toFixed(2)}</td></tr>
               <tr className="border-t border-sa-border"><td className="py-1.5 text-slate-300">Adaptation energy (kWh @ PUE {inp.pue})</td>
                 <td className="number-cell text-right text-white">{r.adaptKwh.toFixed(2)}</td></tr>
             </tbody>
           </table>
-          <div className="mt-3">
+          <div className="mt-3 space-y-3">
+            <Slider label="Memory-bandwidth utilisation (decode)" value={inp.mbu} min={0.2} max={1} step={0.05}
+              display={`${Math.round(inp.mbu * 100)}%`} note="Assumption — decode is memory-bound; KV reads are per sequence, not shared across a batch"
+              onChange={v => set('mbu', v)} />
             <Slider label="Teacher active params (B)" value={inp.teacherActiveParamsB} min={1} max={70} step={1}
               display={`${inp.teacherActiveParamsB}B`} onChange={v => set('teacherActiveParamsB', v)} />
           </div>
@@ -378,7 +390,7 @@ export default function HarnessAdaptationEconomics() {
           <li>One revision run is priced. The paper&apos;s headline curves average 4 runs (320 proposals) and its best-run figures select on held-out data.</li>
           <li>Adaptation needs a grader and dev questions at test time; most production workloads have neither, so the addressable share of tokens is below 100%.</li>
           <li>Solvers are 4B/8B with low absolute accuracy (MuSiQue 0.27 EM); gains on frontier solvers are unproven.</li>
-          <li>Cache-hit tokens are excluded from adaptation FLOPs (prefill skipped) but still counted as tokens; their KV-memory and decode-attention cost is not modelled.</li>
+          <li>Compute = FLOPs (prefill + weights, cache hits excluded) + decode KV reads for every context token. KV capacity limits on batch size, and attention FLOPs, are not modelled separately.</li>
           <li>Failed or zero-scoring candidates (1–5% in QA, Table 23) are priced as full runs — a slight overstatement.</li>
         </ul>
       </div>
