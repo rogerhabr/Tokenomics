@@ -62,6 +62,15 @@ export const FRONTIER_PRESET = {
   adaptedAccuracy: 0.58,
 } as const;
 
+// How the learned edit changes the production query (Fig. 12):
+//  'extra-hop'         — adds solver calls (third retrieval hop / verify branch)
+//  'evidence-rewiring' — keeps the seed's calls; the answer call reads both hops'
+//                        passages instead of summaries, so only input tokens grow
+export type HarnessEditType = 'extra-hop' | 'evidence-rewiring';
+
+// Cache-read price as a share of the input price (same convention as Token Cost Anatomy)
+export const CACHE_READ_DISCOUNT = 0.1;
+
 export interface HarnessInputs {
   benchmarkId: string;
   // Frontier-solver what-if: the paper has no accuracy data above an 8B solver,
@@ -73,7 +82,10 @@ export interface HarnessInputs {
   scoringQuestions: number;
   feedbackQuestions: number;
   seedCalls: number;          // solver calls / question, seed harness
-  adaptedCalls: number;       // solver calls / question, adapted harness (assumption)
+  editType: HarnessEditType;
+  adaptedCalls: number;       // solver calls / question, adapted harness — 'extra-hop' only (assumption)
+  rewiringExtraInputTokens: number; // re-read passages on the answer call — 'evidence-rewiring' only (assumption)
+  rewiringCachedShare: number;      // share of those re-read tokens served from prompt cache (0–1)
   inTokensPerCall: number;    // assumption: ~20 BM25 passages + prompt
   outTokensPerCall: number;   // assumption: non-thinking short answers/summaries
   proposerInTokens: number;   // assumption: harness source + 6-question trace report
@@ -101,7 +113,10 @@ export const DEFAULT_HARNESS_INPUTS: HarnessInputs = {
   scoringQuestions: QA_PROTOCOL.scoringQuestions,
   feedbackQuestions: QA_PROTOCOL.feedbackQuestions,
   seedCalls: QA_PROTOCOL.seedSolverCalls,
+  editType: 'extra-hop',
   adaptedCalls: 5,
+  rewiringExtraInputTokens: 3000, // 2 hops × ~20 passages − the two summaries they replace
+  rewiringCachedShare: 0,
   inTokensPerCall: 1800,
   outTokensPerCall: 200,
   proposerInTokens: 7000,
@@ -166,9 +181,19 @@ export function calcHarnessEconomics(i: HarnessInputs): HarnessResult {
   const perCallTokens = i.inTokensPerCall + i.outTokensPerCall;
   const perCallCost = usd(i.inTokensPerCall, i.outTokensPerCall, i.solverPrices);
   const costPerQuerySeed = i.seedCalls * perCallCost;
-  const costPerQueryAdapted = i.adaptedCalls * perCallCost;
   const tokensPerQuerySeed = i.seedCalls * perCallTokens;
-  const tokensPerQueryAdapted = i.adaptedCalls * perCallTokens;
+  let costPerQueryAdapted: number;
+  let tokensPerQueryAdapted: number;
+  if (i.editType === 'evidence-rewiring') {
+    const x = i.rewiringExtraInputTokens;
+    const cachedShare = Math.min(Math.max(i.rewiringCachedShare, 0), 1);
+    const extraCost = x * i.solverPrices.inputPerM * ((1 - cachedShare) + cachedShare * CACHE_READ_DISCOUNT) / 1e6;
+    costPerQueryAdapted = costPerQuerySeed + extraCost;
+    tokensPerQueryAdapted = tokensPerQuerySeed + x; // counted in full: cache hits are cheaper, not absent (KV memory)
+  } else {
+    costPerQueryAdapted = i.adaptedCalls * perCallCost;
+    tokensPerQueryAdapted = i.adaptedCalls * perCallTokens;
+  }
 
   // C_adapt = T·G·c_prop + T·G·|Q_score|·c_q(h') + |Q_fb|·[c_q(h0) + (T−1)·c_q(h')]
   const proposals = i.rounds * i.candidatesPerRound;

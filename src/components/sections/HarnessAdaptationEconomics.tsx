@@ -8,7 +8,7 @@ import SectionHeader from '../SectionHeader';
 import MetricCard from '../MetricCard';
 import {
   QA_BENCHMARKS, QA_PROTOCOL, PROPOSER_QUALITY, DEFAULT_HARNESS_INPUTS, FRONTIER_PRESET, SMALL_MODEL_PRICES,
-  calcHarnessEconomics, cpcCurve, type HarnessInputs, type Prices,
+  CACHE_READ_DISCOUNT, calcHarnessEconomics, cpcCurve, type HarnessInputs, type HarnessEditType, type Prices,
 } from '@/lib/harnessEconomics';
 import { useLiveData } from '@/hooks/useLiveData';
 
@@ -140,9 +140,38 @@ export default function HarnessAdaptationEconomics() {
 
           <div className="space-y-3 pt-3 border-t border-sa-border">
             <p className="text-[11px] uppercase tracking-wider text-sa-muted">Token assumptions (not reported in paper)</p>
-            <Slider label="Solver calls / query — adapted" value={inp.adaptedCalls} min={1} max={QA_PROTOCOL.solverCallCap} step={1}
-              display={`${inp.adaptedCalls} (seed ${inp.seedCalls})`} note="Cap 12. Learned edits add a 3rd hop or a verify branch (Fig. 12)"
-              onChange={v => set('adaptedCalls', v)} />
+            <div>
+              <label className="text-xs text-slate-300 mb-1.5 block">Learned edit type (Fig. 12)</label>
+              <div className="grid grid-cols-2 gap-1.5">
+                {([['extra-hop', 'Extra hop / verify'], ['evidence-rewiring', 'Evidence rewiring']] as [HarnessEditType, string][]).map(([k, label]) => (
+                  <button key={k} onClick={() => set('editType', k)}
+                    className={`text-[11px] py-1.5 rounded border transition-colors ${inp.editType === k
+                      ? 'bg-sa-accent/20 border-sa-accent/50 text-sa-accent' : 'border-sa-border text-sa-muted hover:text-white'}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-sa-muted mt-1">
+                {inp.editType === 'extra-hop'
+                  ? 'Adds solver calls (Fig. 12c/d).'
+                  : 'Same calls as the seed; the answer call reads both hops\' passages instead of summaries (Fig. 12b), so only input tokens grow.'}
+              </p>
+            </div>
+            {inp.editType === 'extra-hop' ? (
+              <Slider label="Solver calls / query — adapted" value={inp.adaptedCalls} min={1} max={QA_PROTOCOL.solverCallCap} step={1}
+                display={`${inp.adaptedCalls} (seed ${inp.seedCalls})`} note="Cap 12"
+                onChange={v => set('adaptedCalls', v)} />
+            ) : (
+              <>
+                <Slider label="Re-read passage tokens / query" value={inp.rewiringExtraInputTokens} min={0} max={10000} step={100}
+                  display={fmtNum(inp.rewiringExtraInputTokens)} note="≈2 hops × 20 passages, minus the 2 summaries replaced"
+                  onChange={v => set('rewiringExtraInputTokens', v)} />
+                <Slider label="Re-read tokens served from prompt cache" value={inp.rewiringCachedShare} min={0} max={1} step={0.05}
+                  display={`${Math.round(inp.rewiringCachedShare * 100)}%`}
+                  note={`Cache reads billed at ${Math.round(CACHE_READ_DISCOUNT * 100)}% of input. Needs a harness that keeps passages in a shared prompt prefix.`}
+                  onChange={v => set('rewiringCachedShare', v)} />
+              </>
+            )}
             <Slider label="Input tokens / solver call" value={inp.inTokensPerCall} min={200} max={QA_PROTOCOL.solverContext} step={100}
               display={fmtNum(inp.inTokensPerCall)} note="≈20 BM25 passages + prompt; context cap 16k" onChange={v => set('inTokensPerCall', v)} />
             <Slider label="Output tokens / solver call" value={inp.outTokensPerCall} min={20} max={QA_PROTOCOL.solverOutputCap} step={20}
@@ -343,6 +372,7 @@ export default function HarnessAdaptationEconomics() {
           <li>One revision run is priced. The paper&apos;s headline curves average 4 runs (320 proposals) and its best-run figures select on held-out data.</li>
           <li>Adaptation needs a grader and dev questions at test time; most production workloads have neither, so the addressable share of tokens is below 100%.</li>
           <li>Solvers are 4B/8B with low absolute accuracy (MuSiQue 0.27 EM); gains on frontier solvers are unproven.</li>
+          <li>Adaptation GPU-hours count cache-hit tokens as full prefill, which overstates compute for the evidence-rewiring edit.</li>
           <li>Failed or zero-scoring candidates (1–5% in QA, Table 23) are priced as full runs — a slight overstatement.</li>
         </ul>
       </div>

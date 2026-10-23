@@ -19,6 +19,22 @@ const cases: { name: string; ts: HarnessInputs; py: Record<string, number> }[] =
       J0: FRONTIER_PRESET.seedAccuracy, J1: FRONTIER_PRESET.adaptedAccuracy,
     },
   },
+  {
+    name: 'frontier + evidence rewiring, 90% of re-read passages cached',
+    ts: {
+      ...DEFAULT_HARNESS_INPUTS,
+      solverPrices: FRONTIER_PRESET.solverPrices,
+      seedAccuracyOverride: FRONTIER_PRESET.seedAccuracy,
+      adaptedAccuracyOverride: FRONTIER_PRESET.adaptedAccuracy,
+      editType: 'evidence-rewiring',
+      rewiringCachedShare: 0.9,
+    },
+    py: {
+      s_in: FRONTIER_PRESET.solverPrices.inputPerM, s_out: FRONTIER_PRESET.solverPrices.outputPerM,
+      J0: FRONTIER_PRESET.seedAccuracy, J1: FRONTIER_PRESET.adaptedAccuracy,
+      edit: 'evidence-rewiring' as unknown as number, cache: 0.9,
+    },
+  },
 ];
 
 let fail = 0;

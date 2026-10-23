@@ -9,6 +9,7 @@ P = dict(  # paper protocol, arXiv:2609.35738 App. D.3 / Table 22
     T=10, G=8, Qfb=6, Qscore=64, k0=4,
 )
 A = dict(  # labelled assumptions (paper reports no token counts)
+    edit='extra-hop', x=3000, cache=0.0,
     k1=5, tin=1800, tout=200, pin=7000, pout=6000,
     s_in=0.05, s_out=0.40,      # Qwen3-8B OpenRouter $/M
     t_in=0.15, t_out=0.60,      # teacher-class $/M (assumption)
@@ -28,9 +29,14 @@ if len(sys.argv) > 1:
 def cost(i, o, pi, po): return (i * pi + o * po) / 1e6
 
 c_call = cost(A['tin'], A['tout'], A['s_in'], A['s_out'])
-c0, c1 = P['k0'] * c_call, A['k1'] * c_call
 tok_call = A['tin'] + A['tout']
-q0, q1 = P['k0'] * tok_call, A['k1'] * tok_call
+c0, q0 = P['k0'] * c_call, P['k0'] * tok_call
+if A['edit'] == 'evidence-rewiring':
+    # seed calls unchanged; answer call re-reads x passage tokens, a share cached at 10% of input
+    c1 = c0 + A['x'] * A['s_in'] * ((1 - A['cache']) + A['cache'] * 0.1) / 1e6
+    q1 = q0 + A['x']
+else:
+    c1, q1 = A['k1'] * c_call, A['k1'] * tok_call
 
 props = P['T'] * P['G']
 c_prop = cost(A['pin'], A['pout'], A['p_in'], A['p_out'])
