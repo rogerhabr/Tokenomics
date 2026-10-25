@@ -8,9 +8,11 @@ import SectionHeader from '../SectionHeader';
 import MetricCard from '../MetricCard';
 import {
   QA_BENCHMARKS, QA_PROTOCOL, PROPOSER_QUALITY, DEFAULT_HARNESS_INPUTS, FRONTIER_PRESET, SMALL_MODEL_PRICES,
-  CACHE_READ_DISCOUNT, calcHarnessEconomics, cpcCurve, type HarnessInputs, type HarnessEditType, type Prices,
+  CACHE_READ_DISCOUNT, calcHarnessEconomics, cpcCurve, rentalComparison, type HarnessInputs, type HarnessEditType, type Prices,
 } from '@/lib/harnessEconomics';
 import { useLiveData } from '@/hooks/useLiveData';
+import { useComputePrices } from '@/hooks/useComputePrices';
+import { ornnPrice, ORNN_ATTRIBUTION } from '@/lib/ornn';
 
 const SEED_COLOR = '#3b82f6';     // sa-blue
 const ADAPTED_COLOR = '#f97316';  // sa-accent
@@ -58,6 +60,7 @@ function Slider({ label, value, min, max, step, display, note, onChange }: Slide
 
 export default function HarnessAdaptationEconomics() {
   const { liveData, liveLoaded } = useLiveData();
+  const { computePrices } = useComputePrices();
   const [inp, setInp] = useState<HarnessInputs>(DEFAULT_HARNESS_INPUTS);
   // '' = small open model (paper scale), 'frontier' = preset, else a live-data model key
   const [solverTier, setSolverTier] = useState('');
@@ -85,6 +88,17 @@ export default function HarnessAdaptationEconomics() {
     const ys = curve.flatMap(p => [p.seed, p.adapted]).filter(v => Number.isFinite(v) && v > 0);
     return [Math.min(...ys) * 0.8, Math.max(...ys) * 1.2];
   }, [curve]);
+
+  // Rented-compute benchmark: Ornn executed-trade H100 price (licensed, internal
+  // users only) alongside the public Azure/Lambda list price.
+  const ornnH100 = ornnPrice(computePrices, 'H100 SXM');
+  // gpuRentalPrices also carries a `_discovered: string[]` key, so narrow first
+  const h100Entry = liveData.gpuRentalPrices?.['H100'];
+  const listH100 = h100Entry && !Array.isArray(h100Entry) ? h100Entry.lowestPerHour ?? null : null;
+  const rentalRows = [
+    ornnH100 !== null && { label: `H100 @ ${ORNN_ATTRIBUTION}`, cmp: rentalComparison(r, ornnH100) },
+    listH100 !== null && { label: 'H100 @ cloud list price (Azure/Lambda)', cmp: rentalComparison(r, listH100) },
+  ].filter(Boolean) as { label: string; cmp: ReturnType<typeof rentalComparison> }[];
 
   // Volume slider runs on log10 scale
   const logN = Math.log10(inp.queryVolume);
@@ -372,6 +386,40 @@ export default function HarnessAdaptationEconomics() {
                 <td className="number-cell text-right text-white">{r.adaptKwh.toFixed(2)}</td></tr>
             </tbody>
           </table>
+          <div className="mt-3 pt-3 border-t border-sa-border">
+            <p className="text-xs font-semibold text-white mb-1">Rented compute vs API bill</p>
+            {isFrontier ? (
+              <p className="text-[11px] text-sa-muted">
+                Not shown for frontier tiers: GPU-hours here model the paper&apos;s 4B/8B models, not the frontier solver.
+              </p>
+            ) : rentalRows.length === 0 ? (
+              <p className="text-[11px] text-sa-muted">No H100 rental price available.</p>
+            ) : (
+              <table className="w-full text-xs">
+                <tbody>
+                  {rentalRows.map(({ label, cmp }) => (
+                    <tr key={label} className="border-t border-sa-border">
+                      <td className="py-1.5 text-slate-300">
+                        {label}
+                        <span className="block text-[10px] text-sa-muted">
+                          ${cmp.pricePerGpuHour.toFixed(2)}/GPU-h → {fmtUSD(cmp.rentalCost)} vs API {fmtUSD(cmp.apiCost)}
+                        </span>
+                      </td>
+                      <td className={`number-cell text-right font-bold ${cmp.impliedApiGrossMargin >= 0 ? 'text-sa-green' : 'text-sa-red'}`}>
+                        {(cmp.impliedApiGrossMargin * 100).toFixed(0)}%
+                        <span className="block text-[10px] font-normal text-sa-muted">implied API margin</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            {computePrices && (
+              <p className="text-[10px] text-sa-muted mt-1">
+                Source: {ORNN_ATTRIBUTION}, settled {new Date(computePrices.asOf).toLocaleDateString()} — licensed, internal use only.
+              </p>
+            )}
+          </div>
           <div className="mt-3 space-y-3">
             <Slider label="Memory-bandwidth utilisation (decode)" value={inp.mbu} min={0.2} max={1} step={0.05}
               display={`${Math.round(inp.mbu * 100)}%`} note="Assumption — decode is memory-bound; KV reads are per sequence, not shared across a batch"

@@ -323,3 +323,24 @@ export function cpcCurve(i: HarnessInputs, points = 25): { volume: number; seed:
   }
   return out;
 }
+
+// Rented-compute view of the same adaptation run: GPU-hours priced at an H100
+// rental rate vs the API bill. Implied API gross margin = 1 − rental / API.
+// Only meaningful when the GPU-hours model matches the served models (the
+// small-model tier: 4B proposer + 8B solver on H100).
+export interface RentalComparison {
+  pricePerGpuHour: number;
+  rentalCost: number;
+  apiCost: number;
+  impliedApiGrossMargin: number;
+}
+
+export function rentalComparison(r: Pick<HarnessResult, 'adaptGpuHours' | 'adaptCost'>, pricePerGpuHour: number): RentalComparison {
+  const rentalCost = r.adaptGpuHours * pricePerGpuHour;
+  return {
+    pricePerGpuHour,
+    rentalCost,
+    apiCost: r.adaptCost,
+    impliedApiGrossMargin: r.adaptCost > 0 ? 1 - rentalCost / r.adaptCost : NaN,
+  };
+}
