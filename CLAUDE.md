@@ -39,11 +39,12 @@ npm run lint     # ESLint via next lint
 
 ## Setup (new environment)
 
-1. Create a [Supabase](https://supabase.com) project. In the SQL Editor, run `supabase/migrations/0001_init.sql`.
+1. Create a [Supabase](https://supabase.com) project. In the SQL Editor, run `supabase/migrations/0001_init.sql`, then `0002_lock_profile_role.sql` (stops users editing their own `role`). To see licensed Ornn prices, set your role there: `update public.profiles set role = 'owner' where email = '…';`
 2. Copy `.env.example` to `.env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` from Project Settings → API.
 3. (Optional) Create an [Upstash](https://upstash.com) Redis database and add its REST URL/token to `.env.local` to enable API rate limiting.
-4. (Optional) Create a [Sentry](https://sentry.io) project and add its DSN to `.env.local` as `NEXT_PUBLIC_SENTRY_DSN` to enable error tracking.
-5. Connect this repo to a [Vercel](https://vercel.com) project and set the same env vars there (Project Settings → Environment Variables) for production/preview deploys.
+4. (Optional) Add an Ornn premium key as `ORNN_API_KEY` (server-only) for full OCPI history; without it the free public tier is used.
+5. (Optional) Create a [Sentry](https://sentry.io) project and add its DSN to `.env.local` as `NEXT_PUBLIC_SENTRY_DSN` to enable error tracking.
+6. Connect this repo to a [Vercel](https://vercel.com) project and set the same env vars there (Project Settings → Environment Variables) for production/preview deploys.
 
 ## Architecture
 
@@ -58,6 +59,7 @@ npm run lint     # ESLint via next lint
 - `src/hooks/useThroughputData.ts` — Token throughput data hook
 - `scripts/fetch-live-data.mjs` — Script to refresh `live-data.json` from external APIs
 - `scripts/monitor-throughput.mjs` — Autonomous throughput monitoring agent
+- `src/lib/ornn.ts` + `src/app/api/compute-prices/route.ts` + `src/hooks/useComputePrices.ts` — Ornn Compute Price Index (executed-trade GPU $/hr). **Licensed: no redistribution, attribution required.** Never write Ornn values to `public/`, `live-data.json` or git (the repo is public); the route is role-gated (`owner`/`internal`), fails closed, and responds `Cache-Control: private, no-store`. Check with `node scripts/harness-econ/ornn-check.mts --live`
 
 ### Auth & Backend
 - `src/middleware.ts` — Runs on every request: refreshes the Supabase session, redirects unauthenticated requests to `/login`, and applies rate limiting to `/api/*`
@@ -68,6 +70,7 @@ npm run lint     # ESLint via next lint
 - `src/app/auth/callback/route.ts` — Exchanges a Supabase email-confirmation code for a session
 - `src/app/api/health/route.ts`, `src/app/api/profile/route.ts` — Example Route Handlers; `profile` demonstrates a Postgres-RLS-scoped query against the signed-in user
 - `supabase/migrations/0001_init.sql` — `profiles` table, RLS policies, and an `auth.users` insert trigger that provisions a profile row on signup
+- `supabase/migrations/0002_lock_profile_role.sql` — column-level grant so users can update only `display_name`; `role` changes require the SQL Editor
 
 ### Observability
 - `sentry.client.config.ts` / `sentry.server.config.ts` / `sentry.edge.config.ts` — Sentry init for each runtime; all no-op with a console warning if `NEXT_PUBLIC_SENTRY_DSN` isn't set
@@ -128,7 +131,7 @@ This file is committed and served statically. The `useLiveData` hook reads it at
 | 1. Frontend foundations | ✅ Verified live | Next.js App Router, React, Tailwind — confirmed rendering correctly on Vercel |
 | 2. APIs & backend logic | ✅ Built | Next.js Route Handlers (`src/app/api/*`); `/api/health` checked live, `/api/profile` not yet called directly (its data path is proven via the DB check below) |
 | 3. Database & storage | ✅ Verified live | Supabase Postgres (`profiles` table) — confirmed a real row is created on signup; no object storage yet, add a Supabase Storage bucket if needed |
-| 4. Auth, authz, permissions | ✅ Verified live | Supabase Auth (email/password), session cookies via `@supabase/ssr`, `middleware.ts` route protection — full sign-up → confirm → sign-in → logout cycle confirmed working. `profiles.role` column exists for future RBAC checks but nothing enforces roles yet. **Email confirmation is currently OFF** in the Supabase dashboard (Authentication → Providers → Email) to work around the default mailer's rate limit during testing — turn it back on (and/or configure custom SMTP) before real users sign up |
+| 4. Auth, authz, permissions | ✅ Verified live | Supabase Auth (email/password), session cookies via `@supabase/ssr`, `middleware.ts` route protection — full sign-up → confirm → sign-in → logout cycle confirmed working. `profiles.role` now gates Ornn data in `/api/compute-prices` (`owner`/`internal`); `0002_lock_profile_role.sql` must be applied first or users can self-assign a role. **Email confirmation is currently OFF** in the Supabase dashboard (Authentication → Providers → Email) to work around the default mailer's rate limit during testing — turn it back on (and/or configure custom SMTP) before real users sign up |
 | 5/6. Hosting & compute | ✅ Verified live | Vercel serverless functions, auto-deploys on push to `master` — confirmed across multiple deployments |
 | 7. CI/CD & version control | ✅ Working | `.github/workflows/ci.yml` lints+builds on push/PR; every change goes branch → PR → merge → Vercel auto-deploy (its native GitHub integration, not a custom Action) |
 | 8. Security & row-level security | ✅ Verified live | Postgres RLS policies in `supabase/migrations/0001_init.sql` — confirmed 2 active policies on `profiles` in the Supabase Table Editor |
