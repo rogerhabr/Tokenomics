@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-24T10:17:12.835Z",
+  "lastUpdated": "2026-10-25T10:43:21.757Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -938,6 +938,13 @@
       "outputPerM": 4.4,
       "provider": "Mistral AI",
       "displayName": "Mistral/Zai Glm 5 3",
+      "contextK": 1049
+    },
+    "mistral/zai-glm-5-3-flash": {
+      "inputPerM": 0.15,
+      "outputPerM": 0.5,
+      "provider": "Mistral AI",
+      "displayName": "Mistral/Zai Glm 5 3 Flash",
       "contextK": 1049
     },
     "mistral/zai-glm-5": {
