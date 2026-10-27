@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-26T12:15:35.093Z",
+  "lastUpdated": "2026-10-27T11:36:06.799Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 210.96,
-      "prevClose": 214.13,
-      "changePct": -1.48,
+      "price": 216,
+      "prevClose": 217.09,
+      "changePct": -0.5,
       "marketCap": null
     },
     "MSFT": {
-      "price": 524.51,
-      "prevClose": 529.05,
-      "changePct": -0.86,
+      "price": 532.6,
+      "prevClose": 533.52,
+      "changePct": -0.17,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 320.21,
-      "prevClose": 340.59,
-      "changePct": -5.98,
+      "price": 316.8,
+      "prevClose": 344.18,
+      "changePct": -7.96,
       "marketCap": null
     },
     "AMZN": {
-      "price": 248,
-      "prevClose": 250,
-      "changePct": -0.8,
+      "price": 249.09,
+      "prevClose": 262.45,
+      "changePct": -5.09,
       "marketCap": null
     },
     "META": {
-      "price": 642.62,
-      "prevClose": 709.33,
-      "changePct": -9.4,
+      "price": 630.56,
+      "prevClose": 705.44,
+      "changePct": -10.61,
       "marketCap": null
     },
     "AMD": {
-      "price": 516.79,
-      "prevClose": 528.75,
-      "changePct": -2.26,
+      "price": 531.28,
+      "prevClose": 538.05,
+      "changePct": -1.26,
       "marketCap": null
     },
     "ORCL": {
-      "price": 126.16,
-      "prevClose": 128.23,
-      "changePct": -1.61,
+      "price": 126.06,
+      "prevClose": 129.59,
+      "changePct": -2.72,
       "marketCap": null
     }
   },
@@ -1566,7 +1566,8 @@
       "inputPerM": 1.5,
       "outputPerM": 9,
       "provider": "Google",
-      "displayName": "Vertex_ai/Gemini Omni 1.1 Flash Preview"
+      "displayName": "Vertex_ai/Gemini Omni 1.1 Flash Preview",
+      "contextK": 58
     },
     "vertex_ai/gemma-4-26b-a4b-it": {
       "inputPerM": 0.15,
@@ -1784,6 +1785,13 @@
       "provider": "Google",
       "displayName": "Vertex_ai/Gemini 4 Argon Cyber Permissive",
       "contextK": 1049
+    },
+    "gpt-6.1-terra": {
+      "inputPerM": 1,
+      "outputPerM": 5,
+      "provider": "OpenAI",
+      "displayName": "Gpt 6.1 Terra",
+      "contextK": 922
     }
   },
   "nvdaFinancials": null,
