@@ -71,6 +71,19 @@ export type HarnessEditType = 'extra-hop' | 'evidence-rewiring';
 // Cache-read price as a share of the input price (same convention as Token Cost Anatomy)
 export const CACHE_READ_DISCOUNT = 0.1;
 
+// KV-cache geometry, verified against the HF config.json of Qwen3-8B (solver) and
+// Qwen3-4B (QA proposer): 36 layers, 8 KV heads (GQA), head_dim 128, bf16.
+// bytes/token = 2 (K,V) · layers · kv_heads · head_dim · 2 bytes = 147,456 (144 KiB)
+export const kvBytesPerToken = (layers: number, kvHeads: number, headDim: number, bytes = 2) =>
+  2 * layers * kvHeads * headDim * bytes;
+export const QWEN3_KV_BYTES_PER_TOKEN = kvBytesPerToken(36, 8, 128);
+
+// Decode reads every context token's KV once per generated token. With C input
+// tokens and O output tokens the context grows C → C+O−1, so tokens read =
+// O·C + O(O−1)/2. Memory-bound: not amortised across a batch, unlike weights.
+export const decodeKvTokenReads = (contextIn: number, outTokens: number) =>
+  outTokens * contextIn + (outTokens * (outTokens - 1)) / 2;
+
 export interface HarnessInputs {
   benchmarkId: string;
   // Frontier-solver what-if: the paper has no accuracy data above an 8B solver,
@@ -102,6 +115,10 @@ export interface HarnessInputs {
   solverActiveParamsB: number;
   gpuPeakTflops: number;      // dense BF16
   mfu: number;                // model FLOP utilisation
+  hbmBandwidthTBs: number;    // HBM bandwidth, TB/s
+  mbu: number;                // memory-bandwidth utilisation for decode KV reads
+  solverKvBytesPerToken: number;
+  proposerKvBytesPerToken: number;
   gpuPowerKw: number;
   pue: number;
 }
@@ -132,6 +149,10 @@ export const DEFAULT_HARNESS_INPUTS: HarnessInputs = {
   solverActiveParamsB: 8,
   gpuPeakTflops: 989,  // H100 SXM dense BF16
   mfu: 0.2,
+  hbmBandwidthTBs: 3.35, // H100 SXM
+  mbu: 0.6,
+  solverKvBytesPerToken: QWEN3_KV_BYTES_PER_TOKEN,
+  proposerKvBytesPerToken: QWEN3_KV_BYTES_PER_TOKEN,
   gpuPowerKw: 0.7,
   pue: 1.3,
 };
@@ -172,6 +193,10 @@ export interface HarnessResult {
   qualityPerDollarRatio4BVsTeacher: number;
   flopRatioTeacherVs4B: number;
   adaptCachedTokens: number;       // cache-hit tokens: billed at the cache rate, no prefill FLOPs
+  adaptFlopGpuHours: number;       // prefill + weight FLOPs (cache hits excluded)
+  adaptKvReadGpuHours: number;     // decode-time KV reads, every context token
+  adaptProposerKvReadGpuHours: number;
+  adaptCachedKvReadGpuHours: number; // part of the KV-read term owed to cache-hit tokens
   adaptGpuHours: number;
   adaptKwh: number;
 }
@@ -251,7 +276,27 @@ export function calcHarnessEconomics(i: HarnessInputs): HarnessResult {
   // Compute: FLOPs ≈ 2 · active params · tokens actually computed (cache hits excluded)
   const flops = 2 * (i.proposerActiveParamsB * 1e9 * proposerTokens
     + i.solverActiveParamsB * 1e9 * (solverTokens - adaptCachedTokens));
-  const adaptGpuHours = flops / (i.gpuPeakTflops * 1e12 * i.mfu) / 3600;
+  const adaptFlopGpuHours = flops / (i.gpuPeakTflops * 1e12 * i.mfu) / 3600;
+
+  // Decode KV reads, per solver query: seed calls each read R(in, out); the
+  // rewiring edit adds x context tokens to the one answer call (out × x reads).
+  const callReads = decodeKvTokenReads(i.inTokensPerCall, i.outTokensPerCall);
+  const readsSeedQuery = i.seedCalls * callReads;
+  const rewiringExtraReads = i.outTokensPerCall * i.rewiringExtraInputTokens;
+  const readsAdaptedQuery = i.editType === 'evidence-rewiring'
+    ? readsSeedQuery + rewiringExtraReads
+    : i.adaptedCalls * callReads;
+  const solverReads = adaptedQueryRuns * readsAdaptedQuery + i.feedbackQuestions * readsSeedQuery;
+  const proposerReads = proposals * decodeKvTokenReads(i.proposerInTokens, i.proposerOutTokens);
+  const bytesPerSecond = i.hbmBandwidthTBs * 1e12 * i.mbu;
+  const kvHours = (tokenReads: number, kvBytes: number) => tokenReads * kvBytes / bytesPerSecond / 3600;
+  const adaptProposerKvReadGpuHours = kvHours(proposerReads, i.proposerKvBytesPerToken);
+  const adaptKvReadGpuHours = adaptProposerKvReadGpuHours + kvHours(solverReads, i.solverKvBytesPerToken);
+  const cachedReads = i.editType === 'evidence-rewiring'
+    ? adaptedQueryRuns * rewiringExtraReads * Math.min(Math.max(i.rewiringCachedShare, 0), 1) : 0;
+  const adaptCachedKvReadGpuHours = kvHours(cachedReads, i.solverKvBytesPerToken);
+
+  const adaptGpuHours = adaptFlopGpuHours + adaptKvReadGpuHours;
   const adaptKwh = adaptGpuHours * i.gpuPowerKw * i.pue;
 
   return {
@@ -263,7 +308,8 @@ export function calcHarnessEconomics(i: HarnessInputs): HarnessResult {
     cpcSeed, cpcAdaptedAsymptotic, cpcAdaptedAtVolume, breakEvenVolumeCpc, breakEvenVolumeValue, netValueAtVolume,
     tokensPerQueryMultiplier, tokensPerCorrectMultiplier, totalTokenDemandMultiplier,
     proposerCostRatioTeacherVs4B, qualityPerDollarRatio4BVsTeacher, flopRatioTeacherVs4B,
-    adaptCachedTokens, adaptGpuHours, adaptKwh,
+    adaptCachedTokens, adaptFlopGpuHours, adaptKvReadGpuHours, adaptProposerKvReadGpuHours,
+    adaptCachedKvReadGpuHours, adaptGpuHours, adaptKwh,
   };
 }
 
