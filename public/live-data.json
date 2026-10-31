@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-30T12:08:11.750Z",
+  "lastUpdated": "2026-10-31T11:41:00.584Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 213.66,
-      "prevClose": 212.21,
-      "changePct": 0.68,
+      "price": 204.64,
+      "prevClose": 210.96,
+      "changePct": -3,
       "marketCap": null
     },
     "MSFT": {
-      "price": 530.14,
-      "prevClose": 521.08,
-      "changePct": 1.74,
+      "price": 521.91,
+      "prevClose": 524.51,
+      "changePct": -0.5,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 283.82,
-      "prevClose": 324.22,
-      "changePct": -12.46,
+      "price": 279.84,
+      "prevClose": 320.21,
+      "changePct": -12.61,
       "marketCap": null
     },
     "AMZN": {
-      "price": 243.79,
-      "prevClose": 250.38,
-      "changePct": -2.63,
+      "price": 240.35,
+      "prevClose": 248,
+      "changePct": -3.08,
       "marketCap": null
     },
     "META": {
-      "price": 624.52,
-      "prevClose": 648.85,
-      "changePct": -3.75,
+      "price": 614.99,
+      "prevClose": 642.62,
+      "changePct": -4.3,
       "marketCap": null
     },
     "AMD": {
-      "price": 566.42,
-      "prevClose": 507.93,
-      "changePct": 11.52,
+      "price": 504.8,
+      "prevClose": 516.79,
+      "changePct": -2.32,
       "marketCap": null
     },
     "ORCL": {
-      "price": 139.56,
-      "prevClose": 125.54,
-      "changePct": 11.17,
+      "price": 130.67,
+      "prevClose": 126.16,
+      "changePct": 3.57,
       "marketCap": null
     }
   },
@@ -1805,6 +1805,13 @@
       "outputPerM": 5,
       "provider": "OpenAI",
       "displayName": "Gpt 6.1 Terra",
+      "contextK": 922
+    },
+    "gpt-6-rosalind": {
+      "inputPerM": 15,
+      "outputPerM": 75,
+      "provider": "OpenAI",
+      "displayName": "Gpt 6 Rosalind",
       "contextK": 922
     }
   },
