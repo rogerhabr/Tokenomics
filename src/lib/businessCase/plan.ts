@@ -6,9 +6,8 @@ import type { BusinessCaseInputs, BusinessCaseOutputs } from './types.ts';
 import { GEOGRAPHIES, CHIPS, POWER_SOURCES, REVENUE_MODELS, CAPITAL_STACKS, CREDIT_SUPPORTS, byId } from './presets.ts';
 
 const usd = (n: number): string => {
-  const a = Math.abs(n);
-  const s = a >= 1e9 ? `$${(n / 1e9).toFixed(2)}B` : a >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : a >= 1e3 ? `$${(n / 1e3).toFixed(0)}k` : `$${n.toFixed(0)}`;
-  return s;
+  const a = Math.abs(n), sign = n < 0 ? '-' : '';
+  return a >= 1e9 ? `${sign}$${(a / 1e9).toFixed(2)}B` : a >= 1e6 ? `${sign}$${(a / 1e6).toFixed(1)}M` : a >= 1e3 ? `${sign}$${(a / 1e3).toFixed(0)}k` : `${sign}$${a.toFixed(0)}`;
 };
 const pct = (n: number | null, d = 1): string => n === null ? 'n/a' : `${n.toFixed(d)}%`;
 const x = (n: number | null): string => n === null ? 'n/a' : `${n.toFixed(2)}×`;

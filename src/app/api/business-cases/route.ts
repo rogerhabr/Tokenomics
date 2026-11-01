@@ -7,11 +7,19 @@ import { createClient } from '@/lib/supabase/server';
 
 const MAX_INPUTS_BYTES = 64 * 1024;
 
+// Degrade to 503 (not a crash) when Supabase isn't configured — the UI then
+// shows "sign in to save" and the model keeps working client-side.
+function notConfigured() {
+  return !process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+}
+const NOT_CONFIGURED = () => NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
+
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
 export async function GET() {
+  if (notConfigured()) return NOT_CONFIGURED();
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -27,6 +35,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (notConfigured()) return NOT_CONFIGURED();
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -57,6 +66,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  if (notConfigured()) return NOT_CONFIGURED();
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

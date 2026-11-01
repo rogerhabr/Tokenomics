@@ -7,7 +7,7 @@
 
 import type {
   GeographyPreset, ChipPreset, PowerSourcePreset, RevenueModelPreset,
-  CapitalStackPreset, CreditSupportPreset, BusinessCaseInputs,
+  CapitalStackPreset, CreditSupportPreset, BusinessCaseInputs, RevenueModelId,
 } from './types.ts';
 
 // ─── Geographies ─────────────────────────────────────────────────────────────
@@ -199,7 +199,7 @@ export const DEFAULT_SELECTION = {
   geographyId: 'us-ercot',
   chipId: 'gb200-nvl72',
   powerSourceId: 'btm-recip',
-  revenueModelId: 'neocloud' as const,
+  revenueModelId: 'neocloud' as RevenueModelId,
   capitalStackId: 'senior-mezz',
   creditSupportId: 'vendor-backstop',
 };
