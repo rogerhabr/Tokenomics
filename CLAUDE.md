@@ -35,11 +35,12 @@ npm run dev      # Start dev server at localhost:3000
 npm run build    # Production build
 npm run start    # Run the production build locally
 npm run lint     # ESLint via next lint
+node scripts/business-case/crosscheck.mts   # Business-case engine vs independent Python reference
 ```
 
 ## Setup (new environment)
 
-1. Create a [Supabase](https://supabase.com) project. In the SQL Editor, run `supabase/migrations/0001_init.sql`.
+1. Create a [Supabase](https://supabase.com) project. In the SQL Editor, run `supabase/migrations/0001_init.sql`, then `0002_business_cases.sql`.
 2. Copy `.env.example` to `.env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` from Project Settings → API.
 3. (Optional) Create an [Upstash](https://upstash.com) Redis database and add its REST URL/token to `.env.local` to enable API rate limiting.
 4. (Optional) Create a [Sentry](https://sentry.io) project and add its DSN to `.env.local` as `NEXT_PUBLIC_SENTRY_DSN` to enable error tracking.
@@ -98,10 +99,19 @@ npm run lint     # ESLint via next lint
 | hardware-demand | Hardware Demand Forecast |
 | revenue-profit | Revenue & Profit |
 | dc-cost-breakdown | AI Data Center Costs |
+| business-case | Business Case Agent (`src/lib/businessCase/`; cross-check vs Python reference: `node scripts/business-case/crosscheck.mts`) |
 | token-cost | Token Cost Anatomy |
 | workflow-allocation | Workflow Allocation |
 | harness-economics | Harness Adaptation (`src/lib/harnessEconomics.ts`; cross-check vs Python reference: `node scripts/harness-econ/crosscheck.mts`) |
 | data-sources | Data Sources |
+
+### Business Case Agent
+- `src/lib/businessCase/types.ts` — typed inputs/outputs (every number is a user-overridable assumption with units)
+- `src/lib/businessCase/presets.ts` — dropdown presets: 14 geographies, 8 chips (rack-level), 5 power sources (grid / BTM recips / aero SC / aero CC / bridge-to-grid), 3 revenue models (neocloud $/GPU-hr, inference $/M tokens, colocation $/kW-mo), 4 capital stacks, 4 credit-support templates. Origin Partners planning ranges where they exist; everything tagged in `sources.ts`
+- `src/lib/businessCase/engine.ts` — pure monthly project-finance engine: capex, N debt tranches (IDC, grace, annuity), NOL tax, GPU refresh, NBV / multiple / $-per-MW exit, IRR / NPV / DSCR / breakeven, stress cases with credit-support coverage (trigger · amount · duration · claim)
+- `src/lib/businessCase/plan.ts` — deterministic business-plan Markdown generator (no LLM; same inputs → identical document)
+- `scripts/business-case/reference_model.py` + `crosscheck.mts` — independent Python reference; `node scripts/business-case/crosscheck.mts` must print "All cases match to 1e-6 relative." before changing the engine
+- `src/app/api/business-cases/route.ts` + `supabase/migrations/0002_business_cases.sql` — saved cases per user, RLS-scoped (run the migration in the Supabase SQL Editor)
 
 ## Styling Conventions
 

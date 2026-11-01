@@ -30,6 +30,7 @@ const TokenCostAnatomy            = dynamic(() => import('@/components/sections/
 const WorkflowAllocation          = dynamic(() => import('@/components/sections/WorkflowAllocation'),            { ssr: false, loading: LOADING });
 const HarnessAdaptationEconomics  = dynamic(() => import('@/components/sections/HarnessAdaptationEconomics'),  { ssr: false, loading: LOADING });
 const DataCenterCostBreakdown     = dynamic(() => import('@/components/sections/DataCenterCostBreakdown'),        { ssr: false, loading: LOADING });
+const BusinessCase                = dynamic(() => import('@/components/sections/BusinessCase'),                   { ssr: false, loading: LOADING });
 const ScenarioBar            = dynamic(() => import('@/components/ScenarioBar'),                       { ssr: false });
 const DataSources            = dynamic(() => import('@/components/sections/DataSources'),               { ssr: false, loading: LOADING });
 
@@ -47,6 +48,7 @@ const SECTIONS = [
   { id: 'hardware-demand',     label: 'Hardware Demand Forecast',icon: '📦', group: 'Economics' },
   { id: 'revenue-profit',      label: 'Revenue & Profit',        icon: '💰', group: 'Economics' },
   { id: 'dc-cost-breakdown',   label: 'AI Data Center Costs',    icon: '🏭', group: 'Economics' },
+  { id: 'business-case',       label: 'Business Case Agent',     icon: '🏗️', group: 'Economics' },
   { id: 'token-cost',          label: 'Token Cost Anatomy',      icon: '🧬', group: 'Tokenomics' },
   { id: 'workflow-allocation', label: 'Workflow Allocation',     icon: '🕸️', group: 'Tokenomics' },
   { id: 'harness-economics',   label: 'Harness Adaptation',      icon: '🔧', group: 'Tokenomics' },
@@ -68,6 +70,7 @@ function SectionContent({ id }: { id: string }) {
     case 'hardware-demand':    return <HardwareDemandForecast />;
     case 'revenue-profit':     return <RevenueProfit />;
     case 'dc-cost-breakdown':  return <DataCenterCostBreakdown />;
+    case 'business-case':      return <BusinessCase />;
     case 'token-cost':         return <TokenCostAnatomy />;
     case 'workflow-allocation':return <WorkflowAllocation />;
     case 'harness-economics':  return <HarnessAdaptationEconomics />;
