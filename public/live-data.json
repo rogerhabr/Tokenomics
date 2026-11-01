@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-31T11:41:00.584Z",
+  "lastUpdated": "2026-11-01T12:40:32.881Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -1812,6 +1812,13 @@
       "outputPerM": 75,
       "provider": "OpenAI",
       "displayName": "Gpt 6 Rosalind",
+      "contextK": 922
+    },
+    "gpt-6-astra-law": {
+      "inputPerM": 10,
+      "outputPerM": 50,
+      "provider": "OpenAI",
+      "displayName": "Gpt 6 Astra Law",
       "contextK": 922
     }
   },
