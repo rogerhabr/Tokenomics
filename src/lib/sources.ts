@@ -252,6 +252,44 @@ export const DATA_SOURCES: Record<string, DataSource> = {
     sourceURL: 'https://epoch.ai/',
     notes: 'Capacity (GW) and energy cost ($/kWh) are required user inputs. Every line item (Energy, Water, Taxes, Maintenance, Labor OpEx; Servers, Facility, Network Infrastructure, Utility Works, Land CapEx) is computed from user-adjustable unit-cost assumptions (e.g. $/kW build cost, amortization years, PUE, staffing density) — none are fixed lookup totals. No public live-data feed exists for data-center construction unit costs, so these assumptions are labeled estimates; defaults are chosen so the model reproduces the Epoch.ai baseline at its starting slider positions.',
   },
+
+  // ── Business Case Agent ───────────────────────────────────────────────────
+
+  businessCaseEngine: {
+    label: 'Business Case Engine (monthly project-finance model)',
+    sourceType: 'derived',
+    primarySource: 'src/lib/businessCase/engine.ts — pure function of user inputs; cross-checked against scripts/business-case/reference_model.py (independent Python) on 5 preset combinations to 1e-6',
+    notes: 'Chain: MW → PUE → IT kW → racks → GPUs → GPU-hours / tokens / kW-months → revenue; capex (land, shell, MEP, utility, BTM generation, servers, network, contingency, IDC, GPU refresh); N debt tranches with IDC, grace and annuity; NOL tax; NBV / EBITDA-multiple / $-per-MW exit; project & equity IRR, NPV, DSCR, breakeven price; stress cases with credit-support coverage.',
+  },
+
+  businessCaseOriginPartners: {
+    label: 'Origin Partners — BTM power, capital stack, PPA and valuation ranges',
+    sourceType: 'estimate',
+    primarySource: 'Origin Partners Insights (originpartners.io/blog), May 2026 posts; LinkedIn post by the Managing Partner on NVIDIA credit support for the Nscale/Anthropic facility (Oct-2026)',
+    sourceURL: 'https://originpartners.io/blog',
+    notes: 'Recips $1,400–1,800/kW, 7,800–8,300 Btu/kWh, 18–30 mo; aero SC $1,200–1,600/kW, 8,800–9,600 Btu/kWh, 24–36 mo; aero CC $1,800–2,400/kW, 6,800–7,400 Btu/kWh. PJM 2025/26 capacity $269.92/MW-day, MISO Z4 $719.81/MW-day; ERCOT burner-tip gas $2.50–3.50. Firm BTM PPA 15–25 yr, 97–99% availability, 60–70% opco leverage. Mezz 11–16% all-in, 3–7 yr, 60%→75% LTV. Powered shell $8–15M/MW, powered land $4–8M/MW, stabilised cap rates 5–6%, GPU effective life 18–36 mo. Origin Partners publishes no GPU economics and names no chips; those come from the repo hardware datasets. Origin Partners is not a registered broker-dealer or adviser; its figures are planning ranges.',
+  },
+
+  businessCaseGeographies: {
+    label: 'Geography presets — tariffs, gas, land, labor, tax, interconnect (14 markets)',
+    sourceType: 'estimate',
+    primarySource: 'DEWA slab tariff (dewa.gov.ae); EIA state industrial prices; Eurostat H1-2026 DC-band prices; globalpetrolprices.com industrial (2025); EPDK/BOTAŞ April-2026 hikes; Kuwait MEW 2017 tariff law; SEC industrial tariff; Origin Partners for US interconnect months',
+    notes: 'Checked 2026-11. Each preset carries its own sourceNote and asOf date shown in the UI. Tariffs are list/industrial rates in USD at Nov-2026 FX — negotiated large-load contracts can differ by ±20%. Abu Dhabi uses the EWEC 15–21 fils range from a non-official guide; verify against the ADDC >1 MW TOU tariff. Kuwait assumes the 25 fils commercial/investment rate, not the 3 fils industrial-zone rate.',
+  },
+
+  businessCaseChips: {
+    label: 'Chip presets — rack kW, $/unit, tok/s, $/GPU-hr (HGX H100 → Vera Rubin NVL72, MI350X)',
+    sourceType: 'estimate',
+    primarySource: 'NVIDIA DGX/NVL72 datasheets for kW; repo hardwareDefaults for $/GPU; GPU rental indices Oct-2026 (SemiAnalysis contract index, Ornn, aggregator medians)',
+    notes: 'On-demand medians Oct-2026: H100 ~$3.25, H200 ~$4.40, B200 ~$6.39, GB200 ~$8.19/GPU-hr; contract prices assumed 65–75% of on-demand. GB300 and VR200 pricing is forecast. Default price decline 20%/yr per fleet age (H100 fell from ~$8 to $2.35 contract in 3 years).',
+  },
+
+  businessCaseCreditSupport: {
+    label: 'Credit-support templates (vendor backstop, completion guarantee, full wrap)',
+    sourceType: 'estimate',
+    primarySource: 'Origin Partners LinkedIn post (trigger / amount / duration / claim); press reports Jul–Sep 2026 of NVIDIA backstopping ~$860M of Nscale lease obligations',
+    notes: 'No public term sheet exists. Coverage %, duration and claim lag are negotiating assumptions, not disclosed terms. The engine reports, per stress case, the shortfall the support would pay, what remains for sponsor equity, and the cash exposed to the claim lag.',
+  },
 };
 
 // ── Colour coding for source types ──────────────────────────────────────────
