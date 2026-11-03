@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-02T14:45:51.563Z",
+  "lastUpdated": "2026-11-03T13:37:57.281Z",
   "sources": {
     "stocks": "Yahoo Finance API",
     "capex": "SEC EDGAR XBRL API — 10-K PaymentsToAcquirePropertyPlantAndEquipment",
@@ -10,45 +10,45 @@
   },
   "stocks": {
     "NVDA": {
-      "price": 208.85,
+      "price": 202.06,
       "prevClose": 216,
-      "changePct": -3.31,
+      "changePct": -6.45,
       "marketCap": null
     },
     "MSFT": {
-      "price": 522.53,
+      "price": 507.12,
       "prevClose": 532.6,
-      "changePct": -1.89,
+      "changePct": -4.78,
       "marketCap": null
     },
     "GOOGL": {
-      "price": 285.9,
+      "price": 278.99,
       "prevClose": 316.8,
-      "changePct": -9.75,
+      "changePct": -11.93,
       "marketCap": null
     },
     "AMZN": {
-      "price": 250.15,
+      "price": 245.63,
       "prevClose": 249.09,
-      "changePct": 0.43,
+      "changePct": -1.39,
       "marketCap": null
     },
     "META": {
-      "price": 614.58,
+      "price": 606.73,
       "prevClose": 630.56,
-      "changePct": -2.53,
+      "changePct": -3.78,
       "marketCap": null
     },
     "AMD": {
-      "price": 506.84,
+      "price": 466.84,
       "prevClose": 531.28,
-      "changePct": -4.6,
+      "changePct": -12.13,
       "marketCap": null
     },
     "ORCL": {
-      "price": 124.81,
+      "price": 119.22,
       "prevClose": 126.06,
-      "changePct": -0.99,
+      "changePct": -5.43,
       "marketCap": null
     }
   },
@@ -990,15 +990,15 @@
       "contextK": 262
     },
     "mistral/mistral-large-4": {
-      "inputPerM": 1.3599999999999999,
-      "outputPerM": 4.18,
+      "inputPerM": 0.7,
+      "outputPerM": 2.0999999999999996,
       "provider": "Mistral AI",
       "displayName": "Mistral/Mistral Large 4",
       "contextK": 1049
     },
     "mistral/mistral-large-4-0": {
-      "inputPerM": 1.3599999999999999,
-      "outputPerM": 4.18,
+      "inputPerM": 0.7,
+      "outputPerM": 2.0999999999999996,
       "provider": "Mistral AI",
       "displayName": "Mistral/Mistral Large 4 0",
       "contextK": 1049
