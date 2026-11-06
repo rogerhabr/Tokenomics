@@ -14,6 +14,7 @@ A = dict(  # labelled assumptions (paper reports no token counts)
     s_in=0.05, s_out=0.40,      # Qwen3-8B OpenRouter $/M
     t_in=0.15, t_out=0.60,      # teacher-class $/M (assumption)
     N=100_000, V=0.01, eps=1.0,
+    hbm=3.35, mbu=0.6, kvb=2 * 36 * 8 * 128 * 2,  # Qwen3-4B/8B config.json
     p_params=4, s_params=8, t_params=35, tflops=989, mfu=0.2, kw=0.7, pue=1.3,
 )
 J0, J1 = 0.1438, 0.27  # MuSiQue seed (Table 23), ten-round mean (§5.3)
@@ -62,7 +63,23 @@ demand_mult = (cpcN / cpc0) ** (-A['eps']) * tpc_mult
 cached_q = A['x'] * A['cache'] if A['edit'] == 'evidence-rewiring' else 0.0
 tok_cached = (props * P['Qscore'] + P['Qfb'] * (P['T'] - 1)) * cached_q
 flops = 2 * (A['p_params'] * 1e9 * tok_prop + A['s_params'] * 1e9 * (tok_solver - tok_cached))
-gpu_h = flops / (A['tflops'] * 1e12 * A['mfu']) / 3600
+gpu_flop = flops / (A['tflops'] * 1e12 * A['mfu']) / 3600
+
+# decode KV reads: O output tokens over a context growing from C → reads O*C + O(O-1)/2
+def reads(C, O): return O * C + O * (O - 1) / 2
+r_call = reads(A['tin'], A['tout'])
+r_q0 = P['k0'] * r_call
+r_extra = A['tout'] * A['x']
+r_q1 = r_q0 + r_extra if A['edit'] == 'evidence-rewiring' else A['k1'] * r_call
+runs1 = props * P['Qscore'] + P['Qfb'] * (P['T'] - 1)
+r_solver = runs1 * r_q1 + P['Qfb'] * r_q0
+r_prop = props * reads(A['pin'], A['pout'])
+bw = A['hbm'] * 1e12 * A['mbu']
+kv_h = lambda r: r * A['kvb'] / bw / 3600
+gpu_kv_prop = kv_h(r_prop)
+gpu_kv = gpu_kv_prop + kv_h(r_solver)
+gpu_kv_cached = kv_h(runs1 * r_extra * A['cache']) if A['edit'] == 'evidence-rewiring' else 0.0
+gpu_h = gpu_flop + gpu_kv
 
 t_prop = cost(A['pin'], A['pout'], A['t_in'], A['t_out'])
 out = dict(
@@ -75,6 +92,7 @@ out = dict(
     proposerCostRatioTeacherVs4B=t_prop / c_prop,
     qualityPerDollarRatio4BVsTeacher=(0.62 / c_prop) / (0.56 / t_prop),
     cpcAdaptedAsymptotic=c1 / J1, netValueAtVolume=A['N'] * vm - C,
-    adaptCachedTokens=tok_cached, adaptGpuHours=gpu_h, adaptKwh=gpu_h * A['kw'] * A['pue'],
+    adaptCachedTokens=tok_cached, adaptFlopGpuHours=gpu_flop, adaptKvReadGpuHours=gpu_kv,
+    adaptProposerKvReadGpuHours=gpu_kv_prop, adaptCachedKvReadGpuHours=gpu_kv_cached, adaptGpuHours=gpu_h, adaptKwh=gpu_h * A['kw'] * A['pue'],
 )
 json.dump(out, sys.stdout, indent=1)
